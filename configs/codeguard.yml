@@ -1,0 +1,25 @@
+# Configuración de CodeGuard
+# Agente de pre-commit (< 5 segundos)
+
+# Umbrales
+min_pylint_score: 8.0
+max_cyclomatic_complexity: 10
+max_line_length: 100
+max_function_lines: 20
+
+# Verificaciones habilitadas
+check_pep8: true
+check_pylint: true
+check_security: true
+check_complexity: true
+check_types: true
+check_imports: true
+
+# Exclusiones
+exclude_patterns:
+  - "*.pyc"
+  - "__pycache__"
+  - ".venv"
+  - "venv"
+  - "migrations"
+  - "tests/*"

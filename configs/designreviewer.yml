@@ -1,0 +1,45 @@
+# Configuración de DesignReviewer
+# Agente de review (2-5 minutos)
+
+# Umbrales de métricas de diseño
+thresholds:
+  cbo: 5                    # Coupling Between Objects
+  lcom: 1                   # Lack of Cohesion of Methods
+  maintainability_index: 20 # Índice de Mantenibilidad (radon)
+  wmc: 20                   # Weighted Methods per Class
+  dit: 5                    # Depth of Inheritance Tree
+  class_lines: 200          # Máximo LOC por clase
+  method_lines: 20          # Máximo LOC por método
+
+# Análisis habilitados
+analyze_cohesion: true
+analyze_coupling: true
+analyze_maintainability: true
+analyze_code_smells: true
+
+# Integración con IA
+ai:
+  enabled: true
+  model: "claude-sonnet-4-20250514"
+  max_suggestions: 5
+
+# Reportes
+reports:
+  format: html              # html, json, markdown
+  output_dir: reports/design
+  include_suggestions: true
+
+# Code smells a detectar
+code_smells:
+  - long_method
+  - large_class
+  - long_parameter_list
+  - feature_envy
+  - data_clumps
+  - primitive_obsession
+
+# Exclusiones
+exclude_patterns:
+  - "tests/*"
+  - "migrations/*"
+  - "*_test.py"

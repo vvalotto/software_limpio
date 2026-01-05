@@ -1,0 +1,133 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "quality-agents"
+version = "0.1.0"
+description = "Sistema de Control de Calidad en Tres Niveles para Python"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.11"
+authors = [
+    {name = "Victor Valotto"}
+]
+keywords = [
+    "quality",
+    "metrics",
+    "clean-code",
+    "static-analysis",
+    "software-engineering"
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Quality Assurance",
+]
+
+dependencies = [
+    # Control de Calidad
+    "flake8>=6.0.0",
+    "pylint>=3.0.0",
+    "bandit>=1.7.5",
+    "mypy>=1.7.0",
+    "radon>=6.0.1",
+
+    # Análisis de Dependencias
+    "pydeps>=1.12.0",
+    "pipdeptree>=2.13.0",
+
+    # Integración IA
+    "anthropic>=0.8.0",
+
+    # Reportes
+    "jinja2>=3.1.2",
+    "plotly>=5.17.0",
+    "rich>=13.7.0",
+
+    # Utilidades
+    "pyyaml>=6.0.1",
+    "click>=8.1.7",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "coverage>=7.3.0",
+    "black>=23.0.0",
+    "isort>=5.12.0",
+    "ruff>=0.1.0",
+]
+
+[project.scripts]
+codeguard = "quality_agents.codeguard.agent:main"
+designreviewer = "quality_agents.designreviewer.agent:main"
+architectanalyst = "quality_agents.architectanalyst.agent:main"
+
+[project.urls]
+Homepage = "https://github.com/vvalotto/software_limpio"
+Documentation = "https://github.com/vvalotto/software_limpio/tree/main/docs"
+Repository = "https://github.com/vvalotto/software_limpio"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+
+[tool.coverage.run]
+source = ["src/quality_agents"]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+    "pass",
+    "# TODO",
+]
+
+[tool.black]
+line-length = 100
+target-version = ["py311", "py312", "py313"]
+exclude = '''
+/(
+    \.git
+    | \.venv
+    | venv
+    | __pycache__
+    | migrations
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 100
+skip = [".venv", "venv", "__pycache__", "migrations"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+exclude = [".venv", "venv", "__pycache__", "migrations"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "B", "C4"]
+ignore = ["E501"]  # Line too long (handled by formatter)
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_ignores = true
+disallow_untyped_defs = true
+exclude = ["venv", ".venv", "tests"]
