@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f \"$CLAUDE_PROJECT_DIR/SESION.md\" ]; then echo '📋 CONTEXTO DE SESIÓN CARGADO:'; echo ''; cat \"$CLAUDE_PROJECT_DIR/SESION.md\"; fi"
+          }
+        ]
+      }
+    ]
+  }
+}
