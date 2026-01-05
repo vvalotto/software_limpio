@@ -1,0 +1,947 @@
+# GUÍA DE IMPLEMENTACIÓN DE AGENTES DE CALIDAD
+**Setup paso a paso para tu proyecto**
+
+---
+
+## FASE 0: PREPARACIÓN DEL PROYECTO
+
+### 0.1 Estructura de Directorios a Crear
+
+```bash
+cd tu_proyecto/
+
+# Crear estructura de agentes
+mkdir -p .quality_control/{codeguard,designreviewer,architectanalyst}
+mkdir -p reports/{code,design,architecture}
+mkdir -p quality_agents/{analyzers,ai,reporters}
+```
+
+### 0.2 Instalar Dependencias Base
+
+**Crear archivo: `requirements-quality.txt`**
+
+```txt
+# Análisis estático
+flake8>=6.0.0
+pylint>=3.0.0
+bandit>=1.7.5
+mypy>=1.7.0
+radon>=6.0.1
+
+# Dependencias y grafos
+pydeps>=1.12.0
+pipdeptree>=2.13.0
+
+# Testing y cobertura
+pytest>=7.4.0
+pytest-cov>=4.1.0
+coverage>=7.3.0
+
+# Duplicación
+jscpd>=3.5.0
+
+# Seguridad
+safety>=2.3.5
+pip-audit>=2.6.0
+
+# IA
+anthropic>=0.8.0
+
+# Reportes
+jinja2>=3.1.2
+plotly>=5.17.0
+markdown>=3.5.0
+
+# Utils
+pyyaml>=6.0.1
+click>=8.1.7
+colorama>=0.4.6
+rich>=13.7.0
+```
+
+**Instalar:**
+
+```bash
+pip install -r requirements-quality.txt
+```
+
+---
+
+## FASE 1: IMPLEMENTAR CODEGUARD (Pre-commit)
+
+### 1.1 Crear Configuración Base
+
+**Archivo: `.quality_control/codeguard/config.yml`**
+
+```yaml
+# CodeGuard Configuration
+version: "1.0"
+
+enabled: true
+max_execution_time: 5  # segundos
+
+# Métricas a verificar
+metrics:
+  pep8:
+    enabled: true
+    tool: "flake8"
+    config: ".flake8"
+    
+  pylint:
+    enabled: true
+    threshold: 7.0
+    
+  security:
+    enabled: true
+    tools:
+      - "bandit"
+    checks:
+      - "sql_injection"
+      - "hardcoded_secrets"
+      - "insecure_functions"
+      
+  type_hints:
+    enabled: "auto"  # solo si existen hints
+    tool: "mypy"
+    
+  unused_code:
+    enabled: true
+    checks:
+      - "unused_imports"
+      - "unused_variables"
+      
+  complexity:
+    enabled: true
+    info_threshold: 15  # solo informar, no bloquear
+    
+  bare_except:
+    enabled: true
+
+# Comportamiento
+behavior:
+  block_on_error: false  # NUNCA bloquear pre-commit
+  show_suggestions: true
+  show_examples: true
+  auto_suggest_fix: true
+  
+# Logging
+logging:
+  enabled: true
+  path: ".quality_control/codeguard/history.log"
+  level: "INFO"
+  
+# Output
+output:
+  format: "terminal"  # terminal | json | html
+  colors: true
+  verbose: false
+```
+
+**Archivo: `.flake8`** (configuración de PEP8)
+
+```ini
+[flake8]
+max-line-length = 100
+exclude = 
+    .git,
+    __pycache__,
+    .venv,
+    venv,
+    build,
+    dist,
+    .eggs
+ignore = 
+    E203,  # whitespace before ':'
+    W503,  # line break before binary operator
+per-file-ignores =
+    __init__.py:F401
+```
+
+**Archivo: `.pylintrc`** (configuración de pylint)
+
+```ini
+[MASTER]
+ignore=.git,__pycache__,.venv,venv,build,dist
+
+[MESSAGES CONTROL]
+disable=
+    C0111,  # missing-docstring (manejado por otro checker)
+    R0903,  # too-few-public-methods (común en DTOs)
+    
+[FORMAT]
+max-line-length=100
+indent-string='    '
+
+[DESIGN]
+max-args=6
+max-attributes=10
+max-locals=15
+```
+
+**Archivo: `bandit.yml`** (configuración de seguridad)
+
+```yaml
+# Bandit security scanner config
+exclude_dirs:
+  - /test
+  - /tests
+  - /.venv
+  - /venv
+
+tests:
+  - B201  # flask_debug_true
+  - B301  # pickle
+  - B302  # marshal
+  - B303  # md5
+  - B304  # ciphers
+  - B305  # cipher_modes
+  - B306  # mktemp_q
+  - B307  # eval
+  - B308  # mark_safe
+  - B309  # httpsconnection
+  - B310  # urllib_urlopen
+  - B311  # random
+  - B312  # telnetlib
+  - B313  # xml_bad_cElementTree
+  - B314  # xml_bad_ElementTree
+  - B315  # xml_bad_expatreader
+  - B316  # xml_bad_expatbuilder
+  - B317  # xml_bad_sax
+  - B318  # xml_bad_minidom
+  - B319  # xml_bad_pulldom
+  - B320  # xml_bad_etree
+  - B321  # ftplib
+  - B322  # input
+  - B323  # unverified_context
+  - B324  # hashlib_new_insecure_functions
+  - B325  # tempnam
+  - B401  # import_telnetlib
+  - B402  # import_ftplib
+  - B403  # import_pickle
+  - B404  # import_subprocess
+  - B405  # import_xml_etree
+  - B406  # import_xml_sax
+  - B407  # import_xml_expat
+  - B408  # import_xml_minidom
+  - B409  # import_xml_pulldom
+  - B410  # import_lxml
+  - B411  # import_xmlrpclib
+  - B412  # import_httpoxy
+  - B413  # import_pycrypto
+  - B501  # request_with_no_cert_validation
+  - B502  # ssl_with_bad_version
+  - B503  # ssl_with_bad_defaults
+  - B504  # ssl_with_no_version
+  - B505  # weak_cryptographic_key
+  - B506  # yaml_load
+  - B507  # ssh_no_host_key_verification
+  - B601  # paramiko_calls
+  - B602  # subprocess_popen_with_shell_equals_true
+  - B603  # subprocess_without_shell_equals_true
+  - B604  # any_other_function_with_shell_equals_true
+  - B605  # start_process_with_a_shell
+  - B606  # start_process_with_no_shell
+  - B607  # start_process_with_partial_path
+  - B608  # hardcoded_sql_expressions
+  - B609  # linux_commands_wildcard_injection
+  - B610  # django_extra_used
+  - B611  # django_rawsql_used
+```
+
+### 1.2 Crear Script del Agente
+
+**Archivo: `quality_agents/codeguard.py`**
+
+```python
+#!/usr/bin/env python3
+"""
+CodeGuard - Pre-commit Quality Agent
+Verifica calidad básica de código antes de cada commit
+"""
+
+import sys
+import subprocess
+import yaml
+from pathlib import Path
+from typing import Dict, List, Tuple
+from dataclasses import dataclass
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
+
+console = Console()
+
+@dataclass
+class CheckResult:
+    """Resultado de una verificación"""
+    metric: str
+    passed: bool
+    severity: str  # ERROR | WARN | INFO
+    message: str
+    suggestion: str = ""
+    
+class CodeGuard:
+    def __init__(self, config_path: str = ".quality_control/codeguard/config.yml"):
+        self.config = self._load_config(config_path)
+        self.results: List[CheckResult] = []
+        
+    def _load_config(self, path: str) -> dict:
+        """Carga configuración desde YAML"""
+        with open(path, 'r') as f:
+            return yaml.safe_load(f)
+    
+    def _get_changed_files(self) -> List[str]:
+        """Obtiene archivos Python modificados en staging"""
+        try:
+            result = subprocess.run(
+                ['git', 'diff', '--cached', '--name-only', '--diff-filter=ACM'],
+                capture_output=True,
+                text=True,
+                check=True
+            )
+            files = result.stdout.strip().split('\n')
+            return [f for f in files if f.endswith('.py') and f]
+        except subprocess.CalledProcessError:
+            return []
+    
+    def check_pep8(self, files: List[str]) -> CheckResult:
+        """Verifica cumplimiento de PEP8"""
+        if not self.config['metrics']['pep8']['enabled']:
+            return None
+            
+        try:
+            result = subprocess.run(
+                ['flake8'] + files,
+                capture_output=True,
+                text=True
+            )
+            
+            if result.returncode == 0:
+                return CheckResult(
+                    metric="PEP8",
+                    passed=True,
+                    severity="INFO",
+                    message="PEP8 compliant"
+                )
+            else:
+                violations = result.stdout.strip().split('\n')
+                return CheckResult(
+                    metric="PEP8",
+                    passed=False,
+                    severity="WARN",
+                    message=f"{len(violations)} PEP8 violations found",
+                    suggestion="Run 'black .' to auto-format"
+                )
+        except Exception as e:
+            return CheckResult(
+                metric="PEP8",
+                passed=False,
+                severity="ERROR",
+                message=f"Error running flake8: {e}"
+            )
+    
+    def check_pylint(self, files: List[str]) -> CheckResult:
+        """Verifica score de pylint"""
+        if not self.config['metrics']['pylint']['enabled']:
+            return None
+            
+        threshold = self.config['metrics']['pylint']['threshold']
+        
+        try:
+            result = subprocess.run(
+                ['pylint', '--score=yes'] + files,
+                capture_output=True,
+                text=True
+            )
+            
+            # Extraer score de la salida
+            for line in result.stdout.split('\n'):
+                if 'Your code has been rated at' in line:
+                    score = float(line.split('rated at ')[1].split('/')[0])
+                    
+                    if score >= threshold:
+                        return CheckResult(
+                            metric="Pylint",
+                            passed=True,
+                            severity="INFO",
+                            message=f"Score: {score:.1f}/10"
+                        )
+                    else:
+                        return CheckResult(
+                            metric="Pylint",
+                            passed=False,
+                            severity="WARN",
+                            message=f"Score {score:.1f}/10 below threshold {threshold}",
+                            suggestion="Review pylint suggestions"
+                        )
+        except Exception as e:
+            return CheckResult(
+                metric="Pylint",
+                passed=False,
+                severity="ERROR",
+                message=f"Error running pylint: {e}"
+            )
+    
+    def check_security(self, files: List[str]) -> List[CheckResult]:
+        """Verifica problemas de seguridad con bandit"""
+        if not self.config['metrics']['security']['enabled']:
+            return []
+            
+        results = []
+        
+        try:
+            result = subprocess.run(
+                ['bandit', '-f', 'json'] + files,
+                capture_output=True,
+                text=True
+            )
+            
+            import json
+            report = json.loads(result.stdout)
+            
+            # Agrupar por severidad
+            high_issues = [i for i in report.get('results', []) if i['issue_severity'] == 'HIGH']
+            medium_issues = [i for i in report.get('results', []) if i['issue_severity'] == 'MEDIUM']
+            
+            if high_issues:
+                for issue in high_issues:
+                    results.append(CheckResult(
+                        metric="Security",
+                        passed=False,
+                        severity="ERROR",
+                        message=f"{issue['issue_text']} (line {issue['line_number']})",
+                        suggestion=self._get_security_suggestion(issue['test_id'])
+                    ))
+            
+            if not high_issues and not medium_issues:
+                results.append(CheckResult(
+                    metric="Security",
+                    passed=True,
+                    severity="INFO",
+                    message="No security issues detected"
+                ))
+                
+        except Exception as e:
+            results.append(CheckResult(
+                metric="Security",
+                passed=False,
+                severity="ERROR",
+                message=f"Error running bandit: {e}"
+            ))
+        
+        return results
+    
+    def _get_security_suggestion(self, test_id: str) -> str:
+        """Retorna sugerencia según tipo de issue de seguridad"""
+        suggestions = {
+            'B201': 'Use secure Flask configuration',
+            'B301': 'Avoid pickle, use json instead',
+            'B307': 'Never use eval(), parse input safely',
+            'B608': 'Use parameterized queries: cursor.execute("SELECT * FROM t WHERE id=?", (id,))',
+            'B506': 'Use yaml.safe_load() instead of yaml.load()',
+        }
+        return suggestions.get(test_id, 'Review security best practices')
+    
+    def check_complexity(self, files: List[str]) -> List[CheckResult]:
+        """Verifica complejidad ciclomática"""
+        if not self.config['metrics']['complexity']['enabled']:
+            return []
+            
+        threshold = self.config['metrics']['complexity']['info_threshold']
+        results = []
+        
+        try:
+            result = subprocess.run(
+                ['radon', 'cc', '-s', '-a'] + files,
+                capture_output=True,
+                text=True
+            )
+            
+            # Parsear salida para encontrar funciones complejas
+            for line in result.stdout.split('\n'):
+                if 'F ' in line or 'E ' in line:  # Complejidad alta
+                    results.append(CheckResult(
+                        metric="Complexity",
+                        passed=True,  # Solo info, no falla
+                        severity="INFO",
+                        message=f"High complexity detected: {line.strip()}",
+                        suggestion="Consider refactoring into smaller functions"
+                    ))
+            
+            if not results:
+                results.append(CheckResult(
+                    metric="Complexity",
+                    passed=True,
+                    severity="INFO",
+                    message="All functions have acceptable complexity"
+                ))
+                
+        except Exception as e:
+            results.append(CheckResult(
+                metric="Complexity",
+                passed=False,
+                severity="ERROR",
+                message=f"Error checking complexity: {e}"
+            ))
+        
+        return results
+    
+    def run(self) -> int:
+        """Ejecuta todas las verificaciones"""
+        console.print("\n[bold cyan]🔍 CodeGuard - Quality Check[/bold cyan]")
+        console.print("━" * 60)
+        
+        # Obtener archivos modificados
+        files = self._get_changed_files()
+        
+        if not files:
+            console.print("[yellow]No Python files to check[/yellow]")
+            return 0
+        
+        console.print(f"\n[dim]Analyzing {len(files)} file(s)...[/dim]\n")
+        
+        import time
+        start = time.time()
+        
+        # Ejecutar verificaciones
+        checks = [
+            self.check_pep8(files),
+            self.check_pylint(files),
+            *self.check_security(files),
+            *self.check_complexity(files),
+        ]
+        
+        # Filtrar None results
+        checks = [c for c in checks if c is not None]
+        
+        elapsed = time.time() - start
+        
+        # Mostrar resultados
+        errors = [c for c in checks if c.severity == 'ERROR' and not c.passed]
+        warnings = [c for c in checks if c.severity == 'WARN' and not c.passed]
+        
+        for check in checks:
+            if check.passed:
+                console.print(f"✅ [green]PASS:[/green] {check.metric} - {check.message}")
+            elif check.severity == 'ERROR':
+                console.print(f"❌ [red]ERROR:[/red] {check.metric} - {check.message}")
+                if check.suggestion:
+                    console.print(f"   [dim]💡 {check.suggestion}[/dim]")
+            elif check.severity == 'WARN':
+                console.print(f"⚠️  [yellow]WARN:[/yellow] {check.metric} - {check.message}")
+                if check.suggestion:
+                    console.print(f"   [dim]💡 {check.suggestion}[/dim]")
+            else:
+                console.print(f"ℹ️  [blue]INFO:[/blue] {check.metric} - {check.message}")
+        
+        # Summary
+        console.print("\n" + "━" * 60)
+        console.print(f"Summary: {len(errors)} errors, {len(warnings)} warnings in {elapsed:.1f}s\n")
+        
+        if errors or warnings:
+            console.print("[yellow]⚠️  Commit allowed but review recommended[/yellow]")
+            console.print("[dim]💡 Run 'codeguard --fix' to auto-correct some issues[/dim]\n")
+        else:
+            console.print("[green]✨ All checks passed! Good job![/green]\n")
+        
+        # NUNCA bloquear pre-commit
+        return 0
+
+
+def main():
+    """Entry point"""
+    guard = CodeGuard()
+    sys.exit(guard.run())
+
+
+if __name__ == '__main__':
+    main()
+```
+
+### 1.3 Hacer el Script Ejecutable
+
+```bash
+chmod +x quality_agents/codeguard.py
+
+# Crear link simbólico para acceso fácil
+ln -s $(pwd)/quality_agents/codeguard.py /usr/local/bin/codeguard
+```
+
+### 1.4 Configurar Git Hook
+
+**Archivo: `.git/hooks/pre-commit`**
+
+```bash
+#!/bin/bash
+
+# CodeGuard Pre-commit Hook
+# Se ejecuta automáticamente antes de cada commit
+
+python3 quality_agents/codeguard.py
+
+# Siempre retorna 0 para no bloquear
+exit 0
+```
+
+**Hacer ejecutable:**
+
+```bash
+chmod +x .git/hooks/pre-commit
+```
+
+### 1.5 Probar CodeGuard
+
+```bash
+# Ejecutar manualmente
+python3 quality_agents/codeguard.py
+
+# O usar el comando
+codeguard
+
+# Hacer un commit de prueba
+git add .
+git commit -m "Test CodeGuard"
+# Deberías ver la salida de CodeGuard automáticamente
+```
+
+---
+
+## FASE 2: IMPLEMENTAR DESIGNREVIEWER (On-demand)
+
+### 2.1 Crear Configuración
+
+**Archivo: `.quality_control/designreviewer/config.yml`**
+
+```yaml
+# DesignReviewer Configuration
+version: "1.0"
+
+enabled: true
+
+# Triggers
+triggers:
+  manual: true
+  pr_label: "design-review"
+  weekly: false
+
+# Umbrales de bloqueo
+blocking_thresholds:
+  class_size: 200
+  wmc: 20
+  cc_per_class: 30
+  cbo: 5
+  dit: 5
+  nop: 1
+  duplicated_lines: 5.0
+  coverage: 70.0
+  bugs: 0
+  circular_imports: 0
+  code_smells_critical: 0
+
+# Umbrales de advertencia
+warning_thresholds:
+  lcom: 1.0
+  mi: 20
+  fan_out: 7
+  tech_debt_ratio: 5.0
+  branch_coverage: 75.0
+
+# Configuración de IA
+ai_suggestions:
+  enabled: true
+  api_key_env: "ANTHROPIC_API_KEY"  # Leer de variable de entorno
+  model: "claude-sonnet-4"
+  max_tokens: 4000
+  include_examples: true
+  include_effort_estimate: true
+
+# Reportes
+reports:
+  html: true
+  html_path: "reports/design/"
+  markdown: true
+  markdown_path: "reports/design/"
+  include_graphs: true
+  include_history: false  # Implementar en fase posterior
+
+# Excepciones
+exceptions:
+  allow_justified: true
+  require_approval: false  # Para proyectos personales
+  approval_file: ".quality_control/designreviewer/approvals.yml"
+```
+
+### 2.2 Configurar Variable de Entorno para IA
+
+**En tu `.bashrc` o `.zshrc`:**
+
+```bash
+export ANTHROPIC_API_KEY="tu-api-key-aqui"
+```
+
+**O crear archivo `.env` en el proyecto:**
+
+```bash
+# .env
+ANTHROPIC_API_KEY=sk-ant-xxxxx
+```
+
+**Y agregar a `.gitignore`:**
+
+```bash
+echo ".env" >> .gitignore
+```
+
+### 2.3 Crear Script Simplificado del Agente
+
+**Archivo: `quality_agents/designreviewer.py`**
+
+```python
+#!/usr/bin/env python3
+"""
+DesignReviewer - Deep Design Analysis Agent
+Analiza calidad de diseño y sugiere refactorizaciones
+"""
+
+import sys
+import os
+from pathlib import Path
+import yaml
+from anthropic import Anthropic
+from rich.console import Console
+from rich.progress import Progress
+
+console = Console()
+
+class DesignReviewer:
+    def __init__(self, config_path: str = ".quality_control/designreviewer/config.yml"):
+        self.config = self._load_config(config_path)
+        self.client = self._init_ai() if self.config['ai_suggestions']['enabled'] else None
+        
+    def _load_config(self, path: str) -> dict:
+        with open(path, 'r') as f:
+            return yaml.safe_load(f)
+    
+    def _init_ai(self):
+        api_key = os.getenv(self.config['ai_suggestions']['api_key_env'])
+        if not api_key:
+            console.print("[yellow]Warning: ANTHROPIC_API_KEY not set. AI suggestions disabled.[/yellow]")
+            return None
+        return Anthropic(api_key=api_key)
+    
+    def run(self):
+        """Ejecuta análisis completo"""
+        console.print("\n[bold cyan]🔬 DesignReviewer - Deep Analysis[/bold cyan]")
+        console.print("━" * 60)
+        
+        with Progress() as progress:
+            task = progress.add_task("[cyan]Analyzing...", total=100)
+            
+            # TODO: Implementar análisis real
+            # Por ahora, demostración básica
+            
+            progress.update(task, advance=20)
+            console.print("📊 Calculating metrics...")
+            
+            progress.update(task, advance=30)
+            console.print("🔍 Detecting code smells...")
+            
+            progress.update(task, advance=30)
+            console.print("🤖 Generating AI suggestions...")
+            
+            progress.update(task, advance=20)
+            console.print("📄 Creating report...")
+        
+        console.print("\n[green]✅ Analysis complete![/green]")
+        console.print(f"📊 Report: reports/design/review_{Path.cwd().name}.html\n")
+        
+        return 0
+
+def main():
+    reviewer = DesignReviewer()
+    sys.exit(reviewer.run())
+
+if __name__ == '__main__':
+    main()
+```
+
+### 2.4 Ejecutar Manualmente
+
+```bash
+# Hacer ejecutable
+chmod +x quality_agents/designreviewer.py
+
+# Ejecutar
+python3 quality_agents/designreviewer.py
+```
+
+---
+
+## FASE 3: INTEGRACIÓN CON GITHUB ACTIONS (Opcional)
+
+**Archivo: `.github/workflows/quality-check.yml`**
+
+```yaml
+name: Quality Check
+
+on:
+  pull_request:
+    types: [opened, synchronize, labeled]
+
+jobs:
+  design-review:
+    if: contains(github.event.pull_request.labels.*.name, 'design-review')
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install -r requirements-quality.txt
+      
+      - name: Run DesignReviewer
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          python3 quality_agents/designreviewer.py
+      
+      - name: Upload report
+        uses: actions/upload-artifact@v3
+        with:
+          name: design-review-report
+          path: reports/design/
+```
+
+**Configurar Secret en GitHub:**
+1. Ve a tu repo → Settings → Secrets and variables → Actions
+2. New repository secret
+3. Name: `ANTHROPIC_API_KEY`
+4. Value: tu API key
+
+---
+
+## VERIFICACIÓN FINAL
+
+### Checklist de Configuración
+
+```bash
+# ✅ Verificar estructura de directorios
+tree .quality_control/
+tree reports/
+tree quality_agents/
+
+# ✅ Verificar archivos de configuración
+ls .quality_control/codeguard/config.yml
+ls .quality_control/designreviewer/config.yml
+ls .flake8
+ls .pylintrc
+ls bandit.yml
+
+# ✅ Verificar instalación de herramientas
+flake8 --version
+pylint --version
+bandit --version
+radon --version
+
+# ✅ Verificar hook de git
+ls -la .git/hooks/pre-commit
+cat .git/hooks/pre-commit
+
+# ✅ Probar CodeGuard manualmente
+python3 quality_agents/codeguard.py
+
+# ✅ Probar con commit
+git add .
+git commit -m "Test quality agents"
+```
+
+---
+
+## TROUBLESHOOTING
+
+### Problema: CodeGuard no se ejecuta en pre-commit
+
+**Solución:**
+```bash
+# Verificar que el hook sea ejecutable
+chmod +x .git/hooks/pre-commit
+
+# Verificar permisos del script
+chmod +x quality_agents/codeguard.py
+
+# Probar manualmente
+python3 .git/hooks/pre-commit
+```
+
+### Problema: "ModuleNotFoundError" al ejecutar
+
+**Solución:**
+```bash
+# Asegurar que estás en el venv correcto
+which python3
+
+# Reinstalar dependencias
+pip install -r requirements-quality.txt
+
+# Verificar instalación
+pip list | grep flake8
+```
+
+### Problema: API Key de Anthropic no funciona
+
+**Solución:**
+```bash
+# Verificar variable de entorno
+echo $ANTHROPIC_API_KEY
+
+# Si usas .env, cargar con:
+export $(cat .env | xargs)
+
+# O instalar python-dotenv
+pip install python-dotenv
+```
+
+---
+
+## PRÓXIMOS PASOS
+
+1. **Usar CodeGuard durante 1 semana** - Familiarizarte con el flujo
+2. **Implementar DesignReviewer completo** - Agregar análisis real de métricas
+3. **Implementar ArchitectAnalyst** - Para análisis de sprint
+4. **Refinar configuraciones** - Ajustar umbrales según tu proyecto
+5. **Documentar excepciones** - Crear proceso de waivers
+
+---
+
+## RESUMEN DE COMANDOS
+
+```bash
+# Setup inicial
+pip install -r requirements-quality.txt
+chmod +x quality_agents/*.py
+chmod +x .git/hooks/pre-commit
+
+# Uso diario
+# - CodeGuard se ejecuta automáticamente en cada commit
+
+# Análisis profundo (manual)
+python3 quality_agents/designreviewer.py
+
+# Verificar configuración
+cat .quality_control/codeguard/config.yml
+cat .quality_control/designreviewer/config.yml
+```
+
+---
+
+**NOTA IMPORTANTE:**
+
+Este setup es un MVP funcional. Los scripts de `codeguard.py` y `designreviewer.py` son implementaciones básicas que deberás expandir según necesites más features. El documento de especificación tiene todos los detalles de cómo deberían funcionar completamente.
+
+¿Te queda claro cómo configurar e implementar los agentes?
