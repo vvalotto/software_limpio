@@ -1,0 +1,85 @@
+# Configuración de ArchitectAnalyst
+# Agente de fin de sprint (10-30 minutos)
+
+# Umbrales de métricas de arquitectura
+thresholds:
+  distance: 0.3             # Distance from Main Sequence
+  instability_max: 0.8      # Máxima inestabilidad permitida
+  layer_violations: 0       # Violaciones de capa (debe ser 0)
+  dependency_cycles: 0      # Ciclos de dependencia (debe ser 0)
+  package_coupling: 10      # Máximo acoplamiento entre paquetes
+
+# Métricas de Martin
+martin_metrics:
+  calculate_ca: true        # Afferent Coupling
+  calculate_ce: true        # Efferent Coupling
+  calculate_instability: true
+  calculate_abstractness: true
+  calculate_distance: true
+
+# Arquitectura de capas (para detección de violaciones)
+layers:
+  - name: presentation
+    patterns:
+      - "*/views/*"
+      - "*/controllers/*"
+      - "*/api/*"
+    allowed_dependencies:
+      - application
+      - domain
+
+  - name: application
+    patterns:
+      - "*/services/*"
+      - "*/usecases/*"
+    allowed_dependencies:
+      - domain
+      - infrastructure
+
+  - name: domain
+    patterns:
+      - "*/models/*"
+      - "*/entities/*"
+    allowed_dependencies: []  # No depende de nada
+
+  - name: infrastructure
+    patterns:
+      - "*/repositories/*"
+      - "*/adapters/*"
+    allowed_dependencies:
+      - domain
+
+# Base de datos para histórico
+database:
+  path: .quality_control/architecture.db
+  retention_days: 365       # Mantener histórico por 1 año
+
+# Dashboard
+dashboard:
+  enabled: true
+  output_path: reports/architecture/dashboard.html
+  charts:
+    - instability_trend
+    - distance_trend
+    - coupling_heatmap
+    - dependency_graph
+
+# Análisis de tendencias
+trends:
+  periods: 10               # Número de snapshots para análisis
+  alert_on_degradation: true
+  degradation_threshold: 0.1  # 10% de degradación activa alerta
+
+# Reportes
+reports:
+  formats:
+    - html
+    - json
+  output_dir: reports/architecture
+  include_recommendations: true
+
+# Exclusiones
+exclude_packages:
+  - tests
+  - migrations
+  - scripts
