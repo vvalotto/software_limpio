@@ -9,6 +9,16 @@
           }
         ]
       }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo ''; echo '⚠️  Recuerda ejecutar /guardar-sesion antes de salir para guardar el progreso'"
+          }
+        ]
+      }
     ]
   }
 }
