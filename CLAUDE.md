@@ -88,6 +88,7 @@ Defined in `QualityConfig` (`src/quality_agents/shared/config.py`):
 
 - `docs/agentes/especificacion_agentes_calidad.md` - Agent specifications
 - `docs/metricas/Metricas_Clasificadas.md` - Metrics classification
+- `docs/teoria/GUIA_REDACCION.md` - Writing style guide for theory docs
 - `SESION.md` - Session context and current tasks (read at session start)
 
 ## Session Management
