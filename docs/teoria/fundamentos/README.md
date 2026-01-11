@@ -31,37 +31,37 @@ Estos principios son **agnósticos al paradigma**. Preceden a la orientación a 
 
 **Pregunta guía:** *¿Cómo dividir el sistema en partes manejables?*
 
-La capacidad de descomponer un sistema en módulos independientes que pueden desarrollarse, probarse y mantenerse por separado.
+Dividir un sistema en partes independientes que se pueden desarrollar, probar y modificar por separado.
 
 ### 2. [Ocultamiento de Información](02_ocultamiento_informacion.md)
 
 **Pregunta guía:** *¿Qué exponer y qué esconder de cada módulo?*
 
-Cada módulo debe ocultar sus decisiones de diseño internas, exponiendo solo una interfaz estable.
+Cada módulo oculta sus decisiones internas y expone solo lo necesario para usarlo.
 
 ### 3. [Cohesión](03_cohesion.md)
 
 **Pregunta guía:** *¿Qué tan enfocado está cada módulo en una responsabilidad?*
 
-Los elementos dentro de un módulo deben estar fuertemente relacionados entre sí, trabajando hacia un propósito común.
+Los elementos dentro de un módulo deben estar relacionados entre sí y trabajar hacia un propósito común.
 
 ### 4. [Acoplamiento](04_acoplamiento.md)
 
 **Pregunta guía:** *¿Qué tan independientes son los módulos entre sí?*
 
-Minimizar las dependencias entre módulos. Cambios en un módulo no deberían requerir cambios en otros.
+El grado en que un módulo depende de otros. Bajo acoplamiento permite cambiar, probar y reusar módulos de forma independiente.
 
 ### 5. [Separación de Concerns](05_separacion_concerns.md)
 
 **Pregunta guía:** *¿Cada módulo aborda un solo aspecto del problema?*
 
-Dividir el sistema de modo que cada parte aborde una preocupación distinta del dominio.
+Dividir un programa de modo que cada parte aborde una preocupación (concern) distinta.
 
 ### 6. [Abstracción](06_abstraccion.md)
 
 **Pregunta guía:** *¿Se separa el qué (comportamiento) del cómo (implementación)?*
 
-Definir interfaces que describan qué hace un componente sin revelar cómo lo hace.
+Definir interfaces que describen qué hace un componente sin revelar cómo lo hace.
 
 ---
 
