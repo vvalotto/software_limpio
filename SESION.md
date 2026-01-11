@@ -20,22 +20,22 @@ Transformar a los desarrolladores de "escritores de código" a "evaluadores de c
 | **ArchitectAnalyst** | Fin sprint | 10-30 min | Analiza tendencias |
 
 ### Principios Fundamentales (6)
-1. Cohesión
-2. Acoplamiento (minimizar)
-3. Ocultamiento de información
-4. Modularidad
-5. Abstracción
-6. Responsabilidad única
+1. Modularidad (Parnas 1972)
+2. Ocultamiento de información (Parnas 1972)
+3. Cohesión (Constantine 1968)
+4. Acoplamiento (Constantine 1968)
+5. Separación de concerns (Dijkstra 1974)
+6. Abstracción (Liskov 1974)
 
 ---
 
 ## Estado Actual
 
-### Última Sesión: 2025-01-05
+### Última Sesión: 2025-01-11
 
-**Branch activo**: `configuracion-entorno`
+**Branch activo**: `fase-1-codeguard`
 
-**Último commit**: `c855d3a` - Reorganización completa de la estructura del proyecto
+**Último commit**: `c40d3e5` - Implementar CLI básico de CodeGuard con click
 
 ### Completado
 
@@ -50,24 +50,40 @@ Transformar a los desarrolladores de "escritores de código" a "evaluadores de c
 - [x] Proyecto de ejemplo (`examples/sample_project/`)
 - [x] Plan del proyecto (`plan/plan_proyecto.md`)
 - [x] `.gitignore` completo
-- [x] `CLAUDE.md` actualizado
+- [x] `CLAUDE.md` actualizado con guía de redacción
 - [x] `SESION.md` creado (documento de contexto entre sesiones)
 - [x] Comandos personalizados de Claude Code (`/sesion`, `/guardar-sesion`)
+- [x] Hook SessionEnd para recordar guardar sesión
+- [x] **Fase 0 completa**: Documentación teórica de fundamentos
+  - [x] Estructura `docs/teoria/` con 4 secciones (18 archivos)
+  - [x] `docs/teoria/GUIA_REDACCION.md` - Estilo de escritura
+  - [x] 6 principios fundamentales documentados en `docs/teoria/fundamentos/`
+- [x] **Fase 1 iniciada**: CLI básico de CodeGuard
+  - [x] Función `main()` con click
+  - [x] Opciones: PATH, --config, --format
+  - [x] Método `collect_files()` para recolectar archivos .py
+  - [x] Probado en proyecto externo (ISSE_Termostato: 146 archivos)
 
 ### En Progreso
 
-- [ ] Implementación real de CodeGuard (tiene esqueleto, falta lógica)
-- [ ] Documentación de teoría (`docs/teoria/principios_fundamentales.md`)
+- [ ] **Fase 1: CodeGuard funcional** (CLI ya funciona, faltan checks)
+  - [ ] Carga de configuración YAML
+  - [ ] Check: flake8 (PEP8)
+  - [ ] Check: pylint (análisis estático)
+  - [ ] Check: bandit (seguridad)
+  - [ ] Check: radon (complejidad)
+  - [ ] Salida formateada con `rich`
+  - [ ] Documentación en README
 
 ### Pendiente (Próximas Tareas)
 
 **Prioridad Alta (P1)**:
-1. Escribir `docs/teoria/principios_fundamentales.md` - Los 6 principios con ejemplos
-2. Implementar lógica real en `codeguard/checks.py` usando flake8, pylint, bandit, radon
-3. Implementar `designreviewer/analyzers.py` con métricas reales (LCOM, CBO, MI)
-4. Integrar Claude API en `designreviewer/ai_integration.py`
+1. Completar Fase 1: CodeGuard como framework usable
+2. Implementar `designreviewer/analyzers.py` con métricas reales (LCOM, CBO, MI)
+3. Integrar Claude API en `designreviewer/ai_integration.py`
 
 **Prioridad Media (P2)**:
+4. Completar docs/teoria/ (marco_filosofico, trilogia_limpia, nuevo_paradigma)
 5. Implementar `architectanalyst/metrics.py` (métricas de Martin)
 6. Implementar `architectanalyst/snapshots.py` (persistencia SQLite)
 7. Crear reportes HTML con Jinja2
@@ -84,13 +100,17 @@ Transformar a los desarrolladores de "escritores de código" a "evaluadores de c
 ```
 software_limpio/
 ├── src/quality_agents/       # Código fuente (paquete instalable)
-│   ├── codeguard/            # ← IMPLEMENTAR LÓGICA
+│   ├── codeguard/            # ← CLI funciona, faltan checks
 │   ├── designreviewer/       # ← IMPLEMENTAR ANÁLISIS + IA
 │   ├── architectanalyst/     # ← IMPLEMENTAR MÉTRICAS
 │   └── shared/               # Utilidades comunes
 ├── tests/                    # Tests (unit, integration, e2e)
 ├── docs/                     # Documentación
-│   ├── teoria/               # ← ESCRIBIR PRINCIPIOS
+│   ├── teoria/               # ✓ Estructura completa
+│   │   ├── fundamentos/      # ✓ 6 principios documentados
+│   │   ├── marco_filosofico/ # Placeholders
+│   │   ├── trilogia_limpia/  # Placeholders
+│   │   └── nuevo_paradigma/  # Placeholders
 │   ├── metricas/             # Catálogo completo ✓
 │   └── agentes/              # Especificaciones ✓
 ├── configs/                  # Configuraciones YAML ✓
@@ -98,7 +118,7 @@ software_limpio/
 ├── plan/                     # Plan del proyecto ✓
 ├── .claude/                  # Configuración Claude Code ✓
 │   ├── commands/             # Comandos personalizados
-│   └── settings.json         # Hooks
+│   └── settings.json         # Hooks (SessionStart, SessionEnd)
 ├── pyproject.toml            # Setup ✓
 ├── CLAUDE.md                 # Guía técnica ✓
 └── SESION.md                 # Este archivo ✓
@@ -115,7 +135,8 @@ software_limpio/
 | Métricas clasificadas | `docs/metricas/Metricas_Clasificadas.md` |
 | Plan detallado | `plan/plan_proyecto.md` |
 | Configuración CodeGuard | `configs/codeguard.yml` |
-| Ejemplo de código malo/bueno | `examples/sample_project/src/calculator.py` |
+| Guía de redacción teoría | `docs/teoria/GUIA_REDACCION.md` |
+| 6 principios fundamentales | `docs/teoria/fundamentos/` |
 
 ---
 
@@ -129,6 +150,7 @@ software_limpio/
 6. **Claude API** para sugerencias inteligentes (modelo: claude-sonnet-4)
 7. **Rich** para salida de consola con colores
 8. **Jinja2** para reportes HTML
+9. **Click** para CLI de los agentes
 
 ---
 
@@ -142,8 +164,6 @@ software_limpio/
 /guardar-sesion
 ```
 
-**Nota**: Reiniciar Claude Code después de crear nuevos comandos para que los detecte.
-
 ---
 
 ## Comandos Útiles
@@ -155,8 +175,13 @@ pip install -e ".[dev]"
 # Ejecutar tests
 pytest
 
-# Ver estructura
-find . -type f -name "*.py" | grep -v venv | grep -v __pycache__ | head -30
+# Probar CodeGuard
+codeguard .                    # Directorio actual
+codeguard src/                 # Directorio específico
+codeguard --help               # Ver opciones
+
+# Probar en otro proyecto
+codeguard /ruta/a/otro/proyecto
 ```
 
 ---
@@ -165,16 +190,16 @@ find . -type f -name "*.py" | grep -v venv | grep -v __pycache__ | head -30
 
 > Actualizar esta sección al final de cada sesión con contexto relevante.
 
-- El proyecto está en branch `configuracion-entorno`, **pendiente hacer commit** de:
-  - `SESION.md`
-  - `.claude/` (comandos y settings)
-- Después del commit, considerar hacer PR a `main`
-- Los esqueletos de código están listos, falta implementar la lógica real
-- Priorizar: (1) Teoría de principios, (2) CodeGuard funcional, (3) DesignReviewer con IA
+- **Branch actual**: `fase-1-codeguard` - Continuar implementación de checks
+- **Próximo paso**: Carga de configuración YAML, luego checks reales (flake8, pylint, bandit, radon)
+- **Branches pendientes de PR**:
+  - `fase-0-fundamentos` → listo para PR a main
+  - `fase-1-codeguard` → en progreso
+- **El CLI ya funciona**: `codeguard .` encuentra archivos Python, falta ejecutar los checks
+- **Probado en ISSE_Termostato**: 146 archivos Python encontrados
 - El usuario prefiere documentación en español
-- Hay PDFs de investigación en `Documentos de Trabajo local/` (no versionados)
-- **Para que funcionen los comandos `/sesion` y `/guardar-sesion`**: reiniciar Claude Code
+- Hay material de investigación en `Documentos de Trabajo local/` (no versionados)
 
 ---
 
-*Última actualización: 2025-01-05*
+*Última actualización: 2025-01-11*
