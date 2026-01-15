@@ -36,6 +36,17 @@ Basado en las ideas de Nassim Taleb:
 
 El profesional antifrágil usa la disrupción de la IA para **ascender en valor**, no para quebrarse.
 
+### [Sistemas Complejos](sistemas_complejos.md)
+
+Basado en Donella Meadows (*Thinking in Systems*):
+
+El desarrollo de software no es causa-efecto lineal. Es un **sistema complejo** con múltiples elementos interconectados, feedback loops, y propiedades emergentes.
+
+- Las virtudes no son recetas, son nodos que participan en loops de realimentación
+- La antifragilidad no se instala, emerge de la interacción del sistema
+- Las métricas no son causas, son señales emergentes
+- La IA añade complejidad **y** te ayuda a navegarla (si tenés principios)
+
 ---
 
 ## La Dimensión Ética
@@ -80,7 +91,8 @@ La IA no es una amenaza a evitar, sino un obstáculo que se convierte en el cami
 1. **Marco Aurelio**. *Meditaciones*.
 2. **Séneca**. *Cartas a Lucilio*.
 3. **Taleb, N.N. (2012)**. *Antifragile: Things That Gain from Disorder*.
-4. **Martin, R.C. (2011)**. *The Clean Coder*.
+4. **Meadows, D.H. (2008)**. *Thinking in Systems: A Primer*.
+5. **Martin, R.C. (2011)**. *The Clean Coder*.
 
 ---
 

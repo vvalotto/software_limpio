@@ -42,9 +42,17 @@ mypy src/
 After installation, three CLI commands are available:
 
 ```bash
-codeguard           # Pre-commit agent
-designreviewer      # PR/Review agent
-architectanalyst    # Sprint-end agent
+# CodeGuard - Quick pre-commit quality checks
+codeguard .                              # Analyze current directory
+codeguard src/                           # Analyze specific directory
+codeguard --config configs/codeguard.yml # Use custom config
+codeguard --format json .                # JSON output
+
+# DesignReviewer - PR/Review analysis
+designreviewer                           # (implementation pending)
+
+# ArchitectAnalyst - Sprint-end trend analysis
+architectanalyst                         # (implementation pending)
 ```
 
 ## Architecture
@@ -90,6 +98,38 @@ Defined in `QualityConfig` (`src/quality_agents/shared/config.py`):
 - `docs/metricas/Metricas_Clasificadas.md` - Metrics classification
 - `docs/teoria/GUIA_REDACCION.md` - Writing style guide for theory docs
 - `SESION.md` - Session context and current tasks (read at session start)
+
+## Project Phase and Implementation Status
+
+**Current Phase**: Phase 1 - CodeGuard as usable framework
+**Active Branch**: `fase-1-codeguard`
+
+### Completed
+- CLI infrastructure with Click (entry point works)
+- File collection mechanism (`collect_files()` working)
+- Project structure and test fixtures
+
+### In Progress
+- YAML configuration loading
+- Individual quality checks (flake8, pylint, bandit, radon)
+- Rich console output formatting
+
+### Implementation Pattern
+
+When implementing checks in agents, follow this pattern:
+1. Import check results as `CheckResult` with `Severity` enum
+2. Return structured results from individual check methods
+3. Aggregate all results in the `run()` method
+4. Use configuration thresholds from `QualityConfig`
+
+### Tool Configuration
+
+All quality tools have standardized configurations in `pyproject.toml`:
+- Black: line-length 100, Python 3.11+
+- isort: black-compatible profile
+- Ruff: E, F, W, I, N, B, C4 rules (ignoring E501)
+- mypy: strict mode with typed defs required
+- pytest: verbose with short tracebacks
 
 ## Session Management
 
