@@ -85,3 +85,62 @@ class CodeGuard:
         """Verifica complejidad ciclomática."""
         # TODO: Implementar con radon
         pass
+
+    def collect_files(self, path: Path) -> List[Path]:
+        """
+        Recolecta archivos Python a analizar.
+
+        Args:
+            path: Directorio o archivo a analizar
+
+        Returns:
+            Lista de archivos Python
+        """
+        if path.is_file():
+            return [path] if path.suffix == ".py" else []
+
+        return list(path.rglob("*.py"))
+
+
+# --- CLI ---
+
+import click
+
+
+@click.command()
+@click.argument("path", type=click.Path(exists=True), default=".")
+@click.option(
+    "--config", "-c",
+    type=click.Path(exists=True),
+    help="Archivo de configuración YAML"
+)
+@click.option(
+    "--format", "-f",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Formato de salida"
+)
+def main(path: str, config: Optional[str], format: str) -> None:
+    """
+    CodeGuard - Verificación rápida de calidad de código.
+
+    Analiza archivos Python en PATH (archivo o directorio).
+    """
+    target = Path(path)
+    config_path = Path(config) if config else None
+
+    guard = CodeGuard(config_path=config_path)
+    files = guard.collect_files(target)
+
+    click.echo(f"CodeGuard v0.1.0")
+    click.echo(f"Analizando: {target.absolute()}")
+    click.echo(f"Archivos Python encontrados: {len(files)}")
+
+    if config_path:
+        click.echo(f"Configuración: {config_path}")
+
+    # TODO: Ejecutar checks y mostrar resultados
+
+
+if __name__ == "__main__":
+    main()

@@ -59,18 +59,38 @@
 
 ---
 
-### Fase 1: CodeGuard Completo (Semana 2)
+### Fase 1: CodeGuard Funcional (Framework Usable)
 
-| Tarea | Prioridad | Esfuerzo | Descripción |
-|-------|-----------|----------|-------------|
-| Refinar codeguard.py | P2 | 4-6h | Mejorar logging, configuración YAML |
-| Configurar pre-commit hook | P2 | 2h | Hook funcional en `.git/hooks/` |
-| Tests de integración | P2 | 4h | Probar con proyecto real |
+**Objetivo:** CodeGuard como herramienta CLI instalable y usable en proyectos reales.
+
+| Tarea | Prioridad | Descripción |
+|-------|-----------|-------------|
+| CLI con click | P1 | Función `main()` con argumentos: path, --config, --format |
+| Carga de config YAML | P1 | Leer `configs/codeguard.yml` con defaults |
+| Check: PEP8/flake8 | P1 | Integrar flake8 para estilo |
+| Check: Pylint score | P1 | Integrar pylint para análisis estático |
+| Check: Seguridad/bandit | P1 | Integrar bandit para vulnerabilidades |
+| Check: Complejidad/radon | P1 | Integrar radon para CC |
+| Salida formateada | P1 | Usar `rich` para output en consola |
+| Documentación README | P1 | Instalación, uso, configuración |
+| Pre-commit hook | P2 | `.pre-commit-config.yaml` |
+| Tests de integración | P2 | Probar con `examples/sample_project/` |
+
+**Uso esperado:**
+```bash
+pip install quality-agents        # Instalación
+codeguard .                       # Analiza directorio actual
+codeguard src/ --config my.yml    # Config personalizada
+codeguard src/ --format json      # Salida JSON
+```
 
 **Entregables:**
-- [ ] `codeguard.py` refinado
+- [ ] `src/quality_agents/codeguard/agent.py` con `main()` CLI
+- [ ] `src/quality_agents/codeguard/checks.py` con checks reales
+- [ ] `src/quality_agents/codeguard/config.py` carga YAML
+- [ ] `README.md` actualizado con instalación y uso
 - [ ] `.pre-commit-config.yaml`
-- [ ] `/tests/integration/test_codeguard_integration.py`
+- [ ] `tests/integration/test_codeguard_integration.py`
 
 ---
 
