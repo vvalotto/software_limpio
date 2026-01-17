@@ -31,11 +31,11 @@ Transformar a los desarrolladores de "escritores de código" a "evaluadores de c
 
 ## Estado Actual
 
-### Última Sesión: 2025-01-11
+### Última Sesión: 2026-01-17
 
 **Branch activo**: `fase-1-codeguard`
 
-**Último commit**: `c40d3e5` - Implementar CLI básico de CodeGuard con click
+**Último commit**: `ac081c9` - Completar trilogía limpia: código, diseño y arquitectura
 
 ### Completado
 
@@ -50,19 +50,23 @@ Transformar a los desarrolladores de "escritores de código" a "evaluadores de c
 - [x] Proyecto de ejemplo (`examples/sample_project/`)
 - [x] Plan del proyecto (`plan/plan_proyecto.md`)
 - [x] `.gitignore` completo
-- [x] `CLAUDE.md` actualizado con guía de redacción
+- [x] `CLAUDE.md` actualizado con visión del proyecto y principios fundamentales
 - [x] `SESION.md` creado (documento de contexto entre sesiones)
 - [x] Comandos personalizados de Claude Code (`/sesion`, `/guardar-sesion`)
 - [x] Hook SessionEnd para recordar guardar sesión
-- [x] **Fase 0 completa**: Documentación teórica de fundamentos
-  - [x] Estructura `docs/teoria/` con 4 secciones (18 archivos)
+- [x] **Fase 0 completa**: Documentación teórica completa
+  - [x] Estructura `docs/teoria/` con 4 secciones completas
   - [x] `docs/teoria/GUIA_REDACCION.md` - Estilo de escritura
-  - [x] 6 principios fundamentales documentados en `docs/teoria/fundamentos/`
+  - [x] **Fundamentos**: 6 principios fundamentales documentados en `docs/teoria/fundamentos/`
+  - [x] **Marco Filosófico**: Cuatro virtudes, antifragilidad, sistemas complejos
+  - [x] **Nuevo Paradigma**: Rol profesional (4 competencias) y triángulo de competencias
+  - [x] **Trilogía Limpia**: Código limpio, Diseño limpio, Arquitectura limpia
 - [x] **Fase 1 iniciada**: CLI básico de CodeGuard
   - [x] Función `main()` con click
   - [x] Opciones: PATH, --config, --format
   - [x] Método `collect_files()` para recolectar archivos .py
   - [x] Probado en proyecto externo (ISSE_Termostato: 146 archivos)
+- [x] Guías de usuario (`docs/guias/codeguard.md`)
 
 ### En Progreso
 
@@ -83,15 +87,14 @@ Transformar a los desarrolladores de "escritores de código" a "evaluadores de c
 3. Integrar Claude API en `designreviewer/ai_integration.py`
 
 **Prioridad Media (P2)**:
-4. Completar docs/teoria/ (marco_filosofico, trilogia_limpia, nuevo_paradigma)
-5. Implementar `architectanalyst/metrics.py` (métricas de Martin)
-6. Implementar `architectanalyst/snapshots.py` (persistencia SQLite)
-7. Crear reportes HTML con Jinja2
-8. Dashboard con Plotly
+4. Implementar `architectanalyst/metrics.py` (métricas de Martin)
+5. Implementar `architectanalyst/snapshots.py` (persistencia SQLite)
+6. Crear reportes HTML con Jinja2
+7. Dashboard con Plotly
 
 **Prioridad Baja (P3)**:
-9. GitHub Actions CI/CD
-10. Documentación académica
+8. GitHub Actions CI/CD
+9. Documentación académica para publicación
 
 ---
 
@@ -106,13 +109,14 @@ software_limpio/
 │   └── shared/               # Utilidades comunes
 ├── tests/                    # Tests (unit, integration, e2e)
 ├── docs/                     # Documentación
-│   ├── teoria/               # ✓ Estructura completa
+│   ├── teoria/               # ✓ COMPLETA (4 secciones)
 │   │   ├── fundamentos/      # ✓ 6 principios documentados
-│   │   ├── marco_filosofico/ # Placeholders
-│   │   ├── trilogia_limpia/  # Placeholders
-│   │   └── nuevo_paradigma/  # Placeholders
-│   ├── metricas/             # Catálogo completo ✓
-│   └── agentes/              # Especificaciones ✓
+│   │   ├── marco_filosofico/ # ✓ Virtudes, antifragilidad, sistemas
+│   │   ├── trilogia_limpia/  # ✓ Código, Diseño, Arquitectura
+│   │   └── nuevo_paradigma/  # ✓ Rol profesional, triángulo
+│   ├── metricas/             # ✓ Catálogo completo
+│   ├── agentes/              # ✓ Especificaciones
+│   └── guias/                # ✓ Guías de usuario
 ├── configs/                  # Configuraciones YAML ✓
 ├── examples/                 # Proyecto de ejemplo ✓
 ├── plan/                     # Plan del proyecto ✓
@@ -137,6 +141,10 @@ software_limpio/
 | Configuración CodeGuard | `configs/codeguard.yml` |
 | Guía de redacción teoría | `docs/teoria/GUIA_REDACCION.md` |
 | 6 principios fundamentales | `docs/teoria/fundamentos/` |
+| Marco filosófico | `docs/teoria/marco_filosofico/` |
+| Trilogía limpia | `docs/teoria/trilogia_limpia/` |
+| Nuevo paradigma | `docs/teoria/nuevo_paradigma/` |
+| Guías de usuario | `docs/guias/` |
 
 ---
 
@@ -147,7 +155,7 @@ software_limpio/
 3. **YAML para configuración** de cada agente (no JSON, no TOML)
 4. **SQLite para histórico** de métricas de arquitectura
 5. **Plotly para dashboards** (no Dash, no Streamlit)
-6. **Claude API** para sugerencias inteligentes (modelo: claude-sonnet-4)
+6. **Claude API** para sugerencias inteligentes (modelo: claude-sonnet-4-20250514)
 7. **Rich** para salida de consola con colores
 8. **Jinja2** para reportes HTML
 9. **Click** para CLI de los agentes
@@ -190,16 +198,36 @@ codeguard /ruta/a/otro/proyecto
 
 > Actualizar esta sección al final de cada sesión con contexto relevante.
 
-- **Branch actual**: `fase-1-codeguard` - Continuar implementación de checks
-- **Próximo paso**: Carga de configuración YAML, luego checks reales (flake8, pylint, bandit, radon)
+### Progreso de esta sesión (2026-01-17):
+
+**Documentación teórica COMPLETA** - 3 commits realizados:
+
+1. **cf2546d**: Completar sección nuevo_paradigma
+   - `rol_profesional.md`: Las 4 competencias (Dirigir, Evaluar, Refinar, Decidir)
+   - `triangulo_competencias.md`: Integración Principios + Métricas + IA
+   - Actualización de `CLAUDE.md` con visión y principios
+
+2. **ac081c9**: Completar trilogía limpia (1,446 líneas)
+   - `codigo_limpio.md`: Nivel micro (nombres, funciones, anidamiento, comentarios, errores)
+   - `diseno_limpio.md`: Nivel medio - APORTE ORIGINAL (cohesión, acoplamiento, patrones)
+   - `arquitectura_limpia.md`: Nivel macro (capas, boundaries, componentes)
+
+**Todas las secciones de `docs/teoria/` están completas:**
+- ✅ Fundamentos (6 principios)
+- ✅ Marco Filosófico (virtudes, antifragilidad, sistemas complejos)
+- ✅ Nuevo Paradigma (rol profesional, triángulo de competencias)
+- ✅ Trilogía Limpia (código, diseño, arquitectura)
+
+### Para la próxima sesión:
+
+- **Branch actual**: `fase-1-codeguard` - Volver a implementación de CodeGuard
+- **Próximo paso**: Implementar checks reales (flake8, pylint, bandit, radon)
 - **Branches pendientes de PR**:
-  - `fase-0-fundamentos` → listo para PR a main
-  - `fase-1-codeguard` → en progreso
-- **El CLI ya funciona**: `codeguard .` encuentra archivos Python, falta ejecutar los checks
-- **Probado en ISSE_Termostato**: 146 archivos Python encontrados
-- El usuario prefiere documentación en español
-- Hay material de investigación en `Documentos de Trabajo local/` (no versionados)
+  - `fase-0-fundamentos` → **puede mergearse a main** (documentación teórica completa)
+  - `fase-1-codeguard` → en progreso (CLI funciona, faltan checks)
+- **Documentación teórica**: COMPLETA y lista para uso educativo
+- El usuario prefiere documentación en español (rioplatense)
 
 ---
 
-*Última actualización: 2025-01-11*
+*Última actualización: 2026-01-17*
