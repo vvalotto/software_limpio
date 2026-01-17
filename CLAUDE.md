@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Software Limpio** is a Python framework implementing a three-tier automated quality control system, inspired by Robert C. Martin's trilogy (Clean Code, Clean Architecture) with the addition of "Clean Design".
+**Software Limpio** is an educational and practical Python framework implementing a three-tier automated quality control system, inspired by Robert C. Martin's trilogy (Clean Code, Clean Architecture) with the addition of "Clean Design".
+
+**Vision:** Transform developers from "code writers" to "quality evaluators" through AI agents that detect, explain, and suggest improvements in real-time.
 
 - **Language:** Python 3.11+
 - **Documentation language:** Spanish (Rioplatense)
@@ -101,6 +103,18 @@ Available in `tests/conftest.py`:
 - `sample_python_file` - Returns path to sample Python file
 - `empty_config` - Returns default `QualityConfig` instance
 
+## Fundamental Principles
+
+The framework is built on 6 fundamental principles, all documented in `docs/teoria/fundamentos/`:
+1. **Modularidad** (Parnas 1972)
+2. **Ocultamiento de información** (Parnas 1972)
+3. **Cohesión** (Constantine 1968)
+4. **Acoplamiento** (Constantine 1968)
+5. **Separación de concerns** (Dijkstra 1974)
+6. **Abstracción** (Liskov 1974)
+
+Each principle is applied at three levels: Código, Diseño, and Arquitectura.
+
 ## Quality Thresholds
 
 Defined in `QualityConfig.thresholds` (`src/quality_agents/shared/config.py`):
@@ -137,6 +151,7 @@ When writing docs in `docs/teoria/`:
 - `docs/agentes/guia_implementacion_agentes.md` - Implementation guide
 - `docs/metricas/Metricas_Clasificadas.md` - Metrics classification
 - `docs/teoria/GUIA_REDACCION.md` - Writing style guide for theory docs
+- `docs/guias/codeguard.md` - User guide for CodeGuard
 - `plan/plan_proyecto.md` - Detailed project plan
 
 ## Technical Decisions
@@ -144,8 +159,10 @@ When writing docs in `docs/teoria/`:
 - **AI Integration:** Claude API (model: `claude-sonnet-4-20250514`)
 - **Database:** SQLite for ArchitectAnalyst historical metrics
 - **Dashboards:** Plotly (not Dash, not Streamlit)
-- **CLI:** Rich for colored console output
+- **CLI Framework:** Click for command-line interface
+- **Console Output:** Rich for colored, formatted console output
 - **Reports:** Jinja2 for HTML templates
+- **Configuration:** YAML (not JSON, not TOML) for all agent configurations
 
 ## Project Phase and Implementation Status
 
@@ -153,14 +170,20 @@ When writing docs in `docs/teoria/`:
 **Active Branch**: `fase-1-codeguard`
 
 ### Completed
+- Phase 0: Theoretical documentation (`docs/teoria/fundamentos/` - 6 principles documented)
 - CLI infrastructure with Click (entry point works)
 - File collection mechanism (`collect_files()` working)
 - Project structure and test fixtures
+- User guides (`docs/guias/codeguard.md`)
 
 ### In Progress
 - YAML configuration loading
 - Individual quality checks (flake8, pylint, bandit, radon)
 - Rich console output formatting
+
+### Pending Branches
+- `fase-0-fundamentos` - Ready for PR to main
+- `fase-1-codeguard` - In progress
 
 ### Implementation Pattern
 
