@@ -1,0 +1,375 @@
+# Guía de Uso - CodeGuard
+
+> Agente de control de calidad rápido para pre-commit
+
+**CodeGuard** es una herramienta de análisis de código que se ejecuta antes de cada commit para detectar problemas de calidad, seguridad y estilo. **No bloquea tus commits**, solo te advierte de problemas potenciales.
+
+---
+
+## Índice
+
+1. [Instalación](#instalación)
+2. [Uso Básico](#uso-básico)
+3. [Configuración](#configuración)
+4. [Interpretación de Resultados](#interpretación-de-resultados)
+5. [Opciones Avanzadas](#opciones-avanzadas)
+6. [Integración con Git](#integración-con-git)
+7. [Preguntas Frecuentes](#preguntas-frecuentes)
+
+---
+
+## Instalación
+
+### Requisitos
+
+- Python 3.11 o superior
+- Git (para integración con hooks)
+
+### Pasos
+
+```bash
+# 1. Clonar el repositorio
+git clone https://github.com/vvalotto/software_limpio.git
+cd software_limpio
+
+# 2. Crear entorno virtual
+python3.11 -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+
+# 3. Instalar en modo desarrollo
+pip install -e ".[dev]"
+
+# 4. Verificar instalación
+codeguard --version
+```
+
+---
+
+## Uso Básico
+
+### Analizar Directorio Actual
+
+```bash
+codeguard .
+```
+
+### Analizar Directorio Específico
+
+```bash
+codeguard src/
+codeguard src/quality_agents/
+```
+
+### Analizar Archivos Específicos
+
+```bash
+codeguard src/main.py
+codeguard src/module1.py src/module2.py
+```
+
+### Usar Configuración Personalizada
+
+```bash
+codeguard --config configs/codeguard.yml .
+```
+
+### Salida en Formato JSON
+
+```bash
+codeguard --format json . > report.json
+```
+
+---
+
+## Configuración
+
+CodeGuard busca su configuración en estos archivos (en orden de prioridad):
+
+1. `--config` (especificado en línea de comandos)
+2. `.codeguard.yml` (en el directorio actual)
+3. `configs/codeguard.yml` (configuración por defecto)
+
+### Estructura de Configuración
+
+Crear archivo `.codeguard.yml` en la raíz de tu proyecto:
+
+```yaml
+# Umbrales de calidad
+min_pylint_score: 8.0
+max_cyclomatic_complexity: 10
+max_line_length: 100
+max_function_lines: 20
+
+# Verificaciones habilitadas
+check_pep8: true
+check_pylint: true
+check_security: true
+check_complexity: true
+check_types: true
+check_imports: true
+
+# Exclusiones
+exclude_patterns:
+  - "*.pyc"
+  - "__pycache__"
+  - ".venv"
+  - "venv"
+  - "migrations"
+  - "tests/*"
+```
+
+### Personalización de Umbrales
+
+**Proyecto Pequeño (más estricto):**
+```yaml
+min_pylint_score: 9.0
+max_cyclomatic_complexity: 5
+max_function_lines: 15
+```
+
+**Proyecto Legacy (más permisivo):**
+```yaml
+min_pylint_score: 6.0
+max_cyclomatic_complexity: 15
+max_function_lines: 30
+```
+
+---
+
+## Interpretación de Resultados
+
+### Formato de Salida
+
+```
+🔍 CodeGuard - Quality Check
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📄 Analyzing: src/utils/helper.py
+
+✅ PASS: PEP8 compliance
+✅ PASS: No unused imports
+⚠️  WARN: Pylint score 6.8/10 (threshold: 7.0)
+❌ ERROR: Hardcoded secret detected (line 45)
+   → Use environment variables: os.getenv('API_KEY')
+⚠️  WARN: Bare except found (line 78)
+   → Specify exception type: except ValueError:
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Summary: 2 errors, 2 warnings in 3.2s
+
+⚠️  Commit allowed but review recommended
+💡 Run suggested fixes or review manually
+```
+
+### Niveles de Severidad
+
+| Icono | Nivel | Descripción | Acción Recomendada |
+|-------|-------|-------------|-------------------|
+| ✅ | PASS | Sin problemas | Ninguna |
+| ℹ️ | INFO | Informativo | Revisar si hay tiempo |
+| ⚠️ | WARN | Advertencia | Revisar antes de PR |
+| ❌ | ERROR | Error crítico | **Corregir inmediatamente** |
+
+### Qué Verifica CodeGuard
+
+| # | Verificación | Umbral | Severidad |
+|---|--------------|--------|-----------|
+| 1 | **PEP8** - Estilo de código | 0 violaciones | WARN |
+| 2 | **Pylint Score** - Calidad general | ≥ 7.0/10 | WARN |
+| 3 | **Imports sin usar** | 0 | WARN |
+| 4 | **Funciones inseguras** | 0 | ERROR |
+| 5 | **Secretos hardcodeados** | 0 | ERROR |
+| 6 | **Bare excepts** | 0 | WARN |
+| 7 | **Errores de tipos** | 0 | WARN |
+| 8 | **Complejidad ciclomática** | ≤ 10 | INFO |
+
+---
+
+## Opciones Avanzadas
+
+### Línea de Comandos Completa
+
+```bash
+codeguard [OPTIONS] PATH
+
+Opciones:
+  -c, --config PATH        Archivo de configuración YAML
+  -f, --format [text|json] Formato de salida (default: text)
+  -v, --verbose            Salida detallada
+  -q, --quiet              Solo mostrar errores
+  --no-color               Deshabilitar colores
+  --version                Mostrar versión
+  --help                   Mostrar ayuda
+```
+
+### Ejemplos Prácticos
+
+**Análisis silencioso (solo errores):**
+```bash
+codeguard --quiet src/
+```
+
+**Análisis detallado con colores:**
+```bash
+codeguard --verbose --format text .
+```
+
+**Generar reporte JSON para CI/CD:**
+```bash
+codeguard --format json --no-color . > quality-report.json
+```
+
+**Analizar solo archivos modificados (Git):**
+```bash
+codeguard $(git diff --name-only --cached | grep '\.py$')
+```
+
+---
+
+## Integración con Git
+
+### Pre-commit Hook (Recomendado)
+
+Crear archivo `.git/hooks/pre-commit`:
+
+```bash
+#!/bin/bash
+
+# Ejecutar CodeGuard antes de cada commit
+echo "Running CodeGuard quality checks..."
+
+# Obtener archivos Python modificados
+PYTHON_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep '\.py$')
+
+if [ -n "$PYTHON_FILES" ]; then
+    codeguard $PYTHON_FILES
+
+    # Nota: CodeGuard no bloquea, solo advierte
+    # Si querés bloquear en caso de errores, descomentar:
+    # if [ $? -ne 0 ]; then
+    #     echo "❌ Quality checks failed. Commit blocked."
+    #     exit 1
+    # fi
+fi
+
+echo "✅ Quality checks completed"
+exit 0
+```
+
+Hacer el hook ejecutable:
+```bash
+chmod +x .git/hooks/pre-commit
+```
+
+### Pre-push Hook (Análisis Completo)
+
+Crear archivo `.git/hooks/pre-push`:
+
+```bash
+#!/bin/bash
+
+echo "Running full CodeGuard analysis before push..."
+codeguard .
+
+# Bloquear push si hay errores críticos
+if [ $? -ne 0 ]; then
+    read -p "Quality issues found. Push anyway? (y/N) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        exit 1
+    fi
+fi
+
+exit 0
+```
+
+---
+
+## Preguntas Frecuentes
+
+### ¿CodeGuard bloquea mis commits?
+
+**No.** CodeGuard solo advierte. Podés hacer commit incluso con errores. Sin embargo, se recomienda corregir problemas críticos (❌ ERROR) antes de hacer push.
+
+### ¿Cuánto tiempo tarda?
+
+CodeGuard está diseñado para ejecutarse en **menos de 5 segundos** en proyectos medianos. Si tarda más, considerá:
+- Reducir el alcance del análisis
+- Excluir directorios grandes (tests, migrations)
+- Ajustar las verificaciones habilitadas
+
+### ¿Puedo usar CodeGuard sin Git?
+
+Sí. CodeGuard funciona como herramienta standalone:
+```bash
+codeguard /path/to/proyecto
+```
+
+### ¿Cómo deshabilito una verificación específica?
+
+En tu `.codeguard.yml`:
+```yaml
+check_pep8: false        # Deshabilitar PEP8
+check_complexity: false  # Deshabilitar complejidad
+```
+
+### ¿Cómo excluir archivos o directorios?
+
+En tu `.codeguard.yml`:
+```yaml
+exclude_patterns:
+  - "tests/*"
+  - "migrations/*"
+  - "legacy_module.py"
+  - "*.bak"
+```
+
+### ¿CodeGuard autocorrige problemas?
+
+No directamente. Pero sugiere comandos para autocorrección:
+- `black` para formateo
+- `autoflake` para imports sin usar
+- `isort` para ordenar imports
+
+### ¿Puedo usar CodeGuard en CI/CD?
+
+Sí. Ejemplo para GitHub Actions:
+
+```yaml
+- name: Run CodeGuard
+  run: |
+    pip install -e .
+    codeguard --format json . > quality-report.json
+```
+
+### ¿Funciona con Python 2.7?
+
+No. CodeGuard requiere **Python 3.11+** para funcionar correctamente.
+
+---
+
+## Próximos Pasos
+
+Una vez que domines CodeGuard, explorá los otros agentes:
+
+- **DesignReviewer** - Análisis profundo de diseño para PRs (próximamente)
+- **ArchitectAnalyst** - Tendencias de arquitectura a largo plazo (próximamente)
+
+---
+
+## Recursos Adicionales
+
+- [Especificación Técnica de CodeGuard](../agentes/especificacion_agentes_calidad.md#agente-de-código---codeguard)
+- [Catálogo de Métricas de Código](../metricas/metricas_codigo.md)
+- [Principios de Código Limpio](../teoria/trilogia_limpia/codigo_limpio.md)
+- [Configuración de Ejemplo](../../configs/codeguard.yml)
+
+---
+
+## Soporte
+
+¿Encontraste un problema? [Reportar issue](https://github.com/vvalotto/software_limpio/issues)
+
+---
+
+[← Volver a Guías](README.md)
