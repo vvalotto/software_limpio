@@ -7,8 +7,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Software Limpio** is a Python framework implementing a three-tier automated quality control system, inspired by Robert C. Martin's trilogy (Clean Code, Clean Architecture) with the addition of "Clean Design".
 
 - **Language:** Python 3.11+
-- **Documentation language:** Spanish
+- **Documentation language:** Spanish (Rioplatense)
 - **Virtual environment:** `.venv`
+- **Package name:** `quality-agents`
 
 ## Development Commands
 
@@ -28,7 +29,7 @@ pytest tests/unit/test_codeguard.py::TestCodeGuard::test_init_without_config
 # Run tests with coverage
 pytest --cov=src/quality_agents --cov-report=html
 
-# Format code
+# Format code (line-length=100)
 black src/ tests/
 isort src/ tests/
 
@@ -39,19 +40,19 @@ mypy src/
 
 ## CLI Entry Points
 
-After installation, three CLI commands are available:
+After installation (`pip install -e ".[dev]"`), three CLI commands are available:
 
 ```bash
-# CodeGuard - Quick pre-commit quality checks
+# CodeGuard - Quick pre-commit quality checks (<5s, warns only)
 codeguard .                              # Analyze current directory
 codeguard src/                           # Analyze specific directory
 codeguard --config configs/codeguard.yml # Use custom config
 codeguard --format json .                # JSON output
 
-# DesignReviewer - PR/Review analysis
+# DesignReviewer - PR/Review analysis (2-5min, blocks if critical)
 designreviewer                           # (implementation pending)
 
-# ArchitectAnalyst - Sprint-end trend analysis
+# ArchitectAnalyst - Sprint-end trend analysis (10-30min)
 architectanalyst                         # (implementation pending)
 ```
 
@@ -69,35 +70,82 @@ Pre-commit (<5s)        →    PR Review (2-5min)    →    Sprint End (10-30min
 ### Agent Structure
 
 Each agent follows the same pattern in `src/quality_agents/<agent>/`:
-- `agent.py` - Main class with `run()` method
+- `agent.py` - Main class with `run()` method that returns results
 - `checks.py` or `analyzers.py` - Individual verification/analysis functions
 - `config.py` - Agent-specific configuration (loads from `configs/<agent>.yml`)
 
 Shared utilities in `src/quality_agents/shared/`:
-- `config.py` - `QualityConfig` dataclass, loads YAML with `load_config()`
+- `config.py` - `QualityConfig` dataclass with `from_yaml()` class method
 - `reporting.py` - Report generation utilities
 
-### Key Implementation Details
+### Configuration Loading
 
-- Configuration loaded via `QualityConfig.from_yaml()` with fallback to defaults
-- Each check returns `CheckResult` with `Severity` (INFO/WARNING/ERROR)
-- Tests use `temp_project` and `sample_python_file` fixtures from `tests/conftest.py`
+Configuration files are YAML (not JSON, not TOML) in `configs/<agent>.yml`:
+- Load via `QualityConfig.from_yaml(path)` with automatic fallback to defaults
+- Standard search paths: `.quality.yml`, `.quality.yaml`, `configs/quality.yml`
+- Use `load_config(config_path)` for auto-discovery
+
+### Return Types
+
+- Each check returns `CheckResult` with:
+  - `check_name: str`
+  - `severity: Severity` (INFO/WARNING/ERROR enum)
+  - `message: str`
+  - `file_path: Optional[str]`
+  - `line_number: Optional[int]`
+
+### Test Fixtures
+
+Available in `tests/conftest.py`:
+- `temp_project` - Creates temporary project structure with `src/sample.py`
+- `sample_python_file` - Returns path to sample Python file
+- `empty_config` - Returns default `QualityConfig` instance
 
 ## Quality Thresholds
 
-Defined in `QualityConfig` (`src/quality_agents/shared/config.py`):
+Defined in `QualityConfig.thresholds` (`src/quality_agents/shared/config.py`):
+
+**Code Level:**
 - Cyclomatic Complexity: ≤ 10
 - Function lines: ≤ 20
+- Nesting depth: ≤ 4
+- Line length: ≤ 100 (also in Black config)
+
+**Design Level:**
 - CBO (Coupling): ≤ 5
 - LCOM (Cohesion): ≤ 1
 - Maintainability Index: > 20
+- WMC (Weighted Methods): ≤ 20
+
+**Architecture Level:**
+- Distance from main sequence: ≤ 0.3
+- Layer violations: 0
+- Dependency cycles: 0
+
+## Documentation Style
+
+When writing docs in `docs/teoria/`:
+- Follow `docs/teoria/GUIA_REDACCION.md` style guide
+- Spanish (Rioplatense), concise, direct
+- Structure: Definición → Por qué importa → Cómo se aplica → Métricas
+- Show principle application at 3 levels: Código, Diseño, Arquitectura
 
 ## Key Reference Files
 
-- `docs/agentes/especificacion_agentes_calidad.md` - Agent specifications
+- `SESION.md` - **Read first** - Current tasks, decisions, and session context
+- `docs/agentes/especificacion_agentes_calidad.md` - Complete agent specifications
+- `docs/agentes/guia_implementacion_agentes.md` - Implementation guide
 - `docs/metricas/Metricas_Clasificadas.md` - Metrics classification
 - `docs/teoria/GUIA_REDACCION.md` - Writing style guide for theory docs
-- `SESION.md` - Session context and current tasks (read at session start)
+- `plan/plan_proyecto.md` - Detailed project plan
+
+## Technical Decisions
+
+- **AI Integration:** Claude API (model: `claude-sonnet-4-20250514`)
+- **Database:** SQLite for ArchitectAnalyst historical metrics
+- **Dashboards:** Plotly (not Dash, not Streamlit)
+- **CLI:** Rich for colored console output
+- **Reports:** Jinja2 for HTML templates
 
 ## Project Phase and Implementation Status
 
@@ -133,6 +181,6 @@ All quality tools have standardized configurations in `pyproject.toml`:
 
 ## Session Management
 
-Use the custom Claude Code commands:
+Custom Claude Code commands (restart Claude Code after changes):
 - `/sesion` - Load session context at start
 - `/guardar-sesion` - Save progress before ending
