@@ -2,11 +2,31 @@
 Configuración para CodeGuard.
 """
 
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import List, Optional
 
 import yaml
+
+# Python 3.11+ tiene tomllib en stdlib, versiones anteriores usan tomli
+if sys.version_info >= (3, 11):
+    import tomllib
+else:
+    try:
+        import tomli as tomllib  # type: ignore
+    except ImportError:
+        tomllib = None  # type: ignore
+
+
+@dataclass
+class AIConfig:
+    """Configuración de IA para CodeGuard."""
+
+    enabled: bool = False  # Opt-in por defecto
+    explain_errors: bool = True
+    suggest_fixes: bool = True
+    max_tokens: int = 500
 
 
 @dataclass
@@ -36,6 +56,9 @@ class CodeGuardConfig:
         "migrations",
     ])
 
+    # Configuración de IA
+    ai: AIConfig = field(default_factory=AIConfig)
+
     @classmethod
     def from_yaml(cls, path: Path) -> "CodeGuardConfig":
         """
@@ -50,7 +73,64 @@ class CodeGuardConfig:
         with open(path) as f:
             data = yaml.safe_load(f)
 
-        return cls(**data) if data else cls()
+        if not data:
+            return cls()
+
+        # Extraer configuración de IA si existe
+        ai_data = data.pop("ai", {})
+        ai_config = AIConfig(**ai_data) if ai_data else AIConfig()
+
+        # Crear instancia con el resto de la configuración
+        config = cls(**data)
+        config.ai = ai_config
+
+        return config
+
+    @classmethod
+    def from_pyproject_toml(cls, path: Path) -> "CodeGuardConfig":
+        """
+        Carga configuración desde pyproject.toml.
+
+        Lee la sección [tool.codeguard] y opcionalmente [tool.codeguard.ai]
+
+        Args:
+            path: Ruta al archivo pyproject.toml
+
+        Returns:
+            Instancia de CodeGuardConfig
+
+        Raises:
+            ImportError: Si tomllib/tomli no está disponible
+            FileNotFoundError: Si el archivo no existe
+        """
+        if tomllib is None:
+            raise ImportError(
+                "tomllib/tomli is required to read pyproject.toml. "
+                "Install tomli for Python < 3.11: pip install tomli"
+            )
+
+        if not path.exists():
+            raise FileNotFoundError(f"pyproject.toml not found at {path}")
+
+        with open(path, "rb") as f:
+            data = tomllib.load(f)
+
+        # Buscar sección [tool.codeguard]
+        tool_config = data.get("tool", {}).get("codeguard", {})
+
+        if not tool_config:
+            # No hay configuración de codeguard, retornar defaults
+            return cls()
+
+        # Extraer configuración de IA si existe
+        ai_config_data = tool_config.pop("ai", {})
+        ai_config = AIConfig(**ai_config_data) if ai_config_data else AIConfig()
+
+        # Crear instancia con el resto de la configuración
+        config = cls(**tool_config)
+        config.ai = ai_config
+
+        return config
 
     def to_yaml(self, path: Path) -> None:
         """
@@ -71,6 +151,12 @@ class CodeGuardConfig:
             "check_types": self.check_types,
             "check_imports": self.check_imports,
             "exclude_patterns": self.exclude_patterns,
+            "ai": {
+                "enabled": self.ai.enabled,
+                "explain_errors": self.ai.explain_errors,
+                "suggest_fixes": self.ai.suggest_fixes,
+                "max_tokens": self.ai.max_tokens,
+            },
         }
 
         with open(path, "w") as f:
