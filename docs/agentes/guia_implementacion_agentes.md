@@ -1,163 +1,328 @@
 # GUÍA DE IMPLEMENTACIÓN DE AGENTES DE CALIDAD
-**Setup paso a paso para tu proyecto**
+**Integración en tu proyecto - Actualizada Enero 2026**
 
 ---
 
-## FASE 0: PREPARACIÓN DEL PROYECTO
+## INTRODUCCIÓN
 
-### 0.1 Estructura de Directorios a Crear
+Esta guía te muestra cómo **usar** Quality Agents en tus proyectos.
+
+**Nota importante:** Quality Agents se distribuye como **paquete instalable**, no como scripts para copiar. Este enfoque profesional permite:
+- Versionado centralizado
+- Actualizaciones fáciles con `pip install -U quality-agents`
+- Consistencia entre todos tus proyectos
+- Configuración unificada en `pyproject.toml`
+
+---
+
+## INSTALACIÓN RÁPIDA
+
+### Opción 1: Desde PyPI (cuando esté publicado)
+
+```bash
+pip install quality-agents
+```
+
+### Opción 2: Desde GitHub
+
+```bash
+pip install git+https://github.com/vvalotto/software_limpio.git
+```
+
+### Opción 3: En modo desarrollo (para contribuir al framework)
+
+```bash
+git clone https://github.com/vvalotto/software_limpio.git
+cd software_limpio
+pip install -e ".[dev]"
+```
+
+### Verificar instalación
+
+```bash
+codeguard --version
+designreviewer --version
+architectanalyst --version
+```
+
+---
+
+## CONFIGURACIÓN EN TU PROYECTO
+
+### Paso 1: Crear pyproject.toml (si no existe)
 
 ```bash
 cd tu_proyecto/
 
-# Crear estructura de agentes
-mkdir -p .quality_control/{codeguard,designreviewer,architectanalyst}
-mkdir -p reports/{code,design,architecture}
-mkdir -p quality_agents/{analyzers,ai,reporters}
+# Si no tienes pyproject.toml, créalo
+cat > pyproject.toml << 'EOF'
+[project]
+name = "mi-proyecto"
+version = "0.1.0"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+EOF
 ```
 
-### 0.2 Instalar Dependencias Base
+### Paso 2: Agregar configuración de CodeGuard
 
-**Crear archivo: `requirements-quality.txt`**
+Agregar al `pyproject.toml`:
 
-```txt
-# Análisis estático
-flake8>=6.0.0
-pylint>=3.0.0
-bandit>=1.7.5
-mypy>=1.7.0
-radon>=6.0.1
+```toml
+[tool.codeguard]
+# Umbrales
+min_pylint_score = 8.0
+max_cyclomatic_complexity = 10
+max_line_length = 100
 
-# Dependencias y grafos
-pydeps>=1.12.0
-pipdeptree>=2.13.0
+# Verificaciones habilitadas
+check_pep8 = true
+check_pylint = true
+check_security = true
+check_complexity = true
 
-# Testing y cobertura
-pytest>=7.4.0
-pytest-cov>=4.1.0
-coverage>=7.3.0
+# IA opcional (requiere ANTHROPIC_API_KEY)
+[tool.codeguard.ai]
+enabled = false  # Cambiar a true para habilitar explicaciones IA
+explain_errors = true
+suggest_fixes = true
 
-# Duplicación
-jscpd>=3.5.0
-
-# Seguridad
-safety>=2.3.5
-pip-audit>=2.6.0
-
-# IA
-anthropic>=0.8.0
-
-# Reportes
-jinja2>=3.1.2
-plotly>=5.17.0
-markdown>=3.5.0
-
-# Utils
-pyyaml>=6.0.1
-click>=8.1.7
-colorama>=0.4.6
-rich>=13.7.0
+# Exclusiones
+exclude_patterns = [
+    "__pycache__",
+    ".venv",
+    "venv",
+    "migrations",
+]
 ```
 
-**Instalar:**
+### Paso 3: (Opcional) Habilitar IA
+
+Si querés explicaciones inteligentes de errores:
 
 ```bash
-pip install -r requirements-quality.txt
+# Agregar a tu .bashrc o .zshrc
+export ANTHROPIC_API_KEY="sk-ant-..."
+
+# O crear archivo .env
+echo "ANTHROPIC_API_KEY=sk-ant-..." > .env
+echo ".env" >> .gitignore
+```
+
+Luego en `pyproject.toml`:
+```toml
+[tool.codeguard.ai]
+enabled = true
 ```
 
 ---
 
-## FASE 1: IMPLEMENTAR CODEGUARD (Pre-commit)
+## INTEGRACIÓN EN TU WORKFLOW
 
-### 1.1 Crear Configuración Base
+Elige el modelo que mejor se adapte a tu flujo de trabajo:
 
-**Archivo: `.quality_control/codeguard/config.yml`**
+### Modelo 1: Uso Directo (Simple)
 
-```yaml
-# CodeGuard Configuration
-version: "1.0"
+**Cuándo:** Verificación manual ocasional
 
-enabled: true
-max_execution_time: 5  # segundos
-
-# Métricas a verificar
-metrics:
-  pep8:
-    enabled: true
-    tool: "flake8"
-    config: ".flake8"
-    
-  pylint:
-    enabled: true
-    threshold: 7.0
-    
-  security:
-    enabled: true
-    tools:
-      - "bandit"
-    checks:
-      - "sql_injection"
-      - "hardcoded_secrets"
-      - "insecure_functions"
-      
-  type_hints:
-    enabled: "auto"  # solo si existen hints
-    tool: "mypy"
-    
-  unused_code:
-    enabled: true
-    checks:
-      - "unused_imports"
-      - "unused_variables"
-      
-  complexity:
-    enabled: true
-    info_threshold: 15  # solo informar, no bloquear
-    
-  bare_except:
-    enabled: true
-
-# Comportamiento
-behavior:
-  block_on_error: false  # NUNCA bloquear pre-commit
-  show_suggestions: true
-  show_examples: true
-  auto_suggest_fix: true
-  
-# Logging
-logging:
-  enabled: true
-  path: ".quality_control/codeguard/history.log"
-  level: "INFO"
-  
-# Output
-output:
-  format: "terminal"  # terminal | json | html
-  colors: true
-  verbose: false
+```bash
+# En tu proyecto
+codeguard .                     # Analiza directorio actual
+codeguard src/                  # Analiza solo src/
+codeguard --format json .       # Salida JSON para procesamiento
 ```
 
-**Archivo: `.flake8`** (configuración de PEP8)
+**Pros:** Simple, sin configuración extra
+**Contras:** No automático, fácil olvidarse
+
+---
+
+### Modelo 2: Framework pre-commit (Recomendado)
+
+**Cuándo:** Proyectos profesionales, equipos
+
+#### Paso 1: Instalar pre-commit
+
+```bash
+pip install pre-commit
+```
+
+#### Paso 2: Crear `.pre-commit-config.yaml`
+
+```yaml
+# .pre-commit-config.yaml
+repos:
+  - repo: https://github.com/vvalotto/software_limpio
+    rev: v0.1.0  # Cambiar a version actual
+    hooks:
+      - id: codeguard
+        name: CodeGuard Quality Check
+
+      # Opcional: DesignReviewer solo manual
+      - id: designreviewer
+        name: Design Review
+        stages: [manual]
+```
+
+#### Paso 3: Instalar hooks
+
+```bash
+pre-commit install
+```
+
+#### Paso 4: Probar
+
+```bash
+# Ejecutar manualmente
+pre-commit run codeguard --all-files
+
+# O hacer un commit de prueba
+git add .
+git commit -m "test pre-commit"
+# → CodeGuard se ejecuta automáticamente
+```
+
+**Pros:** Automático, versionado, estándar de la industria
+**Contras:** Requiere framework adicional
+
+---
+
+### Modelo 3: Hook Git Manual (Control Total)
+
+**Cuándo:** Proyectos simples, necesitas customización
+
+```bash
+# En tu proyecto
+cat > .git/hooks/pre-commit << 'EOF'
+#!/bin/bash
+codeguard .
+exit 0  # Nunca bloquear commit
+EOF
+
+chmod +x .git/hooks/pre-commit
+```
+
+**Pros:** Control total, sin dependencias
+**Contras:** No versionado, cada dev debe configurarlo
+
+---
+
+### Modelo 4: GitHub Actions (Verificación en PR)
+
+**Cuándo:** Proyectos open source, equipos remotos
+
+#### Crear `.github/workflows/quality.yml`
+
+```yaml
+name: Quality Check
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main]
+
+jobs:
+  codeguard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install Quality Agents
+        run: pip install quality-agents
+
+      - name: Run CodeGuard
+        run: codeguard .
+
+      - name: Run DesignReviewer (if labeled)
+        if: contains(github.event.pull_request.labels.*.name, 'design-review')
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: designreviewer
+```
+
+**Configurar secret:**
+1. Repo → Settings → Secrets → New repository secret
+2. Name: `ANTHROPIC_API_KEY`
+3. Value: tu API key
+
+**Pros:** Verificación centralizada, todos los PRs checked
+**Contras:** Solo en GitHub, feedback tardío
+
+---
+
+## FASE 1: PRIMER USO DE CODEGUARD
+
+### Prueba Rápida
+
+Después de instalar (`pip install quality-agents`), probá CodeGuard en tu proyecto:
+
+```bash
+cd tu_proyecto/
+codeguard .
+```
+
+**Salida esperada:**
+
+```
+🔍 CodeGuard v0.1.0
+Analizando: /Users/tu/proyecto
+Archivos Python encontrados: 47
+
+📄 Analyzing files...
+
+✅ PASS: PEP8 compliance (42/47 files)
+⚠️  WARN: PEP8 violations in 5 files:
+   src/utils/helper.py:15 - E501 line too long
+   src/models/user.py:23 - W503 line break before binary operator
+
+✅ PASS: Security (no critical issues)
+⚠️  WARN: Pylint score 7.8/10 (3 files below threshold)
+ℹ️  INFO: 2 functions with high complexity (>10)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Summary: 0 errors, 3 warnings in 2.1s
+
+⚠️  Review recommended
+💡 Run 'black .' to auto-format code
+```
+
+### Personalizar Configuración
+
+Si los defaults no te sirven, crealos en `pyproject.toml`:
+
+```toml
+[tool.codeguard]
+min_pylint_score = 7.5  # Más permisivo que default (8.0)
+max_cyclomatic_complexity = 15  # Más permisivo que default (10)
+check_types = false  # Deshabilitar mypy
+
+exclude_patterns = [
+    "tests/*",  # No analizar tests
+    "migrations/*",
+]
+```
+
+### Configuraciones Adicionales (Opcional)
+
+**Archivo: `.flake8`** (solo si querés customizar PEP8)
 
 ```ini
 [flake8]
 max-line-length = 100
-exclude = 
-    .git,
-    __pycache__,
-    .venv,
-    venv,
-    build,
-    dist,
-    .eggs
-ignore = 
-    E203,  # whitespace before ':'
-    W503,  # line break before binary operator
+extend-ignore = E203, W503
 per-file-ignores =
     __init__.py:F401
 ```
 
-**Archivo: `.pylintrc`** (configuración de pylint)
+**Archivo: `.pylintrc`** (solo si querés customizar pylint)
 
 ```ini
 [MASTER]
