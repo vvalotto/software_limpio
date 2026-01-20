@@ -2,12 +2,15 @@
 Configuración para CodeGuard.
 """
 
+import logging
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import List, Optional
 
 import yaml
+
+logger = logging.getLogger(__name__)
 
 # Python 3.11+ tiene tomllib en stdlib, versiones anteriores usan tomli
 if sys.version_info >= (3, 11):
@@ -161,3 +164,77 @@ class CodeGuardConfig:
 
         with open(path, "w") as f:
             yaml.dump(data, f, default_flow_style=False)
+
+
+def load_config(config_path: Optional[Path] = None, project_root: Optional[Path] = None) -> CodeGuardConfig:
+    """
+    Carga configuración buscando en ubicaciones estándar.
+
+    Orden de búsqueda:
+    1. config_path explícito (si se provee)
+    2. pyproject.toml en project_root → [tool.codeguard]
+    3. .codeguard.yml en project_root
+    4. Defaults internos
+
+    Args:
+        config_path: Ruta explícita a archivo de configuración (opcional)
+        project_root: Directorio raíz del proyecto (default: directorio actual)
+
+    Returns:
+        Instancia de CodeGuardConfig cargada
+
+    Examples:
+        >>> # Buscar automáticamente
+        >>> config = load_config()
+
+        >>> # Con ruta explícita
+        >>> config = load_config(Path("custom.yml"))
+
+        >>> # Buscar en directorio específico
+        >>> config = load_config(project_root=Path("/path/to/project"))
+    """
+    if project_root is None:
+        project_root = Path.cwd()
+
+    # 1. Si se provee config_path explícito, usarlo
+    if config_path is not None:
+        if not config_path.exists():
+            logger.warning(f"Config file not found: {config_path}, using defaults")
+            return CodeGuardConfig()
+
+        # Determinar formato por extensión
+        if config_path.suffix in [".toml"]:
+            logger.info(f"Loading config from: {config_path} (TOML)")
+            return CodeGuardConfig.from_pyproject_toml(config_path)
+        elif config_path.suffix in [".yml", ".yaml"]:
+            logger.info(f"Loading config from: {config_path} (YAML)")
+            return CodeGuardConfig.from_yaml(config_path)
+        else:
+            logger.warning(f"Unknown config format: {config_path}, using defaults")
+            return CodeGuardConfig()
+
+    # 2. Buscar pyproject.toml en project_root
+    pyproject_path = project_root / "pyproject.toml"
+    if pyproject_path.exists():
+        try:
+            config = CodeGuardConfig.from_pyproject_toml(pyproject_path)
+            # Verificar si realmente tiene configuración de codeguard
+            # (from_pyproject_toml retorna defaults si no hay [tool.codeguard])
+            with open(pyproject_path, "rb") as f:
+                if tomllib is not None:
+                    data = tomllib.load(f)
+                    if "tool" in data and "codeguard" in data["tool"]:
+                        logger.info(f"Loading config from: {pyproject_path} → [tool.codeguard]")
+                        return config
+        except (ImportError, FileNotFoundError):
+            pass
+
+    # 3. Buscar .codeguard.yml en project_root
+    yml_path = project_root / ".codeguard.yml"
+    if yml_path.exists():
+        logger.info(f"Loading config from: {yml_path} (YAML fallback)")
+        return CodeGuardConfig.from_yaml(yml_path)
+
+    # 4. No se encontró configuración, usar defaults
+    logger.info("No config file found, using defaults")
+    return CodeGuardConfig()

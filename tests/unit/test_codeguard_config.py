@@ -6,7 +6,7 @@ import pytest
 import tempfile
 from pathlib import Path
 
-from quality_agents.codeguard.config import CodeGuardConfig, AIConfig
+from quality_agents.codeguard.config import CodeGuardConfig, AIConfig, load_config
 
 
 class TestAIConfig:
@@ -197,3 +197,116 @@ ai:
         assert config_loaded.min_pylint_score == 7.5
         assert config_loaded.check_pep8 is False
         assert config_loaded.ai.enabled is True
+
+
+class TestLoadConfig:
+    """Tests para load_config()."""
+
+    def test_load_config_explicit_path_toml(self, tmp_path):
+        """Debe cargar desde path explícito (TOML)."""
+        config_file = tmp_path / "custom.toml"
+        config_file.write_text("""
+[tool.codeguard]
+min_pylint_score = 9.0
+check_pep8 = false
+""")
+
+        config = load_config(config_path=config_file)
+
+        assert config.min_pylint_score == 9.0
+        assert config.check_pep8 is False
+
+    def test_load_config_explicit_path_yaml(self, tmp_path):
+        """Debe cargar desde path explícito (YAML)."""
+        config_file = tmp_path / "custom.yml"
+        config_file.write_text("""
+min_pylint_score: 6.5
+check_security: false
+""")
+
+        config = load_config(config_path=config_file)
+
+        assert config.min_pylint_score == 6.5
+        assert config.check_security is False
+
+    def test_load_config_explicit_path_not_found(self, tmp_path):
+        """Debe retornar defaults si path explícito no existe."""
+        config_file = tmp_path / "nonexistent.yml"
+
+        config = load_config(config_path=config_file)
+
+        # Debe retornar defaults
+        assert config.min_pylint_score == 8.0
+        assert config.check_pep8 is True
+
+    def test_load_config_from_pyproject_toml(self, tmp_path):
+        """Debe auto-descubrir pyproject.toml en project_root."""
+        pyproject = tmp_path / "pyproject.toml"
+        pyproject.write_text("""
+[tool.codeguard]
+min_pylint_score = 7.0
+max_cyclomatic_complexity = 12
+
+[tool.codeguard.ai]
+enabled = true
+max_tokens = 600
+""")
+
+        config = load_config(project_root=tmp_path)
+
+        assert config.min_pylint_score == 7.0
+        assert config.max_cyclomatic_complexity == 12
+        assert config.ai.enabled is True
+        assert config.ai.max_tokens == 600
+
+    def test_load_config_from_codeguard_yml(self, tmp_path):
+        """Debe caer en fallback a .codeguard.yml si no hay pyproject.toml."""
+        yml_file = tmp_path / ".codeguard.yml"
+        yml_file.write_text("""
+min_pylint_score: 6.0
+check_types: false
+""")
+
+        config = load_config(project_root=tmp_path)
+
+        assert config.min_pylint_score == 6.0
+        assert config.check_types is False
+
+    def test_load_config_pyproject_toml_priority_over_yml(self, tmp_path):
+        """pyproject.toml debe tener prioridad sobre .codeguard.yml."""
+        # Crear ambos archivos
+        pyproject = tmp_path / "pyproject.toml"
+        pyproject.write_text("""
+[tool.codeguard]
+min_pylint_score = 9.5
+""")
+
+        yml_file = tmp_path / ".codeguard.yml"
+        yml_file.write_text("""
+min_pylint_score: 5.0
+""")
+
+        config = load_config(project_root=tmp_path)
+
+        # Debe cargar desde pyproject.toml (prioridad)
+        assert config.min_pylint_score == 9.5
+
+    def test_load_config_defaults_when_no_config_found(self, tmp_path):
+        """Debe retornar defaults si no encuentra ningún archivo de config."""
+        # tmp_path está vacío, no hay archivos de config
+
+        config = load_config(project_root=tmp_path)
+
+        # Debe retornar todos los defaults
+        assert config.min_pylint_score == 8.0
+        assert config.check_pep8 is True
+        assert config.ai.enabled is False
+
+    def test_load_config_default_project_root(self):
+        """Debe usar directorio actual si no se provee project_root."""
+        # No proveer project_root, debe usar Path.cwd()
+        config = load_config()
+
+        # Debe retornar una instancia válida (puede tener defaults o config del proyecto actual)
+        assert isinstance(config, CodeGuardConfig)
+        assert isinstance(config.ai, AIConfig)

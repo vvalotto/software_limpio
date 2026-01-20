@@ -28,23 +28,24 @@ CodeGuard debe ser un agente funcional que:
 
 ## Estado Actual
 
-### ✅ Implementado (30%)
+### ✅ Implementado (45%)
 
 - [x] Estructura básica de clases (`CodeGuard`, `CheckResult`, `Severity`)
 - [x] CLI con click (`agent.py:main()`)
 - [x] Método `collect_files()` funcional
 - [x] Dataclass `CodeGuardConfig` para configuración
 - [x] Carga desde YAML (método `from_yaml()`)
+- [x] **Carga desde `pyproject.toml` (método `from_pyproject_toml()`)** ✅ FASE 1
+- [x] **Función `load_config()` con búsqueda automática** ✅ FASE 1
+- [x] **Configuración de IA en `AIConfig`** ✅ FASE 1
 - [x] Entry point en `pyproject.toml` (`codeguard` command)
-- [x] Tests unitarios básicos
+- [x] Tests unitarios completos (19 tests pasando)
 
-### ❌ Faltante (70%)
+### ❌ Faltante (55%)
 
-- [ ] Carga de configuración desde `pyproject.toml` (decisión #3)
 - [ ] Implementación real de checks (todos están con `TODO`)
-- [ ] Integración IA opcional con Claude API (decisión #4 y #5)
+- [ ] Integración IA opcional con Claude API
 - [ ] Output formateado con Rich
-- [ ] Configuración de IA en `CodeGuardConfig`
 - [ ] `.pre-commit-hooks.yaml` para framework
 - [ ] Tests de integración
 - [ ] Documentación de uso
@@ -72,29 +73,31 @@ CodeGuard debe ser un agente funcional que:
 - **Tiempo real:** ~2 horas
 - **Fecha completado:** 2026-01-20
 
-#### Ticket 1.2: Implementar búsqueda en orden de prioridad
+#### Ticket 1.2: Implementar búsqueda en orden de prioridad ✅ COMPLETADO
 - **Archivo:** `src/quality_agents/codeguard/config.py`
 - **Descripción:** Función `load_config()` que busca en orden: pyproject.toml → .codeguard.yml → defaults
 - **Criterios de aceptación:**
-  - [ ] Buscar primero en `pyproject.toml` (raíz proyecto)
-  - [ ] Si no existe o no tiene `[tool.codeguard]`, buscar `.codeguard.yml`
-  - [ ] Si ninguno existe, usar `CodeGuardConfig()` defaults
-  - [ ] Logging de qué archivo se usó
-  - [ ] Test con cada escenario
+  - [x] Buscar primero en `pyproject.toml` (raíz proyecto)
+  - [x] Si no existe o no tiene `[tool.codeguard]`, buscar `.codeguard.yml`
+  - [x] Si ninguno existe, usar `CodeGuardConfig()` defaults
+  - [x] Logging de qué archivo se usó
+  - [x] Test con cada escenario (8 tests agregados, todos pasando)
 - **Estimación:** 1-2 horas
+- **Tiempo real:** ~1.5 horas
+- **Fecha completado:** 2026-01-20
 
-#### Ticket 1.3: Agregar configuración de IA
+#### Ticket 1.3: Agregar configuración de IA ✅ COMPLETADO (Merged con 1.1)
 - **Archivo:** `src/quality_agents/codeguard/config.py`
 - **Descripción:** Agregar dataclass `AIConfig` y campo en `CodeGuardConfig`
 - **Criterios de aceptación:**
-  - [ ] Crear `@dataclass AIConfig` con: `enabled`, `explain_errors`, `suggest_fixes`, `max_tokens`
-  - [ ] Agregar campo `ai: AIConfig` en `CodeGuardConfig`
-  - [ ] Defaults: `enabled=False` (opt-in)
-  - [ ] Parsear desde pyproject.toml subsección `[tool.codeguard.ai]`
-  - [ ] Tests
-- **Estimación:** 1 hora
+  - [x] Crear `@dataclass AIConfig` con: `enabled`, `explain_errors`, `suggest_fixes`, `max_tokens`
+  - [x] Agregar campo `ai: AIConfig` en `CodeGuardConfig`
+  - [x] Defaults: `enabled=False` (opt-in)
+  - [x] Parsear desde pyproject.toml subsección `[tool.codeguard.ai]`
+  - [x] Tests (incluidos en los 19 tests de Fase 1)
+- **Nota:** Completado como parte del Ticket 1.1 para mayor cohesión
 
-**Total Fase 1:** 4-6 horas
+**Total Fase 1:** 4-6 horas (completado en ~3.5 horas) ✅
 
 ---
 
@@ -455,7 +458,20 @@ CodeGuard estará listo cuando:
 - `tests/unit/test_codeguard_config.py`: Nuevo archivo, 180 líneas, 11 tests
 - `pyproject.toml`: +1 dependencia (tomli)
 
-**Próximo:** Ticket 1.2 - Implementar búsqueda en orden de prioridad
+### 2026-01-20: Ticket 1.2 completado ✅
+- [x] Implementada función `load_config()` con búsqueda en orden de prioridad
+- [x] Soporta config_path explícito (TOML o YAML)
+- [x] Auto-descubrimiento: pyproject.toml → .codeguard.yml → defaults
+- [x] Logging de archivo de configuración usado
+- [x] Agregados 8 tests para todos los escenarios (19 tests totales pasando)
+
+**Cambios realizados:**
+- `src/quality_agents/codeguard/config.py`: +50 líneas (función load_config)
+- `tests/unit/test_codeguard_config.py`: +70 líneas, 8 tests adicionales
+
+**Fase 1 completada** 🎉 - Configuración moderna lista
+
+**Próximo:** Fase 2 - Implementación de checks reales (Ticket 2.1)
 
 ---
 
