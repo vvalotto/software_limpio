@@ -23,10 +23,10 @@ pip install -e ".[dev]"
 pytest
 
 # Run a single test file
-pytest tests/unit/test_codeguard.py
+pytest tests/unit/test_codeguard_config.py
 
 # Run a specific test
-pytest tests/unit/test_codeguard.py::TestCodeGuard::test_init_without_config
+pytest tests/unit/test_codeguard_config.py::TestLoadConfig::test_load_config_from_pyproject_toml
 
 # Run tests with coverage
 pytest --cov=src/quality_agents --cov-report=html
@@ -58,6 +58,39 @@ designreviewer                           # (implementation pending)
 architectanalyst                         # (implementation pending)
 ```
 
+## CodeGuard Configuration
+
+CodeGuard uses `pyproject.toml` for configuration (PEP 518 standard):
+
+```toml
+[tool.codeguard]
+# Quality thresholds
+min_pylint_score = 8.0
+max_cyclomatic_complexity = 10
+max_line_length = 100
+max_function_lines = 20
+
+# Enabled checks
+check_pep8 = true
+check_pylint = true
+check_security = true
+check_complexity = true
+check_types = true
+check_imports = true
+
+# Exclusions
+exclude_patterns = ["*.pyc", "__pycache__", ".venv", "migrations"]
+
+# AI configuration (opt-in)
+[tool.codeguard.ai]
+enabled = false              # Set to true to enable AI explanations
+explain_errors = true        # AI explains detected errors
+suggest_fixes = true         # AI suggests fixes
+max_tokens = 500            # Max tokens for AI responses
+```
+
+Fallback to `.codeguard.yml` is supported for backward compatibility.
+
 ## Architecture
 
 Three-tier quality control system:
@@ -74,7 +107,10 @@ Pre-commit (<5s)        →    PR Review (2-5min)    →    Sprint End (10-30min
 Each agent follows the same pattern in `src/quality_agents/<agent>/`:
 - `agent.py` - Main class with `run()` method that returns results
 - `checks.py` or `analyzers.py` - Individual verification/analysis functions
-- `config.py` - Agent-specific configuration (loads from `configs/<agent>.yml`)
+- `config.py` - Agent-specific configuration
+  - **CodeGuard:** `CodeGuardConfig` + `AIConfig` dataclasses with `from_pyproject_toml()`, `from_yaml()`, and `load_config()`
+  - **Other agents:** Load from YAML in `configs/<agent>.yml`
+- `PLAN_IMPLEMENTACION.md` - Implementation roadmap (CodeGuard only, for now)
 
 Shared utilities in `src/quality_agents/shared/`:
 - `config.py` - `QualityConfig` dataclass with `from_yaml()` class method
@@ -82,10 +118,16 @@ Shared utilities in `src/quality_agents/shared/`:
 
 ### Configuration Loading
 
-Configuration files are YAML (not JSON, not TOML) in `configs/<agent>.yml`:
+**CodeGuard** uses modern pyproject.toml configuration (PEP 518) with YAML fallback:
+- Primary: `pyproject.toml` → `[tool.codeguard]` section
+- Fallback: `.codeguard.yml` for backward compatibility
+- Auto-discovery via `load_config(config_path, project_root)` function
+- Search order: explicit path → pyproject.toml → .codeguard.yml → defaults
+- AI configuration in `[tool.codeguard.ai]` subsection (opt-in)
+
+**Other agents** use YAML configuration in `configs/<agent>.yml`:
 - Load via `QualityConfig.from_yaml(path)` with automatic fallback to defaults
 - Standard search paths: `.quality.yml`, `.quality.yaml`, `configs/quality.yml`
-- Use `load_config(config_path)` for auto-discovery
 
 ### Return Types
 
@@ -147,8 +189,10 @@ When writing docs in `docs/teoria/`:
 ## Key Reference Files
 
 - `SESION.md` - **Read first** - Current tasks, decisions, and session context
-- `docs/agentes/especificacion_agentes_calidad.md` - Complete agent specifications
+- `docs/agentes/especificacion_agentes_calidad.md` - Complete agent specifications (v1.1)
 - `docs/agentes/guia_implementacion_agentes.md` - Implementation guide
+- `docs/agentes/ajuste_documentacion.md` - 5 architectural decisions (January 2026)
+- `src/quality_agents/codeguard/PLAN_IMPLEMENTACION.md` - CodeGuard implementation plan (7 phases, 27 tickets)
 - `docs/metricas/Metricas_Clasificadas.md` - Metrics classification
 - `docs/teoria/GUIA_REDACCION.md` - Writing style guide for theory docs
 - `docs/guias/codeguard.md` - User guide for CodeGuard
@@ -162,28 +206,37 @@ When writing docs in `docs/teoria/`:
 - **CLI Framework:** Click for command-line interface
 - **Console Output:** Rich for colored, formatted console output
 - **Reports:** Jinja2 for HTML templates
-- **Configuration:** YAML (not JSON, not TOML) for all agent configurations
+- **Configuration:**
+  - CodeGuard: `pyproject.toml` → `[tool.codeguard]` (PEP 518 standard) with YAML fallback
+  - Other agents: YAML in `configs/<agent>.yml`
 
 ## Project Phase and Implementation Status
 
-**Current Phase**: Phase 1 - CodeGuard as usable framework
-**Active Branch**: `fase-1-codeguard`
+**Current Phase**: Phase 1 - CodeGuard as usable framework (45% complete)
+**Active Branch**: `refactoring-fase-1-codeguard`
 
 ### Completed
-- Phase 0: Theoretical documentation (`docs/teoria/fundamentos/` - 6 principles documented)
+- **Phase 0:** Theoretical documentation (`docs/teoria/` - all 4 sections complete)
+  - 6 fundamental principles documented
+  - Philosophical framework, Clean Trilogy, New Paradigm
+- **CodeGuard Fase 1:** Modern configuration system ✅
+  - pyproject.toml support with `[tool.codeguard]` (PEP 518)
+  - AI configuration via `[tool.codeguard.ai]` subsection (opt-in)
+  - Auto-discovery function `load_config()` with priority search
+  - 19 unit tests passing (100% coverage for config)
 - CLI infrastructure with Click (entry point works)
 - File collection mechanism (`collect_files()` working)
 - Project structure and test fixtures
 - User guides (`docs/guias/codeguard.md`)
 
-### In Progress
-- YAML configuration loading
-- Individual quality checks (flake8, pylint, bandit, radon)
+### In Progress (Phase 1 - Fase 2)
+- Individual quality checks implementation (flake8, pylint, bandit, radon, mypy, imports)
+- Integration of checks in `CodeGuard.run()` method
 - Rich console output formatting
 
 ### Pending Branches
 - `fase-0-fundamentos` - Ready for PR to main
-- `fase-1-codeguard` - In progress
+- `refactoring-fase-1-codeguard` - In progress (Fase 1 complete, moving to Fase 2)
 
 ### Implementation Pattern
 
@@ -201,6 +254,12 @@ All quality tools have standardized configurations in `pyproject.toml`:
 - Ruff: E, F, W, I, N, B, C4 rules (ignoring E501)
 - mypy: strict mode with typed defs required
 - pytest: verbose with short tracebacks
+
+### Dependencies
+
+**TOML parsing** (for pyproject.toml):
+- Python 3.11+: Uses built-in `tomllib`
+- Python < 3.11: Uses `tomli` package (installed via `pyproject.toml` conditional dependency)
 
 ## Session Management
 
