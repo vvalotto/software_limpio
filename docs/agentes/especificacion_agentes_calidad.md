@@ -1,18 +1,20 @@
 # ESPECIFICACIÓN DE AGENTES DE CONTROL DE CALIDAD
 **Sistema de Control de Calidad en Tres Niveles**
 
-Versión 1.0 - Diciembre 2025
+Versión 1.1 - Enero 2026
 
 ---
 
 ## ÍNDICE
 
 1. [Visión General](#visión-general)
-2. [Agente de Código - "CodeGuard"](#agente-de-código---codeguard)
-3. [Agente de Diseño - "DesignReviewer"](#agente-de-diseño---designreviewer)
-4. [Agente de Arquitectura - "ArchitectAnalyst"](#agente-de-arquitectura---architectanalyst)
-5. [Infraestructura Técnica](#infraestructura-técnica)
-6. [Roadmap de Implementación](#roadmap-de-implementación)
+2. [Modelo de Distribución e Integración](#modelo-de-distribución-e-integración)
+3. [Estructura de Configuración](#estructura-de-configuración)
+4. [Agente de Código - "CodeGuard"](#agente-de-código---codeguard)
+5. [Agente de Diseño - "DesignReviewer"](#agente-de-diseño---designreviewer)
+6. [Agente de Arquitectura - "ArchitectAnalyst"](#agente-de-arquitectura---architectanalyst)
+7. [Infraestructura Técnica](#infraestructura-técnica)
+8. [Roadmap de Implementación](#roadmap-de-implementación)
 
 ---
 
@@ -40,11 +42,278 @@ Pre-commit (segundos)     Review (minutos)        Sprint-end (horas)
 
 ### Estrategia de Bloqueo
 
-| Agente | Bloquea | Advierte | Sugiere | Tiempo |
-|--------|---------|----------|---------|--------|
-| CodeGuard | NO | SÍ | Básico | < 5s |
-| DesignReviewer | SÍ (crítico) | SÍ | IA detallado | 2-5 min |
-| ArchitectAnalyst | NO | SÍ | IA estratégico | 10-30 min |
+| Agente | Bloquea | Advierte | Uso de IA | Tiempo |
+|--------|---------|----------|-----------|--------|
+| CodeGuard | NO | SÍ | Opcional (explicaciones) | < 5s |
+| DesignReviewer | SÍ (crítico) | SÍ | Siempre (refactoring) | 2-5 min |
+| ArchitectAnalyst | NO | SÍ | Siempre (predictivo) | 10-30 min |
+
+---
+
+## MODELO DE DISTRIBUCIÓN E INTEGRACIÓN
+
+### Distribución del Framework
+
+**Quality Agents** se distribuye como paquete Python instalable con soporte para múltiples formas de integración.
+
+#### Instalación
+
+```bash
+# Instalación desde PyPI (recomendado)
+pip install quality-agents
+
+# Instalación desde repositorio
+pip install git+https://github.com/vvalotto/software_limpio.git
+
+# Instalación en modo desarrollo
+git clone https://github.com/vvalotto/software_limpio.git
+cd software_limpio
+pip install -e ".[dev]"
+```
+
+#### Comandos Disponibles
+
+Después de la instalación, tres comandos CLI están disponibles:
+
+```bash
+codeguard .                    # Verificación rápida pre-commit
+designreviewer                 # Análisis profundo de diseño
+architectanalyst               # Análisis estratégico de arquitectura
+```
+
+### Modelos de Integración
+
+El framework soporta **4 modelos de integración** para máxima flexibilidad:
+
+#### 1. Uso Directo desde Terminal
+
+```bash
+# Ejecutar manualmente cuando se necesite
+codeguard .
+codeguard src/ --config custom.toml
+codeguard --format json .
+```
+
+**Ideal para:** Desarrollo local, verificación ad-hoc, debugging
+
+#### 2. Framework pre-commit (Recomendado)
+
+```yaml
+# .pre-commit-config.yaml
+repos:
+  - repo: https://github.com/vvalotto/software_limpio
+    rev: v0.1.0
+    hooks:
+      - id: codeguard
+        name: CodeGuard Quality Check
+        args: [--config=pyproject.toml]
+
+      - id: designreviewer
+        name: Design Review
+        stages: [manual]  # Solo cuando se solicite explícitamente
+```
+
+**Instalación:**
+```bash
+pip install pre-commit
+pre-commit install
+```
+
+**Ideal para:** Equipos profesionales, proyectos con múltiples herramientas de calidad
+
+#### 3. Hook Git Manual
+
+```bash
+# En el proyecto destino
+cat > .git/hooks/pre-commit << 'EOF'
+#!/bin/bash
+codeguard
+exit 0  # Nunca bloquear
+EOF
+
+chmod +x .git/hooks/pre-commit
+```
+
+**Ideal para:** Proyectos simples, control total del hook
+
+#### 4. GitHub Actions / CI/CD
+
+```yaml
+# .github/workflows/quality.yml
+name: Quality Check
+
+on:
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  codeguard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install quality-agents
+        run: pip install quality-agents
+
+      - name: Run CodeGuard
+        run: codeguard .
+
+  design-review:
+    if: contains(github.event.pull_request.labels.*.name, 'design-review')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+
+      - name: Install quality-agents
+        run: pip install quality-agents
+
+      - name: Run DesignReviewer
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: designreviewer
+
+      - name: Upload report
+        uses: actions/upload-artifact@v3
+        with:
+          name: design-review-report
+          path: reports/design/
+```
+
+**Ideal para:** Proyectos open source, equipos distribuidos, verificación en PR
+
+### Tabla Comparativa
+
+| Modelo | Ejecución | Automatización | Flexibilidad | Complejidad |
+|--------|-----------|----------------|--------------|-------------|
+| **Directo** | Manual | Baja | Alta | Muy baja |
+| **pre-commit** | Automática | Alta | Media | Baja |
+| **Hook manual** | Automática | Media | Alta | Media |
+| **CI/CD** | En la nube | Alta | Baja | Media-Alta |
+
+---
+
+## ESTRUCTURA DE CONFIGURACIÓN
+
+### Configuración Moderna: pyproject.toml
+
+**Quality Agents** sigue el estándar PEP 518 y usa `pyproject.toml` como archivo principal de configuración.
+
+#### Ejemplo Completo
+
+```toml
+# pyproject.toml
+
+[tool.codeguard]
+# Umbrales
+min_pylint_score = 8.0
+max_cyclomatic_complexity = 10
+max_line_length = 100
+max_function_lines = 20
+
+# Verificaciones habilitadas
+check_pep8 = true
+check_pylint = true
+check_security = true
+check_complexity = true
+check_types = true
+check_imports = true
+
+# IA opcional para explicaciones
+[tool.codeguard.ai]
+enabled = false  # Opt-in (requiere ANTHROPIC_API_KEY)
+explain_errors = true
+suggest_fixes = true
+max_tokens = 500
+
+# Exclusiones
+exclude_patterns = [
+    "*.pyc",
+    "__pycache__",
+    ".venv",
+    "venv",
+    "migrations",
+]
+
+[tool.designreviewer]
+# Umbrales de bloqueo
+[tool.designreviewer.blocking_thresholds]
+class_size = 200
+wmc = 20
+cc_per_class = 30
+cbo = 5
+dit = 5
+nop = 1
+duplicated_lines = 5.0
+coverage = 70.0
+
+# Umbrales de advertencia
+[tool.designreviewer.warning_thresholds]
+lcom = 1.0
+mi = 20
+fan_out = 7
+
+# IA (siempre activa)
+[tool.designreviewer.ai]
+enabled = true
+model = "claude-sonnet-4"
+include_examples = true
+include_effort_estimate = true
+
+[tool.architectanalyst]
+# Métricas de Martin
+[tool.architectanalyst.thresholds]
+distance_main_sequence = 0.2
+tech_debt_ratio = 5.0
+avg_cc = 5
+duplicated_lines = 3.0
+coverage = 80.0
+
+# Análisis de tendencias
+[tool.architectanalyst.trends]
+history_sprints = 6
+show_projections = true
+projection_sprints = 3
+
+# IA predictiva
+[tool.architectanalyst.ai]
+enabled = true
+model = "claude-sonnet-4"
+deep_dive = true
+predictive_insights = true
+```
+
+### Configuración Legacy: Archivos YAML
+
+Para compatibilidad con proyectos que no usan `pyproject.toml`, se soporta configuración via archivos YAML:
+
+```yaml
+# .codeguard.yml (en la raíz del proyecto)
+min_pylint_score: 8.0
+max_cyclomatic_complexity: 10
+check_pep8: true
+check_security: true
+
+ai:
+  enabled: false
+  explain_errors: true
+```
+
+### Orden de Búsqueda de Configuración
+
+Los agentes buscan configuración en este orden:
+
+1. **pyproject.toml** (prioridad) → `[tool.codeguard]`
+2. `.codeguard.yml` (fallback) → raíz del proyecto
+3. **Defaults internos** → si no se encuentra ninguna config
+
+Este orden permite:
+- Proyectos modernos: usar `pyproject.toml` centralizado
+- Proyectos legacy: mantener archivos `.yml` separados
+- Proyectos sin config: funcionan con defaults razonables
 
 ---
 
@@ -83,9 +352,62 @@ bandit              # Seguridad (insecure functions, secrets)
 mypy                # Type checking (solo si hay hints)
 radon               # CC rápido
 
+# IA (opcional)
+anthropic           # Claude API para explicaciones de errores
+
 # Opcional
 autoflake           # Auto-fix unused imports
 black               # Auto-formatting (sugerencia)
+```
+
+### 1.4.1 IA Opcional para Explicaciones
+
+**CodeGuard** puede usar IA (Claude) para explicar errores detectados y sugerir correcciones.
+
+**Características:**
+- **Opt-in**: Deshabilitado por default (requiere configuración explícita)
+- **Condicional**: Solo se activa si hay errores detectados
+- **Rápido**: Llamada a API agrega ~2 segundos solo cuando hay errores
+- **Educativo**: Explica *por qué* el código tiene problemas y *cómo* arreglarlo
+
+**Flujo de ejecución:**
+```
+1. Ejecutar linters (flake8, pylint, bandit, radon)  [~2s]
+2. Si NO hay errores → Terminar                      [Total: ~2s]
+3. Si hay errores AND config.ai.enabled = true:
+   - Enviar errores a Claude API                     [+2s]
+   - Recibir explicación + sugerencias
+   - Agregar al output                               [Total: ~4s]
+4. Si hay errores AND config.ai.enabled = false:
+   - Mostrar errores sin explicación IA              [Total: ~2s]
+```
+
+**Ejemplo de salida con IA:**
+```
+❌ ERROR: Hardcoded secret detected (line 45)
+   Code: api_key = "sk-1234567890"
+
+   🤖 AI Explanation:
+   Hardcoding secrets in source code is a critical security vulnerability.
+   If this code is committed to version control, the API key becomes
+   accessible to anyone with repository access, including in commit history.
+
+   Recommended fix:
+   1. Store the key in environment variables
+   2. Load it using: api_key = os.getenv('API_KEY')
+   3. Add .env to .gitignore
+   4. Document required env vars in README
+
+   Example:
+   ```python
+   import os
+   from dotenv import load_dotenv
+
+   load_dotenv()
+   api_key = os.getenv('API_KEY')
+   if not api_key:
+       raise ValueError("API_KEY environment variable not set")
+   ```
 ```
 
 ### 1.5 Formato de Salida
@@ -124,51 +446,75 @@ Summary: 2 errors, 2 warnings in 3.2s
 
 ### 1.7 Configuración
 
-**Archivo: `.codeguard.yml`**
+**Archivo: `pyproject.toml` (recomendado)**
+
+```toml
+[tool.codeguard]
+# Umbrales
+min_pylint_score = 8.0
+max_cyclomatic_complexity = 10
+max_line_length = 100
+max_function_lines = 20
+
+# Verificaciones habilitadas
+check_pep8 = true
+check_pylint = true
+check_security = true
+check_complexity = true
+check_types = true
+check_imports = true
+
+# IA opcional para explicaciones
+[tool.codeguard.ai]
+enabled = false  # Opt-in (requiere ANTHROPIC_API_KEY)
+explain_errors = true
+suggest_fixes = true
+max_tokens = 500
+
+# Exclusiones
+exclude_patterns = [
+    "*.pyc",
+    "__pycache__",
+    ".venv",
+    "venv",
+    "migrations",
+]
+```
+
+**Configuración Legacy (fallback): `.codeguard.yml`**
 
 ```yaml
-enabled: true
-max_execution_time: 5  # segundos
-metrics:
-  pep8: true
-  pylint_threshold: 7.0
-  security: true
-  type_hints: auto  # solo si existen hints
-  complexity_info: true
-  complexity_threshold: 15
-  
-auto_suggest_fix: true
-show_examples: true
-log_warnings: true
-log_path: .codeguard/history.log
+min_pylint_score: 8.0
+max_cyclomatic_complexity: 10
+check_pep8: true
+check_security: true
+
+ai:
+  enabled: false
+  explain_errors: true
+  suggest_fixes: true
+```
+
+**Variables de entorno:**
+
+```bash
+# Requerido solo si ai.enabled = true
+export ANTHROPIC_API_KEY="sk-ant-..."
 ```
 
 ### 1.8 Integración Técnica
 
-```python
-# .git/hooks/pre-commit
-#!/usr/bin/env python3
-import subprocess
-import sys
+**Ver sección [Modelo de Distribución e Integración](#modelo-de-distribución-e-integración)** para detalles completos sobre los 4 modelos soportados:
 
-def run_codeguard():
-    result = subprocess.run(
-        ['codeguard', '--pre-commit'],
-        capture_output=True,
-        text=True
-    )
-    
-    # Solo mostrar salida, NO bloquear
-    print(result.stdout)
-    if result.stderr:
-        print(result.stderr)
-    
-    # Siempre retornar 0 (éxito)
-    return 0
+1. Uso directo desde terminal
+2. Framework pre-commit (recomendado)
+3. Hook Git manual
+4. GitHub Actions / CI/CD
 
-if __name__ == '__main__':
-    sys.exit(run_codeguard())
-```
+**Recordatorios importantes:**
+- CodeGuard **NUNCA bloquea** commits (exit code siempre 0)
+- IA es **opt-in** y solo se activa con errores presentes
+- Tiempo de ejecución: < 2s sin errores, ~4s con errores + IA habilitada
 
 ---
 

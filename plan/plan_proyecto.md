@@ -2,7 +2,47 @@
 
 ## Estado Actual del Proyecto
 
-**Última actualización:** Enero 2025
+**Última actualización:** Enero 2026 (Revisión Arquitectónica)
+
+---
+
+## Decisiones Arquitectónicas (Enero 2026)
+
+Se realizó una revisión arquitectónica completa documentada en `docs/agentes/ajuste_documentacion.md`. Las 5 decisiones clave tomadas:
+
+### 1. Modelo de Distribución: Híbrido ✅
+- Paquete instalable via `pip install quality-agents`
+- También soporta pre-commit framework
+- Justificación: Adopción profesional con máxima flexibilidad
+
+### 2. Modelo de Integración: Todos los Modelos ✅
+- Uso directo desde terminal
+- Framework pre-commit (recomendado)
+- Hook Git manual
+- GitHub Actions / CI/CD
+- Justificación: Soportar diversos workflows profesionales
+
+### 3. Estructura de Configuración: pyproject.toml ✅
+- Configuración en `[tool.codeguard]` siguiendo PEP 518
+- Fallback a `.codeguard.yml` para compatibilidad
+- Justificación: Estándar moderno de Python (black, ruff, pytest)
+
+### 4. Nomenclatura: Todos son Agentes ✅
+- Los tres componentes se llaman "agentes"
+- CodeGuard tendrá IA ligera (opcional)
+- DesignReviewer IA media (siempre)
+- ArchitectAnalyst IA profunda (siempre)
+- Justificación: Coherencia conceptual y técnica
+
+### 5. Alcance de IA en CodeGuard: IA Opcional ✅
+- IA solo si: errores detectados + usuario habilita
+- Mantiene < 5s en commits limpios (~2s)
+- Con errores + IA: ~4s
+- Justificación: Balance entre valor agregado y restricción de tiempo
+
+**Impacto en roadmap:** Las decisiones están reflejadas en la especificación actualizada (v1.1) y guía de implementación.
+
+---
 
 ### Resumen de Completitud
 
@@ -63,18 +103,21 @@
 
 **Objetivo:** CodeGuard como herramienta CLI instalable y usable en proyectos reales.
 
-| Tarea | Prioridad | Descripción |
-|-------|-----------|-------------|
-| CLI con click | P1 | Función `main()` con argumentos: path, --config, --format |
-| Carga de config YAML | P1 | Leer `configs/codeguard.yml` con defaults |
-| Check: PEP8/flake8 | P1 | Integrar flake8 para estilo |
-| Check: Pylint score | P1 | Integrar pylint para análisis estático |
-| Check: Seguridad/bandit | P1 | Integrar bandit para vulnerabilidades |
-| Check: Complejidad/radon | P1 | Integrar radon para CC |
-| Salida formateada | P1 | Usar `rich` para output en consola |
-| Documentación README | P1 | Instalación, uso, configuración |
-| Pre-commit hook | P2 | `.pre-commit-config.yaml` |
-| Tests de integración | P2 | Probar con `examples/sample_project/` |
+**Estado:** Actualizado con decisiones arquitectónicas de Enero 2026
+
+| Tarea | Prioridad | Estado | Descripción |
+|-------|-----------|--------|-------------|
+| CLI con click | P1 | ✅ | Función `main()` con argumentos: path, --config, --format |
+| Carga de config desde pyproject.toml | P1 | ⏳ | Leer `[tool.codeguard]` con fallback a .yml |
+| Check: PEP8/flake8 | P1 | ⏳ | Integrar flake8 para estilo |
+| Check: Pylint score | P1 | ⏳ | Integrar pylint para análisis estático |
+| Check: Seguridad/bandit | P1 | ⏳ | Integrar bandit para vulnerabilidades |
+| Check: Complejidad/radon | P1 | ⏳ | Integrar radon para CC |
+| IA opcional para explicaciones | P1 | ⏳ | Claude API para explicar errores (opt-in) |
+| Salida formateada con Rich | P1 | ⏳ | Output colorido en consola |
+| Crear `.pre-commit-hooks.yaml` | P1 | ⏳ | Soporte para pre-commit framework |
+| Documentación README | P1 | ⏳ | Instalación, uso, configuración |
+| Tests de integración | P2 | ⏳ | Probar con `examples/sample_project/` |
 
 **Uso esperado:**
 ```bash
