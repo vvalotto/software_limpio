@@ -106,15 +106,69 @@ Pre-commit (<5s)        →    PR Review (2-5min)    →    Sprint End (10-30min
 
 Each agent follows the same pattern in `src/quality_agents/<agent>/`:
 - `agent.py` - Main class with `run()` method that returns results
-- `checks.py` or `analyzers.py` - Individual verification/analysis functions
+- `orchestrator.py` - Orchestrates execution of verifiables (NEW - Feb 2026)
+- `checks/` or `analyzers/` or `metrics/` - Individual verifiable components (modular)
+  - Each verifiable inherits from `shared.verifiable.Verifiable`
+  - Auto-discovered by orchestrator
 - `config.py` - Agent-specific configuration
   - **CodeGuard:** `CodeGuardConfig` + `AIConfig` dataclasses with `from_pyproject_toml()`, `from_yaml()`, and `load_config()`
   - **Other agents:** Load from YAML in `configs/<agent>.yml`
 - `PLAN_IMPLEMENTACION.md` - Implementation roadmap (CodeGuard only, for now)
 
 Shared utilities in `src/quality_agents/shared/`:
+- `verifiable.py` - Base class `Verifiable` + `ExecutionContext` (NEW - Feb 2026)
 - `config.py` - `QualityConfig` dataclass with `from_yaml()` class method
 - `reporting.py` - Report generation utilities
+
+### Modular Architecture (February 2026)
+
+All agents implement a **modular verification system** with contextual orchestration:
+
+**Base Class:**
+All verifiables (checks/analyzers/metrics) inherit from `Verifiable`:
+- `name` - Identifier
+- `category` - Type of verification
+- `estimated_duration` - Time budget
+- `priority` - Execution priority (1=highest)
+- `should_run(context)` - Decides if should execute
+- `execute(file_path)` - Performs verification
+
+**Orchestrator:**
+Intelligently selects which verifiables to run based on:
+- Analysis type (pre-commit, PR-review, full, sprint-end)
+- Time budget (< 5s for pre-commit)
+- File context (new, modified, excluded)
+- Priorities and estimated durations
+- AI suggestions (optional)
+
+**Adding a New Check:**
+1. Create new file in `checks/` directory
+2. Inherit from `Verifiable`
+3. Implement required methods
+4. Export in `__init__.py`
+5. Auto-discovery handles the rest
+
+**Example:**
+```python
+# codeguard/checks/my_check.py
+class MyCheck(Verifiable):
+    @property
+    def name(self) -> str:
+        return "MyCheck"
+
+    @property
+    def priority(self) -> int:
+        return 3
+
+    def should_run(self, context) -> bool:
+        return context.file_path.suffix == ".py"
+
+    def execute(self, file_path) -> List[CheckResult]:
+        # Implementation
+        return results
+```
+
+**Reference:** See `docs/agentes/decision_arquitectura_checks_modulares.md` for complete details.
 
 ### Configuration Loading
 
@@ -192,7 +246,8 @@ When writing docs in `docs/teoria/`:
 - `docs/agentes/especificacion_agentes_calidad.md` - Complete agent specifications (v1.1)
 - `docs/agentes/guia_implementacion_agentes.md` - Implementation guide
 - `docs/agentes/ajuste_documentacion.md` - 5 architectural decisions (January 2026)
-- `src/quality_agents/codeguard/PLAN_IMPLEMENTACION.md` - CodeGuard implementation plan (7 phases, 27 tickets)
+- **`docs/agentes/decision_arquitectura_checks_modulares.md`** - **Modular architecture decision (February 2026)**
+- `src/quality_agents/codeguard/PLAN_IMPLEMENTACION.md` - CodeGuard implementation plan (9 phases, 30 tickets)
 - `docs/metricas/Metricas_Clasificadas.md` - Metrics classification
 - `docs/teoria/GUIA_REDACCION.md` - Writing style guide for theory docs
 - `docs/guias/codeguard.md` - User guide for CodeGuard
@@ -212,8 +267,9 @@ When writing docs in `docs/teoria/`:
 
 ## Project Phase and Implementation Status
 
-**Current Phase**: Phase 1 - CodeGuard as usable framework (45% complete)
-**Active Branch**: `refactoring-fase-1-codeguard`
+**Current Phase**: Phase 1.5 - Modular architecture foundation (30% complete)
+**Active Branch**: `fase-2-implementacion-codeguard`
+**Latest Architectural Decision**: Modular architecture with contextual orchestration (Feb 2026)
 
 ### Completed
 - **Phase 0:** Theoretical documentation (`docs/teoria/` - all 4 sections complete)
@@ -224,27 +280,58 @@ When writing docs in `docs/teoria/`:
   - AI configuration via `[tool.codeguard.ai]` subsection (opt-in)
   - Auto-discovery function `load_config()` with priority search
   - 19 unit tests passing (100% coverage for config)
+- **Architectural Decision (Feb 2026):** Modular architecture ✅
+  - Document `decision_arquitectura_checks_modulares.md` created
+  - Impact analysis completed
+  - All documentation updated
 - CLI infrastructure with Click (entry point works)
 - File collection mechanism (`collect_files()` working)
 - Project structure and test fixtures
 - User guides (`docs/guias/codeguard.md`)
+- Functional implementation of `check_pep8()` (function form)
 
-### In Progress (Phase 1 - Fase 2)
-- Individual quality checks implementation (flake8, pylint, bandit, radon, mypy, imports)
-- Integration of checks in `CodeGuard.run()` method
-- Rich console output formatting
+### In Progress (Phase 1.5 + 2)
+- **Phase 1.5:** Modular architecture foundations
+  - [ ] Create base class `Verifiable` + `ExecutionContext`
+  - [ ] Implement `CheckOrchestrator` with auto-discovery
+  - [ ] Create modular directory structure
+- **Phase 2:** Migration to modular architecture
+  - [ ] Migrate `check_pep8()` to `PEP8Check` class
+  - [ ] Implement 5 remaining checks as classes
+  - [ ] Integrate with orchestrator
 
 ### Pending Branches
-- `fase-0-fundamentos` - Ready for PR to main
-- `refactoring-fase-1-codeguard` - In progress (Fase 1 complete, moving to Fase 2)
+- `fase-2-implementacion-codeguard` - Active (documentation updated, ready for Phase 1.5)
 
-### Implementation Pattern
+### Implementation Pattern (Updated Feb 2026)
 
-When implementing checks in agents, follow this pattern:
-1. Import check results as `CheckResult` with `Severity` enum
-2. Return structured results from individual check methods
-3. Aggregate all results in the `run()` method
-4. Use configuration thresholds from `QualityConfig`
+**For modular checks/analyzers/metrics:**
+
+1. **Create verifiable class** inheriting from `Verifiable`:
+```python
+class MyCheck(Verifiable):
+    @property
+    def name(self) -> str: ...
+
+    @property
+    def priority(self) -> int: ...
+
+    def should_run(self, context) -> bool: ...
+
+    def execute(self, file_path) -> List[CheckResult]: ...
+```
+
+2. **Export in `__init__.py`**:
+```python
+from .my_check import MyCheck
+__all__ = [..., "MyCheck"]
+```
+
+3. **Auto-discovery** handles registration - no need to modify core
+
+4. **Orchestrator** decides when to execute based on context
+
+**Reference:** See `docs/agentes/decision_arquitectura_checks_modulares.md` for complete pattern.
 
 ### Tool Configuration
 

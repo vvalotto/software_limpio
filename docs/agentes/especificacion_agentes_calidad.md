@@ -27,6 +27,7 @@ Versión 1.1 - Enero 2026
 3. **Progresividad**: De advertencias ligeras a análisis profundos
 4. **Accionabilidad**: Todo reporte debe tener sugerencias concretas
 5. **Educación**: Los agentes enseñan mientras controlan
+6. **Modularidad y Cohesión**: Cada verificación es un componente autocontenido (Febrero 2026)
 
 ### Arquitectura del Sistema
 
@@ -39,6 +40,72 @@ Pre-commit (segundos)     Review (minutos)        Sprint-end (horas)
      │                          │                         │
   CLI Output              HTML Report              Dashboard + Trends
 ```
+
+### Arquitectura Interna Modular (Febrero 2026)
+
+**Decisión arquitectónica:** Sistema modular con orquestación contextual
+
+Cada agente implementa una **arquitectura modular** donde cada verificación/análisis/métrica es un componente independiente que decide cuándo debe ejecutarse según el contexto.
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                     AGENTE                              │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│  ┌────────────────────────────────────────┐            │
+│  │         Orchestrator                   │            │
+│  │  - Auto-discovery de verificables     │            │
+│  │  - Selección contextual               │            │
+│  │  - Presupuesto de tiempo              │            │
+│  │  - Priorización                       │            │
+│  └──────────┬─────────────────────────────┘            │
+│             │                                           │
+│             ├─→ Verifiable 1 (Check/Analyzer/Metric)  │
+│             ├─→ Verifiable 2                          │
+│             ├─→ Verifiable 3                          │
+│             └─→ ...                                    │
+│                                                         │
+│  Cada verificable:                                     │
+│  - name: str                                           │
+│  - category: str                                       │
+│  - estimated_duration: float                           │
+│  - priority: int (1=alta, 10=baja)                    │
+│  - should_run(context) -> bool                        │
+│  - execute(file_path) -> results                      │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+```
+
+**Características clave:**
+
+1. **Modularidad**: Cada verificación es un componente independiente en su propio archivo
+2. **Orquestación**: El orquestador decide qué ejecutar según:
+   - Tipo de análisis (pre-commit, PR-review, full, sprint-end)
+   - Presupuesto de tiempo (< 5s en pre-commit)
+   - Prioridades y duración estimada
+   - Contexto del archivo (nuevo, modificado, excluido)
+   - Configuración habilitada
+3. **Extensibilidad**: Agregar nueva verificación = crear clase + exportar (auto-discovery)
+4. **Decisiones contextuales**: Cada verificable puede decidir si debe ejecutarse
+5. **Preparado para IA**: El orquestador puede usar IA para selección inteligente
+
+**Ejemplo de decisión contextual:**
+
+```
+Contexto: Pre-commit (time_budget=5s)
+Archivo: src/utils.py (modificado)
+
+Orquestador selecciona:
+✓ PEP8Check        (0.5s, priority=2) → Ejecutar
+✓ SecurityCheck    (1.5s, priority=1) → Ejecutar
+✓ UnusedImports    (1.0s, priority=3) → Ejecutar
+✗ PylintCheck      (2.0s, priority=4) → Omitir (sin presupuesto)
+✗ TypesCheck       (2.0s, priority=6) → Omitir (baja prioridad)
+
+Total: 3.0s de 5.0s disponibles
+```
+
+**Referencia:** Ver `docs/agentes/decision_arquitectura_checks_modulares.md` para detalles completos.
 
 ### Estrategia de Bloqueo
 
@@ -516,6 +583,163 @@ export ANTHROPIC_API_KEY="sk-ant-..."
 - IA es **opt-in** y solo se activa con errores presentes
 - Tiempo de ejecución: < 2s sin errores, ~4s con errores + IA habilitada
 
+### 1.9 Arquitectura Interna Modular
+
+**Decisión arquitectónica (Febrero 2026):** CodeGuard implementa un sistema modular de checks con orquestación contextual.
+
+#### Componentes
+
+**1. Clase Base: `Verifiable`**
+
+Todos los checks heredan de esta clase base ubicada en `shared/verifiable.py`:
+
+```python
+class Verifiable(ABC):
+    @property
+    @abstractmethod
+    def name(self) -> str:
+        """Nombre del check."""
+
+    @property
+    def estimated_duration(self) -> float:
+        """Duración estimada en segundos (para presupuesto)."""
+        return 1.0
+
+    @property
+    def priority(self) -> int:
+        """Prioridad de ejecución: 1=alta, 10=baja."""
+        return 5
+
+    def should_run(self, context: ExecutionContext) -> bool:
+        """Decide si debe ejecutarse en este contexto."""
+        return not context.is_excluded
+
+    @abstractmethod
+    def execute(self, file_path: Path) -> List[CheckResult]:
+        """Ejecuta el check."""
+```
+
+**2. Checks Específicos (Modulares)**
+
+Cada check es un módulo autocontenido en `codeguard/checks/`:
+
+| Check | Archivo | Priority | Duration | Categoría |
+|-------|---------|----------|----------|-----------|
+| PEP8 | `pep8_check.py` | 2 (alta) | 0.5s | style |
+| Security | `security_check.py` | 1 (máxima) | 1.5s | security |
+| Unused Imports | `imports_check.py` | 3 (alta) | 1.0s | quality |
+| Pylint | `pylint_check.py` | 4 (media) | 2.0s | quality |
+| Complexity | `complexity_check.py` | 5 (media) | 1.0s | quality |
+| Types | `types_check.py` | 6 (baja) | 2.0s | quality |
+
+**3. Orquestador (`CheckOrchestrator`)**
+
+Decide qué checks ejecutar según el contexto:
+
+```python
+class CheckOrchestrator:
+    def select_checks(self, context: ExecutionContext) -> List[Verifiable]:
+        """
+        Selecciona checks según:
+        - Tipo de análisis (pre-commit, PR-review, full)
+        - Presupuesto de tiempo
+        - Prioridades
+        - Configuración
+        """
+```
+
+**Estrategias de selección:**
+
+| Análisis | Estrategia | Checks Ejecutados |
+|----------|-----------|-------------------|
+| `pre-commit` | Solo rápidos (<2s) + alta prioridad (≤3) | PEP8, Security, UnusedImports |
+| `pr-review` | Todos los habilitados | Todos |
+| `full` | Todos los habilitados | Todos |
+
+#### Flujo de Ejecución
+
+```
+1. CodeGuard.run(files, analysis_type="pre-commit")
+2. Para cada archivo:
+   a. Crear ExecutionContext:
+      - file_path, analysis_type
+      - time_budget (5s para pre-commit)
+      - config, is_excluded, ai_enabled
+   b. orchestrator.select_checks(context)
+      - Filtrar por should_run()
+      - Aplicar presupuesto de tiempo
+      - Ordenar por prioridad
+   c. Ejecutar checks seleccionados
+   d. Agregar resultados
+3. Retornar CheckResult list
+```
+
+#### Ejemplo de Decisión Contextual
+
+**Escenario:** Pre-commit de `src/utils.py`
+
+```python
+context = ExecutionContext(
+    file_path=Path("src/utils.py"),
+    analysis_type="pre-commit",
+    time_budget=5.0,
+    config=config,
+    is_excluded=False
+)
+
+# Orquestador evalúa:
+# ✓ PEP8Check: should_run()=True, priority=2, duration=0.5s → EJECUTAR
+# ✓ SecurityCheck: should_run()=True, priority=1, duration=1.5s → EJECUTAR
+# ✓ UnusedImports: should_run()=True, priority=3, duration=1.0s → EJECUTAR
+# ✗ PylintCheck: should_run()=True, priority=4, duration=2.0s → OMITIR (sin presupuesto)
+# ✗ TypesCheck: should_run()=False (no type hints) → OMITIR
+
+# Checks ejecutados: 3 (total 3.0s de 5.0s disponibles)
+```
+
+#### Ventajas de esta Arquitectura
+
+| Aspecto | Beneficio |
+|---------|-----------|
+| **Mantenibilidad** | Agregar check = crear archivo nuevo, no modificar existente |
+| **Testabilidad** | Cada check se prueba en aislamiento |
+| **Flexibilidad** | Decisiones contextuales (tipo análisis, tiempo, archivo) |
+| **Rendimiento** | Solo ejecuta checks relevantes según presupuesto |
+| **Extensibilidad** | Auto-discovery permite agregar checks sin cambiar core |
+
+#### Agregar Nuevo Check
+
+Para agregar un nuevo check:
+
+1. Crear `codeguard/checks/mi_check.py`:
+```python
+class MiCheck(Verifiable):
+    @property
+    def name(self) -> str:
+        return "MiCheck"
+
+    @property
+    def priority(self) -> int:
+        return 3
+
+    def should_run(self, context) -> bool:
+        return context.file_path.suffix == ".py"
+
+    def execute(self, file_path) -> List[CheckResult]:
+        # Implementación...
+        return results
+```
+
+2. Exportar en `checks/__init__.py`:
+```python
+from .mi_check import MiCheck
+__all__ = [..., "MiCheck"]
+```
+
+3. ✅ Listo - El orquestador lo descubre automáticamente
+
+**Referencia:** Ver `src/quality_agents/codeguard/PLAN_IMPLEMENTACION.md` para plan de implementación completo.
+
 ---
 
 ## AGENTE DE DISEÑO - "DesignReviewer"
@@ -718,6 +942,63 @@ Analiza el siguiente código y las métricas de calidad detectadas:
 Markdown estructurado con secciones claras.
 """
 ```
+
+### 2.9 Arquitectura Interna Modular
+
+**Decisión arquitectónica (Febrero 2026):** DesignReviewer implementa un sistema modular de analyzers con orquestación contextual.
+
+#### Componentes
+
+**1. Clase Base: `Verifiable`** (heredada de `shared/verifiable.py`)
+
+Todos los analyzers heredan de la misma clase base que CodeGuard.
+
+**2. Analyzers Específicos (Modulares)**
+
+Cada analyzer es un módulo autocontenido en `designreviewer/analyzers/`:
+
+| Analyzer | Archivo | Priority | Duration | Métrica |
+|----------|---------|----------|----------|---------|
+| LCOM | `lcom_analyzer.py` | 1 (máxima) | 3-5s | Cohesión |
+| CBO | `cbo_analyzer.py` | 1 (máxima) | 2-4s | Acoplamiento |
+| MI | `mi_analyzer.py` | 2 (alta) | 4-6s | Mantenibilidad |
+| WMC | `wmc_analyzer.py` | 3 (alta) | 2-3s | Complejidad ponderada |
+
+**3. Orquestador (`AnalyzerOrchestrator`)**
+
+Decide qué analyzers ejecutar según el tipo de cambio:
+
+| Tipo de Cambio | Analyzers Ejecutados |
+|----------------|---------------------|
+| **Refactoring** | LCOM + CBO (cohesión y acoplamiento) |
+| **Feature nueva** | MI + WMC (mantenibilidad y complejidad) |
+| **PR-review completo** | Todos los analyzers |
+
+#### Decisión Contextual Inteligente
+
+A diferencia de CodeGuard (presupuesto de tiempo), DesignReviewer usa **tipo de cambio** para seleccionar analyzers:
+
+```python
+context = ExecutionContext(
+    analysis_type="refactoring",  # Detectado por diff
+    files_changed=["src/models/user.py"],
+    config=config
+)
+
+# Orquestador selecciona:
+# ✓ LCOMAnalyzer → Ejecutar (verifica cohesión post-refactoring)
+# ✓ CBOAnalyzer → Ejecutar (verifica acoplamiento)
+# ✗ MIAnalyzer → Omitir (no crítico para refactoring)
+```
+
+#### IA en Analyzers
+
+Cada analyzer puede usar IA para:
+- **Explicar** por qué la métrica está fuera de umbral
+- **Sugerir** refactorización específica
+- **Mostrar** código de ejemplo mejorado
+
+**Referencia:** Ver `src/quality_agents/designreviewer/` (implementación futura).
 
 ---
 
@@ -1089,6 +1370,84 @@ Markdown estructurado, secciones claras, sin explicaciones obvias.
 Enfócate en insights accionables.
 """
 ```
+
+### 3.9 Arquitectura Interna Modular
+
+**Decisión arquitectónica (Febrero 2026):** ArchitectAnalyst implementa un sistema modular de metrics con orquestación contextual.
+
+#### Componentes
+
+**1. Clase Base: `Verifiable`** (heredada de `shared/verifiable.py`)
+
+Todos los metrics heredan de la misma clase base que CodeGuard y DesignReviewer.
+
+**2. Metrics Específicas (Modulares)**
+
+Cada métrica es un módulo autocontenido en `architectanalyst/metrics/`:
+
+| Metric | Archivo | Priority | Duration | Aspecto |
+|--------|---------|----------|----------|---------|
+| Martin Metrics | `martin_metrics.py` | 1 (máxima) | 5-8s | I, A, D (Main Sequence) |
+| Stability | `stability_metrics.py` | 1 (máxima) | 4-6s | Ca, Ce, estabilidad |
+| Cycles | `cycles_analyzer.py` | 2 (alta) | 6-10s | Ciclos de dependencias |
+| Layer Violations | `layer_violations.py` | 3 (alta) | 3-5s | Violaciones arquitectónicas |
+
+**3. Orquestador (`MetricsOrchestrator`)**
+
+Decide qué métricas ejecutar según el tipo de análisis:
+
+| Tipo de Análisis | Metrics Ejecutadas |
+|------------------|-------------------|
+| **Sprint-end** | Todas las métricas + snapshot en BD |
+| **On-demand** | Métricas específicas según solicitud |
+| **Trend analysis** | Comparación con snapshots históricos |
+
+#### Persistencia con Snapshots
+
+ArchitectAnalyst usa **SQLite** para almacenar snapshots de métricas:
+
+```python
+class MetricsSnapshot:
+    id: int
+    timestamp: datetime
+    sprint_id: str
+    project_name: str
+    metrics_json: str  # Todas las métricas del sprint
+
+    # Permite análisis de tendencias:
+    # - ¿Qué métricas empeoraron vs sprint anterior?
+    # - ¿Cuál es la velocidad de deterioro?
+    # - ¿Hay patrones estacionales?
+```
+
+#### Decisión Contextual
+
+ArchitectAnalyst ejecuta **todas** las métricas en sprint-end, pero puede ejecutar subsets on-demand:
+
+```python
+context = ExecutionContext(
+    analysis_type="on-demand",
+    requested_metrics=["martin", "cycles"],  # Usuario solicita métricas específicas
+    config=config
+)
+
+# Orquestador selecciona:
+# ✓ MartinMetrics → Ejecutar
+# ✓ CyclesAnalyzer → Ejecutar
+# ✗ StabilityMetrics → Omitir (no solicitado)
+# ✗ LayerViolations → Omitir (no solicitado)
+```
+
+#### Dashboard Interactivo
+
+A diferencia de CodeGuard (CLI) y DesignReviewer (HTML), ArchitectAnalyst genera **dashboard web interactivo** con Plotly:
+
+- **Gráficos de tendencias** (métricas vs tiempo)
+- **Comparación sprint-actual vs histórico**
+- **Detección de anomalías** (picos/caídas)
+- **Predicción de degradación** (IA)
+
+**Referencia:** Ver `src/quality_agents/architectanalyst/` (implementación futura).
 
 ---
 
