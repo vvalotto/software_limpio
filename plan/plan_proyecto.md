@@ -101,39 +101,51 @@ Se realizó una revisión arquitectónica completa documentada en `docs/agentes/
 
 ### Fase 1: CodeGuard Funcional (Framework Usable)
 
-**Objetivo:** CodeGuard como herramienta CLI instalable y usable en proyectos reales.
+**Objetivo:** CodeGuard como herramienta CLI instalable y usable en proyectos reales con arquitectura modular.
 
-**Estado:** Actualizado con decisiones arquitectónicas de Enero 2026
+**Estado:** Actualizado con decisiones arquitectónicas de Enero 2026 + Febrero 2026 (Arquitectura Modular)
 
 | Tarea | Prioridad | Estado | Descripción |
 |-------|-----------|--------|-------------|
 | CLI con click | P1 | ✅ | Función `main()` con argumentos: path, --config, --format |
-| Carga de config desde pyproject.toml | P1 | ⏳ | Leer `[tool.codeguard]` con fallback a .yml |
-| Check: PEP8/flake8 | P1 | ⏳ | Integrar flake8 para estilo |
-| Check: Pylint score | P1 | ⏳ | Integrar pylint para análisis estático |
-| Check: Seguridad/bandit | P1 | ⏳ | Integrar bandit para vulnerabilidades |
-| Check: Complejidad/radon | P1 | ⏳ | Integrar radon para CC |
+| Carga de config desde pyproject.toml | P1 | ✅ | Leer `[tool.codeguard]` con fallback a .yml |
+| **Arquitectura modular base** | **P0** | **⏳** | **Clase Verifiable + Orchestrator (Fase 1.5)** |
+| Check: PEP8/flake8 (clase modular) | P1 | 🔄 | Migrar función a clase `PEP8Check` |
+| Check: Pylint score (clase modular) | P1 | ⏳ | Implementar como `PylintCheck(Verifiable)` |
+| Check: Seguridad/bandit (clase modular) | P1 | ⏳ | Implementar como `SecurityCheck(Verifiable)` |
+| Check: Complejidad/radon (clase modular) | P1 | ⏳ | Implementar como `ComplexityCheck(Verifiable)` |
+| Check: Types/mypy (clase modular) | P1 | ⏳ | Implementar como `TypesCheck(Verifiable)` |
+| Check: Unused imports (clase modular) | P1 | ⏳ | Implementar como `ImportsCheck(Verifiable)` |
+| Integración con orquestador | P1 | ⏳ | `CodeGuard.run()` usa `CheckOrchestrator` (Fase 2.5) |
 | IA opcional para explicaciones | P1 | ⏳ | Claude API para explicar errores (opt-in) |
 | Salida formateada con Rich | P1 | ⏳ | Output colorido en consola |
 | Crear `.pre-commit-hooks.yaml` | P1 | ⏳ | Soporte para pre-commit framework |
-| Documentación README | P1 | ⏳ | Instalación, uso, configuración |
-| Tests de integración | P2 | ⏳ | Probar con `examples/sample_project/` |
+| Documentación README | P1 | ⏳ | Instalación, uso, configuración, arquitectura |
+| Tests de integración | P2 | ⏳ | Probar orquestación con `examples/sample_project/` |
 
 **Uso esperado:**
 ```bash
-pip install quality-agents        # Instalación
-codeguard .                       # Analiza directorio actual
-codeguard src/ --config my.yml    # Config personalizada
-codeguard src/ --format json      # Salida JSON
+pip install quality-agents              # Instalación
+codeguard .                             # Analiza directorio actual
+codeguard src/ --config my.yml          # Config personalizada
+codeguard src/ --format json            # Salida JSON
+codeguard . --analysis-type pre-commit  # Análisis rápido (<5s)
 ```
 
 **Entregables:**
-- [ ] `src/quality_agents/codeguard/agent.py` con `main()` CLI
-- [ ] `src/quality_agents/codeguard/checks.py` con checks reales
-- [ ] `src/quality_agents/codeguard/config.py` carga YAML
+- [x] `src/quality_agents/codeguard/agent.py` con `main()` CLI
+- [x] `src/quality_agents/codeguard/config.py` carga pyproject.toml + YAML
+- [ ] **`src/quality_agents/shared/verifiable.py`** - Clase base (Fase 1.5)
+- [ ] **`src/quality_agents/codeguard/orchestrator.py`** - Orquestador (Fase 1.5)
+- [ ] **`src/quality_agents/codeguard/checks/`** - Checks modulares (Fase 2)
+  - [ ] `pep8_check.py`, `pylint_check.py`, `security_check.py`
+  - [ ] `complexity_check.py`, `types_check.py`, `imports_check.py`
 - [ ] `README.md` actualizado con instalación y uso
 - [ ] `.pre-commit-config.yaml`
 - [ ] `tests/integration/test_codeguard_integration.py`
+- [ ] `tests/integration/test_codeguard_orchestration.py`
+
+**Estimación actualizada:** 49-67.5h (vs 42-54h original) = +11-13.5h por arquitectura modular
 
 ---
 

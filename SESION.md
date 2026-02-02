@@ -31,11 +31,11 @@ Transformar a los desarrolladores de "escritores de código" a "evaluadores de c
 
 ## Estado Actual
 
-### Última Sesión: 2026-01-20
+### Última Sesión: 2026-02-02
 
-**Branch activo**: `refactoring-fase-1-codeguard`
+**Branch activo**: `decision-arquitectura-modular`
 
-**Último commit**: `13a9967` - Actualizar CLAUDE.md con progreso de CodeGuard Fase 1
+**Último commit**: `9f8c5c8` - Decisión arquitectónica: Arquitectura modular con orquestación contextual
 
 ### Completado
 
@@ -76,39 +76,63 @@ Transformar a los desarrolladores de "escritores de código" a "evaluadores de c
   - [x] **Ticket 1.2**: Función `load_config()` con búsqueda automática
   - [x] **Ticket 1.3**: Configuración de IA con `AIConfig` (opt-in)
   - [x] 19 tests unitarios pasando (100% cobertura de configuración)
-  - [x] `PLAN_IMPLEMENTACION.md` con roadmap completo (7 fases, 27 tickets)
+  - [x] `PLAN_IMPLEMENTACION.md` con roadmap completo (originalmente 7 fases, 27 tickets)
 - [x] Guías de usuario (`docs/guias/codeguard.md`)
 - [x] `CLAUDE.md` actualizado con estado Fase 1
+- [x] **Decisión Arquitectónica (Febrero 2026)** ✅ COMPLETA + COMMITEADA
+  - [x] Documento `decision_arquitectura_checks_modulares.md` creado (820 líneas, 13 secciones)
+  - [x] Análisis de impacto `analisis_impacto_arquitectura_modular.md` (6 documentos identificados)
+  - [x] **Actualización de documentación completa (8 archivos, ~2,070 líneas):**
+    - [x] `PLAN_IMPLEMENTACION.md` rediseñado (9 fases, 30 tickets, 49-67.5h)
+    - [x] `especificacion_agentes_calidad.md` (+290 líneas, arquitectura de 3 agentes)
+    - [x] `guia_implementacion_agentes.md` (+240 líneas, guía para contribuidores)
+    - [x] `CLAUDE.md` (arquitectura modular + patrones actualizados)
+    - [x] `SESION.md` (este documento)
+    - [x] `plan/plan_proyecto.md` (estimaciones ajustadas)
+  - [x] Sistema modular con orquestación contextual documentado
+  - [x] Patrón `Verifiable` + `Orchestrator` definido para los 3 agentes
+  - [x] **Commit 9f8c5c8** en branch `decision-arquitectura-modular`
+  - [x] Código de implementación funcional descartado (checks.py, tests)
 
 ### En Progreso
 
-- [ ] **Fase 2: CodeGuard - Implementación de Checks Reales** (Próximo paso)
-  - [ ] Ticket 2.1: Check PEP8 con flake8
-  - [ ] Ticket 2.2: Check Pylint score
-  - [ ] Ticket 2.3: Check Security con bandit
-  - [ ] Ticket 2.4: Check Complejidad con radon
-  - [ ] Ticket 2.5: Check Type Errors con mypy
-  - [ ] Ticket 2.6: Check Unused Imports
+- [ ] **Fase 1.5: Fundamentos de Arquitectura Modular** (PRÓXIMO - Prioridad CRÍTICA)
+  - [ ] Ticket 1.5.1: Crear clase base `Verifiable` + `ExecutionContext` (~2-3h)
+  - [ ] Ticket 1.5.2: Crear `CheckOrchestrator` con auto-discovery (~3-4h)
+  - [ ] Ticket 1.5.3: Estructura de directorios modular (~0.5h)
+- [ ] **Fase 2: Migración a Arquitectura Modular** (Rediseñada)
+  - [ ] Ticket 2.1: Migrar `check_pep8()` a clase `PEP8Check` (~2h)
+  - [ ] Ticket 2.2-2.6: Implementar 5 checks restantes como clases (~11-14h)
+- [ ] **Fase 2.5: Integración con Orquestador** (Nueva)
+  - [ ] Ticket 2.5.1: Integrar orquestador en `CodeGuard.run()` (~2-3h)
+  - [ ] Ticket 2.5.2: Tests de orquestación end-to-end (~2-3h)
+  - [ ] Ticket 2.5.3: CLI con `--analysis-type` (~1h)
 
 ### Pendiente (Próximas Tareas)
 
+**Prioridad CRÍTICA (P0):**
+1. **Fase 1.5**: Implementar fundamentos de arquitectura modular (~5.5-7.5h)
+   - Clase base `Verifiable`
+   - `CheckOrchestrator`
+   - Estructura modular
+
 **Prioridad Alta (P1)**:
-1. **Completar Fase 2 de CodeGuard**: Implementar los 6 checks reales (~13-16 horas)
-2. **Completar Fase 3 de CodeGuard**: Integrar checks en `CodeGuard.run()` (~4 horas)
-3. Implementar `designreviewer/analyzers.py` con métricas reales (LCOM, CBO, MI)
-4. Integrar Claude API en `designreviewer/ai_integration.py`
+2. **Fase 2**: Migrar checks a clases modulares (~13-16h)
+3. **Fase 2.5**: Integrar orquestador (~5-7h)
+4. **Fase 3** (renumerada): IA opcional con Claude (~7-8h)
+5. **Fase 4** (renumerada): Output con Rich (~5-7h)
 
 **Prioridad Media (P2)**:
-5. **Completar Fases 4-5 de CodeGuard**: IA opcional + Rich output (~12-15 horas)
-6. Implementar `architectanalyst/metrics.py` (métricas de Martin)
-7. Implementar `architectanalyst/snapshots.py` (persistencia SQLite)
-8. Crear reportes HTML con Jinja2
-9. Dashboard con Plotly
+6. **Fase 5** (renumerada): Soporte pre-commit (~2h)
+7. **Fase 6** (renumerada): Tests y documentación (~7-9h)
+8. Implementar `designreviewer/analyzers.py` con arquitectura modular
+9. Implementar `architectanalyst/metrics.py` con arquitectura modular
 
 **Prioridad Baja (P3)**:
-10. **Completar Fases 6-7 de CodeGuard**: pre-commit + tests + docs (~9-11 horas)
-11. GitHub Actions CI/CD
-12. Documentación académica para publicación
+10. GitHub Actions CI/CD
+11. Documentación académica para publicación
+
+**Estimación total actualizada:** 49-67.5h (vs 42-54h original) = +11-13.5h por arquitectura modular
 
 ---
 
@@ -228,7 +252,65 @@ codeguard /ruta/a/otro/proyecto
 
 > Actualizar esta sección al final de cada sesión con contexto relevante.
 
-### Progreso de esta sesión (2026-01-20):
+### Progreso de esta sesión (2026-02-02):
+
+**DECISIÓN ARQUITECTÓNICA: Arquitectura Modular con Orquestación Contextual** ✅
+
+**Contexto:**
+Durante la implementación del Ticket 2.1 (Check PEP8), se identificó una limitación arquitectónica fundamental: el diseño monolítico de `checks.py` no permite decisiones contextuales ni escala bien.
+
+**Decisión tomada:**
+Implementar sistema modular donde cada verificación/análisis/métrica es un componente independiente (`Verifiable`) que decide cuándo debe ejecutarse según el contexto, orquestado por un componente inteligente (`Orchestrator`).
+
+**Trabajo realizado:**
+
+1. **Documentación de la decisión arquitectónica**
+   - Creado `docs/agentes/decision_arquitectura_checks_modulares.md` (820 líneas, 13 secciones)
+   - Análisis completo del problema, solución propuesta, diseño detallado
+   - Aplicación a los 3 agentes, fundamentación teórica (6 principios)
+   - Consecuencias, alternativas, plan de implementación
+
+2. **Análisis de impacto**
+   - Creado `docs/agentes/analisis_impacto_arquitectura_modular.md`
+   - Identificados 6 documentos afectados con nivel de impacto
+   - Plan de actualización con orden y estimaciones (12-18.5h)
+
+3. **Actualización completa de documentación (6 documentos)**
+   - ✅ `PLAN_IMPLEMENTACION.md` - Rediseñado completo (820 líneas)
+     - Nueva Fase 1.5: Fundamentos de arquitectura modular (5.5-7.5h)
+     - Fase 2 rediseñada: Migración a clases modulares (13-16h)
+     - Nueva Fase 2.5: Integración con orquestador (5-7h)
+     - Total actualizado: 49-67.5h (vs 42-54h original)
+   - ✅ `especificacion_agentes_calidad.md` - Actualizado (1500+ líneas, +290 líneas)
+     - Principio #6 de Modularidad agregado
+     - Arquitectura Interna general + específica para 3 agentes
+     - Secciones 1.9, 2.9, 3.9 con componentes, orquestación, ejemplos
+   - ✅ `guia_implementacion_agentes.md` - Actualizado (1350 líneas, +240 líneas)
+     - Nueva sección "ARQUITECTURA INTERNA (PARA CONTRIBUIDORES)"
+     - Guía completa de cómo crear checks/analyzers/metrics
+     - Código de ejemplo completo + tests
+   - ✅ `CLAUDE.md` - Actualizado
+     - Sección "Agent Structure" actualizada con arquitectura modular
+     - Nueva sección "Modular Architecture"
+     - Estado del proyecto actualizado (30% completo, Fase 1.5 próxima)
+   - ✅ `SESION.md` - Actualizado (este documento)
+   - ✅ `plan/plan_proyecto.md` - Pendiente (próximo)
+
+**Impacto en estimaciones:**
+- Incremento: +11-13.5h por arquitectura modular
+- Justificación: Inversión en calidad arquitectónica, extensibilidad, mantenibilidad
+- ROI: Facilita agregar checks, decisiones contextuales, preparado para IA
+
+**Resultado:**
+- ✅ Decisión arquitectónica documentada formalmente
+- ✅ Análisis de impacto completo
+- ✅ 5 de 6 documentos actualizados
+- ✅ Plan de implementación rediseñado
+- ⏳ Código sin cambios (solo documentación)
+
+---
+
+### Progreso de sesión anterior (2026-01-20):
 
 **CodeGuard Fase 1 COMPLETADA** ✅ - 3 commits realizados:
 
@@ -267,24 +349,34 @@ codeguard /ruta/a/otro/proyecto
 
 ### Para la próxima sesión:
 
-- **Branch actual**: `refactoring-fase-1-codeguard`
-- **Estado del proyecto**: 45% completo (Fase 1 de CodeGuard completa)
-- **Próximo paso**: Fase 2 - Implementar checks reales
-  - Ticket 2.1: Check PEP8 con flake8
-  - Ticket 2.2: Check Pylint score
-  - Ticket 2.3: Check Security con bandit
-  - Ticket 2.4: Check Complejidad con radon
-  - Ticket 2.5: Check Type Errors con mypy
-  - Ticket 2.6: Check Unused Imports
-- **Branches pendientes de PR**:
-  - `fase-0-fundamentos` → puede mergearse a main (documentación teórica completa)
-  - `refactoring-fase-1-codeguard` → en progreso (Fase 1 completa, continuar con Fase 2)
-- **Tests**: 19 tests pasando en `test_codeguard_config.py`
+- **Branch actual**: `decision-arquitectura-modular`
+- **Último commit**: `9f8c5c8` - Decisión arquitectónica commiteada ✅
+- **Estado del proyecto**: 30% completo (Documentación arquitectónica completa, código limpio)
+- **Próximo paso**: Fase 1.5 - Fundamentos de Arquitectura Modular ⚠️ CRÍTICO
+  - Ticket 1.5.1: Crear clase base `Verifiable` + `ExecutionContext` (~2-3h)
+  - Ticket 1.5.2: Crear `CheckOrchestrator` con auto-discovery (~3-4h)
+  - Ticket 1.5.3: Estructura de directorios modular (~0.5h)
+  - **Luego:** Fase 2 - Migrar checks a clases modulares
+- **Documentación actualizada (2026-02-02)**: ✅ COMPLETADA Y COMMITEADA
+  - ✅ 8 archivos actualizados (+3,058 líneas, -239 líneas)
+  - ✅ Todos los documentos reflejan arquitectura modular
+  - ✅ Plan de implementación rediseñado (9 fases, 30 tickets, 49-67.5h)
+  - ✅ Commit limpio sin código de implementación
+- **Tests**: 19 tests pasando (solo configuración - código de checks descartado)
 - **Referencias importantes**:
-  - `src/quality_agents/codeguard/PLAN_IMPLEMENTACION.md` - Roadmap detallado
-  - `docs/agentes/ajuste_documentacion.md` - 5 decisiones arquitectónicas
-  - `CLAUDE.md` - Actualizado con progreso Fase 1
+  - **`docs/agentes/decision_arquitectura_checks_modulares.md`** - Decisión arquitectónica (LEER PRIMERO - 820 líneas)
+  - `docs/agentes/analisis_impacto_arquitectura_modular.md` - Análisis de impacto
+  - `src/quality_agents/codeguard/PLAN_IMPLEMENTACION.md` - Roadmap actualizado (9 fases, 30 tickets)
+  - `docs/agentes/especificacion_agentes_calidad.md` - Arquitectura de 3 agentes (+290 líneas)
+  - `docs/agentes/guia_implementacion_agentes.md` - Guía para contribuidores (+240 líneas)
+  - `CLAUDE.md` - Actualizado con arquitectura modular
+
+**Importante:**
+- La arquitectura modular está DOCUMENTADA pero NO implementada en código
+- Antes de implementar Fase 1.5, revisar `decision_arquitectura_checks_modulares.md`
+- Seguir estrictamente el patrón `Verifiable` + `Orchestrator`
+- Branch limpio: solo documentación, sin código de implementación funcional
 
 ---
 
-*Última actualización: 2026-01-20*
+*Última actualización: 2026-02-02 (Commit 9f8c5c8 - Decisión arquitectónica)*

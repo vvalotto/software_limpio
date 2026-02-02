@@ -47,6 +47,294 @@ architectanalyst --version
 
 ---
 
+## ARQUITECTURA INTERNA (PARA CONTRIBUIDORES)
+
+Esta sección es relevante si estás **contribuyendo al framework** o extendiendo funcionalidad. Si solo quieres **usar** los agentes, podés saltear esta parte.
+
+### Sistema Modular de Verificaciones
+
+**Decisión arquitectónica (Febrero 2026):** Cada agente usa una arquitectura modular con orquestación contextual.
+
+```
+agente/
+├── orchestrator.py       # Orquestador de verificaciones
+├── checks/               # O analyzers/ o metrics/
+│   ├── __init__.py
+│   ├── verificable_1.py
+│   ├── verificable_2.py
+│   └── ...
+└── agent.py              # Agente principal
+```
+
+**Características clave:**
+
+| Aspecto | Descripción |
+|---------|-------------|
+| **Modularidad** | Cada verificación en su propio archivo |
+| **Auto-discovery** | El orquestador descubre automáticamente las verificaciones |
+| **Orquestación** | Decisión inteligente de qué ejecutar según contexto |
+| **Extensibilidad** | Agregar verificación = crear archivo + exportar |
+
+### Crear un Nuevo Check/Analyzer/Metric
+
+Si querés agregar una nueva verificación a cualquier agente, seguí estos pasos:
+
+#### Paso 1: Crear módulo en directorio correspondiente
+
+**Ejemplo para CodeGuard:**
+
+```python
+# codeguard/checks/mi_nuevo_check.py
+
+from pathlib import Path
+from typing import List
+
+from quality_agents.shared.verifiable import Verifiable, ExecutionContext
+from quality_agents.codeguard.agent import CheckResult, Severity
+
+
+class MiNuevoCheck(Verifiable):
+    """
+    Descripción breve del check.
+
+    Este check verifica [qué verifica] usando [herramienta].
+    """
+
+    @property
+    def name(self) -> str:
+        """Nombre identificador del check."""
+        return "MiNuevoCheck"
+
+    @property
+    def category(self) -> str:
+        """Categoría del check."""
+        return "quality"  # Opciones: "style", "quality", "security"
+
+    @property
+    def estimated_duration(self) -> float:
+        """Duración estimada en segundos."""
+        return 1.5  # Ajustar según mediciones reales
+
+    @property
+    def priority(self) -> int:
+        """
+        Prioridad de ejecución (1=más alta, 10=más baja).
+
+        Guía:
+        - 1-2: Crítico (seguridad, errores graves)
+        - 3-4: Alto (calidad esencial)
+        - 5-6: Medio (mejoras)
+        - 7-10: Bajo (nice-to-have)
+        """
+        return 3
+
+    def should_run(self, context: ExecutionContext) -> bool:
+        """
+        Decide si este check debe ejecutarse en el contexto dado.
+
+        Args:
+            context: Contexto de ejecución con info del archivo y análisis
+
+        Returns:
+            True si debe ejecutarse, False si no
+        """
+        # Ejemplo: solo archivos .py no excluidos
+        if context.is_excluded:
+            return False
+
+        if context.file_path.suffix != ".py":
+            return False
+
+        # Verificar si está habilitado en config
+        if hasattr(context.config, 'check_mi_nuevo'):
+            return context.config.check_mi_nuevo
+
+        return True
+
+    def execute(self, file_path: Path) -> List[CheckResult]:
+        """
+        Ejecuta la verificación sobre el archivo.
+
+        Args:
+            file_path: Ruta al archivo a verificar
+
+        Returns:
+            Lista de resultados encontrados
+        """
+        results = []
+
+        try:
+            # Tu lógica de verificación aquí
+            # Ejemplo: ejecutar herramienta externa
+            # import subprocess
+            # process = subprocess.run(
+            #     ["mi-herramienta", str(file_path)],
+            #     capture_output=True,
+            #     text=True,
+            #     timeout=5
+            # )
+
+            # Parsear output y crear CheckResult
+            # if process.stdout:
+            #     results.append(CheckResult(
+            #         check_name=self.name,
+            #         severity=Severity.WARNING,
+            #         message="Mensaje descriptivo",
+            #         file_path=str(file_path),
+            #         line_number=10  # Opcional
+            #     ))
+
+            pass  # Reemplazar con implementación real
+
+        except FileNotFoundError:
+            results.append(CheckResult(
+                check_name=self.name,
+                severity=Severity.ERROR,
+                message="Herramienta no encontrada. Instalar con: pip install ...",
+                file_path=str(file_path),
+                line_number=None
+            ))
+        except Exception as e:
+            results.append(CheckResult(
+                check_name=self.name,
+                severity=Severity.ERROR,
+                message=f"Error ejecutando check: {str(e)}",
+                file_path=str(file_path),
+                line_number=None
+            ))
+
+        return results
+```
+
+#### Paso 2: Exportar en `__init__.py`
+
+```python
+# codeguard/checks/__init__.py
+
+from .pep8_check import PEP8Check
+from .pylint_check import PylintCheck
+from .mi_nuevo_check import MiNuevoCheck  # AGREGAR ESTA LÍNEA
+
+__all__ = [
+    "PEP8Check",
+    "PylintCheck",
+    "MiNuevoCheck",  # AGREGAR ESTA LÍNEA
+]
+```
+
+#### Paso 3: ¡Listo! Auto-discovery
+
+**No necesitás modificar ningún otro archivo.** El sistema de auto-discovery del orquestador incluirá tu check automáticamente.
+
+```python
+# El orquestador hace esto automáticamente:
+checks = orchestrator._discover_checks()
+# → [PEP8Check(), PylintCheck(), MiNuevoCheck(), ...]
+```
+
+### Crear Tests para tu Check
+
+**Siempre** creá tests para tu verificación:
+
+```python
+# tests/unit/test_codeguard_checks.py
+
+import pytest
+from pathlib import Path
+
+from quality_agents.codeguard.checks import MiNuevoCheck
+from quality_agents.shared.verifiable import ExecutionContext
+from quality_agents.codeguard.agent import Severity
+
+
+class TestMiNuevoCheck:
+    """Tests para MiNuevoCheck."""
+
+    def test_should_run_on_py_files(self, tmp_path):
+        """Debe ejecutarse en archivos .py."""
+        check = MiNuevoCheck()
+        context = ExecutionContext(
+            file_path=tmp_path / "test.py",
+            is_excluded=False,
+            analysis_type="full"
+        )
+
+        assert check.should_run(context) is True
+
+    def test_should_not_run_on_excluded_files(self, tmp_path):
+        """No debe ejecutarse en archivos excluidos."""
+        check = MiNuevoCheck()
+        context = ExecutionContext(
+            file_path=tmp_path / "test.py",
+            is_excluded=True,
+            analysis_type="full"
+        )
+
+        assert check.should_run(context) is False
+
+    def test_execute_returns_results(self, tmp_path):
+        """Debe retornar lista de resultados."""
+        check = MiNuevoCheck()
+        file_path = tmp_path / "test.py"
+        file_path.write_text("# codigo de ejemplo\n")
+
+        results = check.execute(file_path)
+
+        assert isinstance(results, list)
+        # Agregar más aserciones según tu implementación
+
+    def test_execute_with_violations(self, tmp_path):
+        """Debe detectar violaciones."""
+        check = MiNuevoCheck()
+        file_path = tmp_path / "bad_code.py"
+        # Escribir código que tu check debe detectar
+        file_path.write_text("# codigo con problema\n")
+
+        results = check.execute(file_path)
+
+        assert len(results) > 0
+        assert all(r.check_name == "MiNuevoCheck" for r in results)
+        # Verificar severidad, mensaje, etc.
+
+    def test_execute_without_violations(self, tmp_path):
+        """Debe retornar lista vacía si no hay violaciones."""
+        check = MiNuevoCheck()
+        file_path = tmp_path / "clean_code.py"
+        # Escribir código limpio
+        file_path.write_text("# codigo limpio\n")
+
+        results = check.execute(file_path)
+
+        assert results == []
+```
+
+### Ejecutar Tests
+
+```bash
+# Ejecutar solo tests de tu check
+pytest tests/unit/test_codeguard_checks.py::TestMiNuevoCheck -v
+
+# Ejecutar todos los tests de checks
+pytest tests/unit/test_codeguard_checks.py -v
+
+# Ejecutar con coverage
+pytest tests/unit/test_codeguard_checks.py --cov=src/quality_agents/codeguard/checks
+```
+
+### Aplicar el Mismo Patrón a Otros Agentes
+
+El mismo patrón se aplica a **DesignReviewer** y **ArchitectAnalyst**:
+
+| Agente | Directorio | Clase Base | Tipo |
+|--------|-----------|------------|------|
+| CodeGuard | `codeguard/checks/` | `Verifiable` | Check |
+| DesignReviewer | `designreviewer/analyzers/` | `Verifiable` | Analyzer |
+| ArchitectAnalyst | `architectanalyst/metrics/` | `Verifiable` | Metric |
+
+**Referencia completa:** Ver `docs/agentes/decision_arquitectura_checks_modulares.md`
+
+---
+
 ## CONFIGURACIÓN EN TU PROYECTO
 
 ### Paso 1: Crear pyproject.toml (si no existe)
