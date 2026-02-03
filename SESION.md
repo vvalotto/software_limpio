@@ -33,9 +33,9 @@ Transformar a los desarrolladores de "escritores de código" a "evaluadores de c
 
 ### Última Sesión: 2026-02-03
 
-**Branch activo**: `fase-2-arquitectura-modular-codeguard`
+**Branch activo**: `fase-2.5-orchestrator-integration`
 
-**Último commit**: `98f21ea` - Ticket 2.3: Implementar SecurityCheck como clase modular
+**Último commit**: `57602a2` - Ticket 2.5.2: Tests de orquestación end-to-end
 
 ### Completado
 
@@ -120,36 +120,59 @@ Transformar a los desarrolladores de "escritores de código" a "evaluadores de c
   - [x] **Ticket 2.5**: TypeCheck - mypy inteligente, priority=5, 3.0s, 35 tests - Commit 066cfaf
   - [x] **Ticket 2.6**: ImportCheck - pylint unused, priority=6, 0.5s, 25 tests - Commit f1455d1
   - [x] **Total Fase 2**: 6/6 checks implementados, 149 tests nuevos (220 tests totales)
+- [x] **Fase 2.5: Integración con Orquestador** ✅ COMPLETA (2026-02-03)
+  - [x] **Ticket 2.5.1**: Integrar orquestador en `CodeGuard.run()` (~2-3h)
+    - [x] Integrado `CheckOrchestrator` en `__init__()`
+    - [x] Reescrito `run()` con orquestación contextual
+    - [x] Nuevos parámetros: `analysis_type` y `time_budget`
+    - [x] Creación de `ExecutionContext` por archivo
+    - [x] Manejo robusto de errores
+    - [x] CLI actualizado con `--analysis-type` y `--time-budget`
+    - [x] 15 tests de integración
+    - [x] **Commit 85f4c0b** en branch `fase-2.5-orchestrator-integration`
+  - [x] **Ticket 2.5.2**: Tests de orquestación end-to-end (~2-3h)
+    - [x] 16 tests e2e en 4 categorías
+    - [x] Tests de CLI completo (texto y JSON)
+    - [x] Tests de detección real (PEP8, complexity, imports, security)
+    - [x] Tests de orquestación contextual
+    - [x] Tests con proyecto de ejemplo
+    - [x] Helper `extract_json_from_output()`
+    - [x] **Commit 57602a2** en branch `fase-2.5-orchestrator-integration`
+  - [x] **Ticket 2.5.3**: CLI con `--analysis-type` (~1h)
+    - [x] Implementado en Ticket 2.5.1 (argumento CLI completo)
+    - [x] Opciones: pre-commit, pr-review, full
+    - [x] Documentado en `--help`
+    - [x] Tests incluidos en 2.5.2
+  - [x] **Total Fase 2.5**: 31 tests nuevos (15 integración + 16 e2e), 251 tests totales
 
 ### En Progreso
 
-- [ ] **Fase 2.5: Integración con Orquestador** (PRÓXIMO - Prioridad CRÍTICA)
-  - [ ] Ticket 2.5.1: Integrar orquestador en `CodeGuard.run()` (~2-3h)
-  - [ ] Ticket 2.5.2: Tests de orquestación end-to-end (~2-3h)
-  - [ ] Ticket 2.5.3: CLI con `--analysis-type` (~1h)
-  - [ ] **Estimación total**: 5-7 horas
+- [ ] **Ninguna tarea en progreso actualmente**
 
 ### Pendiente (Próximas Tareas)
 
 **Prioridad CRÍTICA (P0):**
-1. **Fase 2.5**: Integrar orquestador (~5-7h) ⚠️ PRÓXIMO
-   - Integrar en `CodeGuard.run()`
-   - Tests end-to-end
-   - CLI con `--analysis-type`
+1. ✅ ~~Fase 2.5: Integrar orquestador~~ **COMPLETADA**
 
-**Prioridad Alta (P1)**:
-2. **Fase 3** (renumerada): IA opcional con Claude (~7-8h)
-3. **Fase 4** (renumerada): Output con Rich (~5-7h)
+**Prioridad Alta (P1):**
+2. **Fase 3**: IA opcional con Claude (~7-8h) ⚠️ PRÓXIMO
+   - Ticket 3.1: Crear módulo de integración IA
+   - Ticket 3.2: Integrar con CodeGuard
+   - Ticket 3.3: Tests de IA (mocks)
+3. **Fase 4**: Output con Rich (~5-7h)
+   - Ticket 4.1: Formatear output con Rich
+   - Ticket 4.2: Barra de progreso
+   - Ticket 4.3: Tabla de resultados
 
-**Prioridad Media (P2)**:
-6. **Fase 5** (renumerada): Soporte pre-commit (~2h)
-7. **Fase 6** (renumerada): Tests y documentación (~7-9h)
-8. Implementar `designreviewer/analyzers.py` con arquitectura modular
-9. Implementar `architectanalyst/metrics.py` con arquitectura modular
+**Prioridad Media (P2):**
+4. **Fase 5**: Soporte pre-commit (~2h)
+5. **Fase 6**: Tests y documentación (~7-9h)
+6. Implementar `designreviewer/analyzers.py` con arquitectura modular
+7. Implementar `architectanalyst/metrics.py` con arquitectura modular
 
-**Prioridad Baja (P3)**:
-10. GitHub Actions CI/CD
-11. Documentación académica para publicación
+**Prioridad Baja (P3):**
+8. GitHub Actions CI/CD
+9. Documentación académica para publicación
 
 **Estimación total actualizada:** 49-67.5h (vs 42-54h original) = +11-13.5h por arquitectura modular
 
@@ -160,15 +183,18 @@ Transformar a los desarrolladores de "escritores de código" a "evaluadores de c
 ```
 software_limpio/
 ├── src/quality_agents/       # Código fuente (paquete instalable)
-│   ├── codeguard/            # ← Fase 1.5 COMPLETA, Fase 2 EN PROGRESO (50%)
+│   ├── codeguard/            # ← Fases 1, 1.5, 2, 2.5 COMPLETAS ✅
+│   │   ├── agent.py          # ✅ CLI + run() con orquestación
 │   │   ├── config.py         # ✅ pyproject.toml + AIConfig + load_config()
 │   │   ├── orchestrator.py   # ✅ CheckOrchestrator con auto-discovery
-│   │   ├── checks/           # ✅ 3/6 checks implementados
-│   │   │   ├── __init__.py   # ✅ Exports: PEP8Check, PylintCheck, SecurityCheck
-│   │   │   ├── pep8_check.py       # ✅ Ticket 2.1
-│   │   │   ├── pylint_check.py     # ✅ Ticket 2.2
-│   │   │   └── security_check.py   # ✅ Ticket 2.3
-│   │   ├── checks.py         # ← DEPRECADO (migrar a checks/)
+│   │   ├── checks/           # ✅ 6/6 checks implementados
+│   │   │   ├── __init__.py   # ✅ Exports: todos los checks
+│   │   │   ├── pep8_check.py         # ✅ Ticket 2.1
+│   │   │   ├── pylint_check.py       # ✅ Ticket 2.2
+│   │   │   ├── security_check.py     # ✅ Ticket 2.3
+│   │   │   ├── complexity_check.py   # ✅ Ticket 2.4
+│   │   │   ├── type_check.py         # ✅ Ticket 2.5
+│   │   │   └── import_check.py       # ✅ Ticket 2.6
 │   │   └── PLAN_IMPLEMENTACION.md  # ✅ Roadmap completo
 │   ├── designreviewer/       # ← IMPLEMENTAR ANÁLISIS + IA
 │   ├── architectanalyst/     # ← IMPLEMENTAR MÉTRICAS
@@ -177,33 +203,20 @@ software_limpio/
 │       ├── config.py         # ✅ QualityConfig
 │       └── reporting.py      # ✅ Utilidades de reporte
 ├── tests/                    # Tests (unit, integration, e2e)
-│   └── unit/
-│       ├── test_codeguard_config.py  # ✅ 19 tests
-│       ├── test_verifiable.py        # ✅ 14 tests
-│       ├── test_orchestrator.py      # ✅ 13 tests
-│       ├── test_pep8_check.py        # ✅ 15 tests (Ticket 2.1)
-│       ├── test_pylint_check.py      # ✅ 23 tests (Ticket 2.2)
-│       └── test_security_check.py    # ✅ 24 tests (Ticket 2.3)
+│   ├── unit/                 # ✅ 220 tests unitarios
+│   ├── integration/          # ✅ 15 tests de integración
+│   └── e2e/                  # ✅ 16 tests end-to-end
 ├── docs/                     # Documentación
 │   ├── teoria/               # ✓ COMPLETA (4 secciones)
-│   │   ├── fundamentos/      # ✓ 6 principios documentados
-│   │   ├── marco_filosofico/ # ✓ Virtudes, antifragilidad, sistemas
-│   │   ├── trilogia_limpia/  # ✓ Código, Diseño, Arquitectura
-│   │   └── nuevo_paradigma/  # ✓ Rol profesional, triángulo
 │   ├── metricas/             # ✓ Catálogo completo
 │   ├── agentes/              # ✓ Especificaciones + decisiones
-│   │   ├── especificacion_agentes_calidad.md  # v1.1
-│   │   ├── guia_implementacion_agentes.md
-│   │   └── ajuste_documentacion.md  # ✅ 5 decisiones arquitectónicas
 │   └── guias/                # ✓ Guías de usuario
 ├── configs/                  # Configuraciones YAML ✓
 ├── examples/                 # Proyecto de ejemplo ✓
 ├── plan/                     # Plan del proyecto ✓
 ├── .claude/                  # Configuración Claude Code ✓
-│   ├── commands/             # Comandos personalizados
-│   └── settings.json         # Hooks (SessionStart, SessionEnd)
 ├── pyproject.toml            # Setup ✓ (con tomli condicional)
-├── CLAUDE.md                 # Guía técnica ✓ (actualizado Fase 1)
+├── CLAUDE.md                 # Guía técnica ✓
 └── SESION.md                 # Este archivo ✓
 ```
 
@@ -216,6 +229,7 @@ software_limpio/
 | Especificación completa de agentes | `docs/agentes/especificacion_agentes_calidad.md` (v1.1) |
 | Guía de implementación | `docs/agentes/guia_implementacion_agentes.md` |
 | Decisiones arquitectónicas | `docs/agentes/ajuste_documentacion.md` (Enero 2026) |
+| Decisión arquitectura modular | `docs/agentes/decision_arquitectura_checks_modulares.md` (Febrero 2026) |
 | Plan de implementación CodeGuard | `src/quality_agents/codeguard/PLAN_IMPLEMENTACION.md` |
 | Métricas clasificadas | `docs/metricas/Metricas_Clasificadas.md` |
 | Plan detallado | `plan/plan_proyecto.md` |
@@ -267,16 +281,23 @@ pip install -e ".[dev]"
 # Ejecutar tests
 pytest
 
-# Ejecutar tests de configuración
-pytest tests/unit/test_codeguard_config.py -v
+# Ejecutar solo tests unitarios
+pytest tests/unit/ -v
 
-# Probar CodeGuard
-codeguard .                    # Directorio actual
-codeguard src/                 # Directorio específico
-codeguard --help               # Ver opciones
+# Ejecutar tests de integración
+pytest tests/integration/ -v
 
-# Probar en otro proyecto
-codeguard /ruta/a/otro/proyecto
+# Ejecutar tests end-to-end
+pytest tests/e2e/ -v
+
+# Probar CodeGuard con diferentes análisis
+codeguard .                                # Pre-commit (default)
+codeguard . --analysis-type pr-review      # PR review
+codeguard . --analysis-type full           # Full analysis
+codeguard . --time-budget 3.0              # Con límite de tiempo
+
+# Ver opciones CLI
+codeguard --help
 ```
 
 ---
@@ -285,50 +306,79 @@ codeguard /ruta/a/otro/proyecto
 
 > Actualizar esta sección al final de cada sesión con contexto relevante.
 
-### Progreso de esta sesión (2026-02-03) - FASE 2 COMPLETADA:
+### Progreso de esta sesión (2026-02-03) - FASE 2.5 COMPLETADA:
 
-**FASE 2 COMPLETADA AL 100%** ✅
+**FASE 2.5 COMPLETADA AL 100%** ✅
 
 **Trabajo realizado:**
-Implementación completa de 6 checks modulares heredando de `Verifiable`, con auto-discovery por `CheckOrchestrator`.
+Integración completa del orquestador con CodeGuard, con 31 tests nuevos (15 integración + 16 e2e).
 
-**Tickets completados (6/6):**
-1. ✅ **Ticket 2.1**: PEP8Check - flake8, priority=2, 0.5s, 15 tests
-2. ✅ **Ticket 2.2**: PylintCheck - pylint score, priority=4, 2.0s, 23 tests
-3. ✅ **Ticket 2.3**: SecurityCheck - bandit JSON, priority=1, 1.5s, 24 tests
-4. ✅ **Ticket 2.4**: ComplexityCheck - radon cc, priority=3, 1.0s, 27 tests
-5. ✅ **Ticket 2.5**: TypeCheck - mypy inteligente, priority=5, 3.0s, 35 tests
-6. ✅ **Ticket 2.6**: ImportCheck - pylint unused, priority=6, 0.5s, 25 tests
+**Tickets completados (3/3):**
+1. ✅ **Ticket 2.5.1**: Integrar orquestador en `CodeGuard.run()`
+   - Integrado `CheckOrchestrator` en `__init__()`
+   - Reescrito `run()` con `ExecutionContext` por archivo
+   - Selección contextual de checks vía `orchestrator.select_checks()`
+   - Parámetros: `analysis_type` (pre-commit/pr-review/full), `time_budget`
+   - CLI actualizado con `--analysis-type` y `--time-budget`
+   - Manejo robusto de errores (checks pueden fallar sin romper ejecución)
+   - 15 tests de integración
 
-**Commits realizados (6):**
+2. ✅ **Ticket 2.5.2**: Tests de orquestación end-to-end
+   - 16 tests e2e en 4 categorías:
+     * TestCodeGuardCLIEndToEnd (8 tests): CLI, formatos, configuración
+     * TestCodeGuardRealChecksEndToEnd (4 tests): Detección real de problemas
+     * TestCodeGuardOrchestrationEndToEnd (2 tests): Orquestación contextual
+     * TestCodeGuardWithExampleProject (2 tests): Proyecto de ejemplo
+   - Helper `extract_json_from_output()` para parsear JSON del CLI
+   - Fixtures con proyectos temporales realistas
+
+3. ✅ **Ticket 2.5.3**: CLI con `--analysis-type`
+   - Implementado en Ticket 2.5.1
+   - Opciones: pre-commit (default), pr-review, full
+   - Documentado en `--help`
+   - Tests incluidos en 2.5.2
+
+**Commits realizados (2):**
 ```
-f1455d1 Ticket 2.6: ImportCheck
-066cfaf Ticket 2.5: TypeCheck
-12d9b1a Ticket 2.4: ComplexityCheck
-98f21ea Ticket 2.3: SecurityCheck
-03f229f Ticket 2.2: PylintCheck
-7334e18 Ticket 2.1: PEP8Check
+57602a2 Ticket 2.5.2: Tests de orquestación end-to-end
+85f4c0b Ticket 2.5.1: Integrar orquestador en CodeGuard.run()
 ```
 
 **Estadísticas:**
-- ✅ **220/220 tests pasando** (100%)
-- ✅ **6 checks modulares** completamente funcionales
-- ✅ **~1,380 líneas** de código de checks
-- ✅ **~1,400 líneas** de tests
-- ✅ **Auto-discovery** operativo (orquestador encuentra los 6)
-- ✅ **Duración total**: 8.5s (suma de todos los checks)
-- ✅ **Patrón `Verifiable`** aplicado consistentemente
+- ✅ **251/251 tests pasando** (100%)
+  - 220 tests unitarios
+  - 15 tests integración
+  - 16 tests e2e
+- ✅ **Orquestación contextual** completamente funcional
+- ✅ **CLI completo** con todas las opciones
+- ✅ **3 tipos de análisis**: pre-commit (<5s), pr-review (todos), full (sin límite)
+- ✅ **Auto-discovery** operativo (6 checks detectados)
+- ✅ **Configuración** desde pyproject.toml funcionando
 
-**Arquitectura implementada:**
-- Cada check es independiente, auto-descubrible
-- Decide contextualmente cuándo ejecutarse (`should_run`)
-- Prioridades bien definidas (1-6)
-- Manejo robusto de errores
-- Parsing específico por herramienta (regex, JSON)
+**Funcionalidad verificada:**
+- ✅ CLI produce output correcto (texto y JSON)
+- ✅ Orquestador selecciona checks según `analysis_type`
+- ✅ Presupuesto de tiempo se respeta
+- ✅ Checks detectan problemas reales
+- ✅ Exclusión de archivos funciona
+- ✅ Proyecto de ejemplo se analiza sin errores
+- ✅ Manejo de errores robusto
+
+**Estado del sistema:**
+- CodeGuard ahora es **completamente funcional** con orquestación
+- Listo para usar en pre-commit hooks
+- Preparado para agregar IA opcional (Fase 3)
+- Output básico funcionando (Fase 4 agregará Rich)
 
 ---
 
 ### Resumen de Sesiones Anteriores
+
+**Fase 2 (2026-02-03)**: Migración a arquitectura modular ✅
+- 6 checks modulares implementados
+- 149 tests unitarios nuevos
+- Patrón `Verifiable` aplicado consistentemente
+- Auto-discovery operativo
 
 **Fase 1.5 (Febrero 2026)**: Fundamentos de arquitectura modular ✅
 - Clase base `Verifiable` + `ExecutionContext`
@@ -349,16 +399,20 @@ f1455d1 Ticket 2.6: ImportCheck
 
 ### Para la próxima sesión:
 
-- **Branch actual**: `fase-2-arquitectura-modular-codeguard`
-- **Último commit**: `f1455d1` - Ticket 2.6: Implementar ImportCheck ✅
-- **Estado del proyecto**: Fase 2 COMPLETA (100%), 6/6 checks implementados ✅
-- **Próximo paso**: Fase 2.5 - Integración con Orquestador ⚠️ CRÍTICO
-  - **Ticket 2.5.1**: Integrar orquestador en `CodeGuard.run()` (~2-3h)
-  - **Ticket 2.5.2**: Tests de orquestación end-to-end (~2-3h)
-  - **Ticket 2.5.3**: CLI con `--analysis-type` (~1h)
-  - **Estimación total**: 5-7 horas
+- **Branch actual**: `fase-2.5-orchestrator-integration`
+- **Último commit**: `57602a2` - Ticket 2.5.2 ✅
+- **Estado del proyecto**: Fase 2.5 COMPLETA (100%) ✅
+- **Próximo paso**: Decidir entre:
+  1. **Merge a main** y crear PR (Fases 1.5, 2, 2.5 completas)
+  2. **Actualizar PLAN_IMPLEMENTACION.md** para marcar progreso
+  3. **Fase 3: IA opcional** (~7-8h) - Integración con Claude API
+  4. **Fase 4: Output Rich** (~5-7h) - Formatear salida con colores
 
-- **Tests**: 220/220 tests pasando (100%) ✅
+- **Tests**: 251/251 tests pasando (100%) ✅
+  - 220 unitarios
+  - 15 integración
+  - 16 e2e
+
 - **Checks implementados**: 6/6 (100%) ✅
   1. SecurityCheck (priority=1, 1.5s) - 24 tests
   2. PEP8Check (priority=2, 0.5s) - 15 tests
@@ -367,23 +421,33 @@ f1455d1 Ticket 2.6: ImportCheck
   5. TypeCheck (priority=5, 3.0s) - 35 tests
   6. ImportCheck (priority=6, 0.5s) - 25 tests
 
-- **Auto-discovery**: Orquestador descubre automáticamente los 6 checks ✅
-- **Duración total**: 8.5s (suma de todos los checks)
+- **Orquestación**: 100% funcional ✅
+  - Selección contextual según `analysis_type`
+  - Respeto de `time_budget`
+  - Auto-discovery de checks
+  - Manejo robusto de errores
 
 **Referencias importantes**:
-- `src/quality_agents/codeguard/checks/` - 6 checks implementados
-- `src/quality_agents/codeguard/orchestrator.py` - Auto-discovery listo
-- `src/quality_agents/codeguard/PLAN_IMPLEMENTACION.md` - Roadmap (Fase 2.5 siguiente)
-- `docs/agentes/guia_implementacion_agentes.md` - Guía arquitectura modular
+- `src/quality_agents/codeguard/agent.py` - CLI y run() con orquestación
+- `src/quality_agents/codeguard/orchestrator.py` - Orquestador completo
+- `src/quality_agents/codeguard/checks/` - 6 checks modulares
+- `tests/integration/test_codeguard_integration.py` - 15 tests integración
+- `tests/e2e/test_codeguard_e2e.py` - 16 tests end-to-end
+- `src/quality_agents/codeguard/PLAN_IMPLEMENTACION.md` - Roadmap
 
-**Logros de Fase 2:**
-- ✅ 6 checks modulares funcionando
-- ✅ Patrón `Verifiable` aplicado consistentemente
-- ✅ Auto-discovery operativo
-- ✅ 220 tests (100% pasando)
-- ✅ ~2,780 líneas nuevas (código + tests)
-- ✅ 6 commits realizados
+**Logros de Fase 2.5:**
+- ✅ Orquestación contextual funcionando
+- ✅ CLI completo con todas las opciones
+- ✅ 31 tests nuevos (integración + e2e)
+- ✅ 251 tests totales (100% pasando)
+- ✅ CodeGuard completamente funcional
+- ✅ Listo para producción (falta IA y Rich opcionales)
+
+**Decisión pendiente:**
+- ¿Merge a main o continuar con Fase 3/4?
+- Actualizar PLAN_IMPLEMENTACION.md con progreso
+- Considerar crear PR para review
 
 ---
 
-*Última actualización: 2026-02-03 (Commit f1455d1 - Fase 2 COMPLETA 100%)*
+*Última actualización: 2026-02-03 (Commit 57602a2 - Fase 2.5 COMPLETA 100%)*
