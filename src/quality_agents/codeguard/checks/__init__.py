@@ -106,9 +106,7 @@ from .pylint_check import PylintCheck
 from .security_check import SecurityCheck
 from .complexity_check import ComplexityCheck
 from .type_check import TypeCheck
-
-# Próximos checks a implementar:
-# from .import_check import ImportCheck
+from .import_check import ImportCheck
 
 # Lista de checks exportados (actualizar cuando se agreguen checks)
 __all__ = [
@@ -117,5 +115,5 @@ __all__ = [
     "SecurityCheck",
     "ComplexityCheck",
     "TypeCheck",
-    # "ImportCheck",
+    "ImportCheck",
 ]
