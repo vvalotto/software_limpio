@@ -100,20 +100,20 @@ Fecha de creación: 2026-02-03
 Ticket: 1.5.3
 """
 
-# Cuando se implementen checks en Fase 2, importarlos aquí:
-# from .pep8_check import PEP8Check
-# from .pylint_check import PylintCheck
-# from .security_check import SecurityCheck
-# from .complexity_check import ComplexityCheck
-# from .type_check import TypeCheck
-# from .import_check import ImportCheck
+# Imports de checks implementados
+from .pep8_check import PEP8Check
+from .pylint_check import PylintCheck
+from .security_check import SecurityCheck
+from .complexity_check import ComplexityCheck
+from .type_check import TypeCheck
+from .import_check import ImportCheck
 
 # Lista de checks exportados (actualizar cuando se agreguen checks)
 __all__ = [
-    # "PEP8Check",
-    # "PylintCheck",
-    # "SecurityCheck",
-    # "ComplexityCheck",
-    # "TypeCheck",
-    # "ImportCheck",
+    "PEP8Check",
+    "PylintCheck",
+    "SecurityCheck",
+    "ComplexityCheck",
+    "TypeCheck",
+    "ImportCheck",
 ]

@@ -31,11 +31,11 @@ Transformar a los desarrolladores de "escritores de código" a "evaluadores de c
 
 ## Estado Actual
 
-### Última Sesión: 2026-02-02
+### Última Sesión: 2026-02-03
 
-**Branch activo**: `decision-arquitectura-modular`
+**Branch activo**: `fase-2-arquitectura-modular-codeguard`
 
-**Último commit**: `9f8c5c8` - Decisión arquitectónica: Arquitectura modular con orquestación contextual
+**Último commit**: `98f21ea` - Ticket 2.3: Implementar SecurityCheck como clase modular
 
 ### Completado
 
@@ -93,34 +93,53 @@ Transformar a los desarrolladores de "escritores de código" a "evaluadores de c
   - [x] Patrón `Verifiable` + `Orchestrator` definido para los 3 agentes
   - [x] **Commit 9f8c5c8** en branch `decision-arquitectura-modular`
   - [x] Código de implementación funcional descartado (checks.py, tests)
+- [x] **Fase 1.5 - Fundamentos de Arquitectura Modular** ✅ COMPLETA (2026-02-03)
+  - [x] **Ticket 1.5.1**: Clase base `Verifiable` + `ExecutionContext` (~2h)
+    - [x] Creado `shared/verifiable.py` (236 líneas)
+    - [x] Dataclass `ExecutionContext` con 8 campos
+    - [x] Clase abstracta `Verifiable` con properties y métodos
+    - [x] 14 tests unitarios (100% pasando)
+    - [x] **Commit cfc0158** en branch `ticket-1.5-base-modular`
+  - [x] **Ticket 1.5.2**: `CheckOrchestrator` con auto-discovery (~3h)
+    - [x] Creado `codeguard/orchestrator.py` (285 líneas)
+    - [x] Auto-discovery usando importlib + inspect
+    - [x] Selección contextual con 3 estrategias
+    - [x] 13 tests unitarios (100% pasando)
+    - [x] **Commit 9a459ba** en branch `ticket-1.5-base-modular`
+  - [x] **Ticket 1.5.3**: Estructura de directorios modular (~0.5h)
+    - [x] Creado directorio `codeguard/checks/`
+    - [x] Creado `checks/__init__.py` con documentación completa
+    - [x] Estructura preparada para Fase 2
+    - [x] **Commit 8c0750c** en branch `ticket-1.5-base-modular`
+  - [x] **Total Fase 1.5**: 71 tests pasando, 5 archivos nuevos, ~1,210 líneas
+- [x] **Fase 2: Migración a Arquitectura Modular** ✅ COMPLETA (2026-02-03)
+  - [x] **Ticket 2.1**: PEP8Check - flake8, priority=2, 0.5s, 15 tests - Commit 7334e18
+  - [x] **Ticket 2.2**: PylintCheck - pylint score, priority=4, 2.0s, 23 tests - Commit 03f229f
+  - [x] **Ticket 2.3**: SecurityCheck - bandit JSON, priority=1, 1.5s, 24 tests - Commit 98f21ea
+  - [x] **Ticket 2.4**: ComplexityCheck - radon cc, priority=3, 1.0s, 27 tests - Commit 12d9b1a
+  - [x] **Ticket 2.5**: TypeCheck - mypy inteligente, priority=5, 3.0s, 35 tests - Commit 066cfaf
+  - [x] **Ticket 2.6**: ImportCheck - pylint unused, priority=6, 0.5s, 25 tests - Commit f1455d1
+  - [x] **Total Fase 2**: 6/6 checks implementados, 149 tests nuevos (220 tests totales)
 
 ### En Progreso
 
-- [ ] **Fase 1.5: Fundamentos de Arquitectura Modular** (PRÓXIMO - Prioridad CRÍTICA)
-  - [ ] Ticket 1.5.1: Crear clase base `Verifiable` + `ExecutionContext` (~2-3h)
-  - [ ] Ticket 1.5.2: Crear `CheckOrchestrator` con auto-discovery (~3-4h)
-  - [ ] Ticket 1.5.3: Estructura de directorios modular (~0.5h)
-- [ ] **Fase 2: Migración a Arquitectura Modular** (Rediseñada)
-  - [ ] Ticket 2.1: Migrar `check_pep8()` a clase `PEP8Check` (~2h)
-  - [ ] Ticket 2.2-2.6: Implementar 5 checks restantes como clases (~11-14h)
-- [ ] **Fase 2.5: Integración con Orquestador** (Nueva)
+- [ ] **Fase 2.5: Integración con Orquestador** (PRÓXIMO - Prioridad CRÍTICA)
   - [ ] Ticket 2.5.1: Integrar orquestador en `CodeGuard.run()` (~2-3h)
   - [ ] Ticket 2.5.2: Tests de orquestación end-to-end (~2-3h)
   - [ ] Ticket 2.5.3: CLI con `--analysis-type` (~1h)
+  - [ ] **Estimación total**: 5-7 horas
 
 ### Pendiente (Próximas Tareas)
 
 **Prioridad CRÍTICA (P0):**
-1. **Fase 1.5**: Implementar fundamentos de arquitectura modular (~5.5-7.5h)
-   - Clase base `Verifiable`
-   - `CheckOrchestrator`
-   - Estructura modular
+1. **Fase 2.5**: Integrar orquestador (~5-7h) ⚠️ PRÓXIMO
+   - Integrar en `CodeGuard.run()`
+   - Tests end-to-end
+   - CLI con `--analysis-type`
 
 **Prioridad Alta (P1)**:
-2. **Fase 2**: Migrar checks a clases modulares (~13-16h)
-3. **Fase 2.5**: Integrar orquestador (~5-7h)
-4. **Fase 3** (renumerada): IA opcional con Claude (~7-8h)
-5. **Fase 4** (renumerada): Output con Rich (~5-7h)
+2. **Fase 3** (renumerada): IA opcional con Claude (~7-8h)
+3. **Fase 4** (renumerada): Output con Rich (~5-7h)
 
 **Prioridad Media (P2)**:
 6. **Fase 5** (renumerada): Soporte pre-commit (~2h)
@@ -141,16 +160,30 @@ Transformar a los desarrolladores de "escritores de código" a "evaluadores de c
 ```
 software_limpio/
 ├── src/quality_agents/       # Código fuente (paquete instalable)
-│   ├── codeguard/            # ← Fase 1 COMPLETA (config), Fase 2 en progreso (checks)
+│   ├── codeguard/            # ← Fase 1.5 COMPLETA, Fase 2 EN PROGRESO (50%)
 │   │   ├── config.py         # ✅ pyproject.toml + AIConfig + load_config()
-│   │   ├── checks.py         # ← IMPLEMENTAR checks reales
+│   │   ├── orchestrator.py   # ✅ CheckOrchestrator con auto-discovery
+│   │   ├── checks/           # ✅ 3/6 checks implementados
+│   │   │   ├── __init__.py   # ✅ Exports: PEP8Check, PylintCheck, SecurityCheck
+│   │   │   ├── pep8_check.py       # ✅ Ticket 2.1
+│   │   │   ├── pylint_check.py     # ✅ Ticket 2.2
+│   │   │   └── security_check.py   # ✅ Ticket 2.3
+│   │   ├── checks.py         # ← DEPRECADO (migrar a checks/)
 │   │   └── PLAN_IMPLEMENTACION.md  # ✅ Roadmap completo
 │   ├── designreviewer/       # ← IMPLEMENTAR ANÁLISIS + IA
 │   ├── architectanalyst/     # ← IMPLEMENTAR MÉTRICAS
 │   └── shared/               # Utilidades comunes
+│       ├── verifiable.py     # ✅ Verifiable + ExecutionContext
+│       ├── config.py         # ✅ QualityConfig
+│       └── reporting.py      # ✅ Utilidades de reporte
 ├── tests/                    # Tests (unit, integration, e2e)
 │   └── unit/
-│       └── test_codeguard_config.py  # ✅ 19 tests pasando
+│       ├── test_codeguard_config.py  # ✅ 19 tests
+│       ├── test_verifiable.py        # ✅ 14 tests
+│       ├── test_orchestrator.py      # ✅ 13 tests
+│       ├── test_pep8_check.py        # ✅ 15 tests (Ticket 2.1)
+│       ├── test_pylint_check.py      # ✅ 23 tests (Ticket 2.2)
+│       └── test_security_check.py    # ✅ 24 tests (Ticket 2.3)
 ├── docs/                     # Documentación
 │   ├── teoria/               # ✓ COMPLETA (4 secciones)
 │   │   ├── fundamentos/      # ✓ 6 principios documentados
@@ -252,131 +285,105 @@ codeguard /ruta/a/otro/proyecto
 
 > Actualizar esta sección al final de cada sesión con contexto relevante.
 
-### Progreso de esta sesión (2026-02-02):
+### Progreso de esta sesión (2026-02-03) - FASE 2 COMPLETADA:
 
-**DECISIÓN ARQUITECTÓNICA: Arquitectura Modular con Orquestación Contextual** ✅
-
-**Contexto:**
-Durante la implementación del Ticket 2.1 (Check PEP8), se identificó una limitación arquitectónica fundamental: el diseño monolítico de `checks.py` no permite decisiones contextuales ni escala bien.
-
-**Decisión tomada:**
-Implementar sistema modular donde cada verificación/análisis/métrica es un componente independiente (`Verifiable`) que decide cuándo debe ejecutarse según el contexto, orquestado por un componente inteligente (`Orchestrator`).
+**FASE 2 COMPLETADA AL 100%** ✅
 
 **Trabajo realizado:**
+Implementación completa de 6 checks modulares heredando de `Verifiable`, con auto-discovery por `CheckOrchestrator`.
 
-1. **Documentación de la decisión arquitectónica**
-   - Creado `docs/agentes/decision_arquitectura_checks_modulares.md` (820 líneas, 13 secciones)
-   - Análisis completo del problema, solución propuesta, diseño detallado
-   - Aplicación a los 3 agentes, fundamentación teórica (6 principios)
-   - Consecuencias, alternativas, plan de implementación
+**Tickets completados (6/6):**
+1. ✅ **Ticket 2.1**: PEP8Check - flake8, priority=2, 0.5s, 15 tests
+2. ✅ **Ticket 2.2**: PylintCheck - pylint score, priority=4, 2.0s, 23 tests
+3. ✅ **Ticket 2.3**: SecurityCheck - bandit JSON, priority=1, 1.5s, 24 tests
+4. ✅ **Ticket 2.4**: ComplexityCheck - radon cc, priority=3, 1.0s, 27 tests
+5. ✅ **Ticket 2.5**: TypeCheck - mypy inteligente, priority=5, 3.0s, 35 tests
+6. ✅ **Ticket 2.6**: ImportCheck - pylint unused, priority=6, 0.5s, 25 tests
 
-2. **Análisis de impacto**
-   - Creado `docs/agentes/analisis_impacto_arquitectura_modular.md`
-   - Identificados 6 documentos afectados con nivel de impacto
-   - Plan de actualización con orden y estimaciones (12-18.5h)
+**Commits realizados (6):**
+```
+f1455d1 Ticket 2.6: ImportCheck
+066cfaf Ticket 2.5: TypeCheck
+12d9b1a Ticket 2.4: ComplexityCheck
+98f21ea Ticket 2.3: SecurityCheck
+03f229f Ticket 2.2: PylintCheck
+7334e18 Ticket 2.1: PEP8Check
+```
 
-3. **Actualización completa de documentación (6 documentos)**
-   - ✅ `PLAN_IMPLEMENTACION.md` - Rediseñado completo (820 líneas)
-     - Nueva Fase 1.5: Fundamentos de arquitectura modular (5.5-7.5h)
-     - Fase 2 rediseñada: Migración a clases modulares (13-16h)
-     - Nueva Fase 2.5: Integración con orquestador (5-7h)
-     - Total actualizado: 49-67.5h (vs 42-54h original)
-   - ✅ `especificacion_agentes_calidad.md` - Actualizado (1500+ líneas, +290 líneas)
-     - Principio #6 de Modularidad agregado
-     - Arquitectura Interna general + específica para 3 agentes
-     - Secciones 1.9, 2.9, 3.9 con componentes, orquestación, ejemplos
-   - ✅ `guia_implementacion_agentes.md` - Actualizado (1350 líneas, +240 líneas)
-     - Nueva sección "ARQUITECTURA INTERNA (PARA CONTRIBUIDORES)"
-     - Guía completa de cómo crear checks/analyzers/metrics
-     - Código de ejemplo completo + tests
-   - ✅ `CLAUDE.md` - Actualizado
-     - Sección "Agent Structure" actualizada con arquitectura modular
-     - Nueva sección "Modular Architecture"
-     - Estado del proyecto actualizado (30% completo, Fase 1.5 próxima)
-   - ✅ `SESION.md` - Actualizado (este documento)
-   - ✅ `plan/plan_proyecto.md` - Pendiente (próximo)
+**Estadísticas:**
+- ✅ **220/220 tests pasando** (100%)
+- ✅ **6 checks modulares** completamente funcionales
+- ✅ **~1,380 líneas** de código de checks
+- ✅ **~1,400 líneas** de tests
+- ✅ **Auto-discovery** operativo (orquestador encuentra los 6)
+- ✅ **Duración total**: 8.5s (suma de todos los checks)
+- ✅ **Patrón `Verifiable`** aplicado consistentemente
 
-**Impacto en estimaciones:**
-- Incremento: +11-13.5h por arquitectura modular
-- Justificación: Inversión en calidad arquitectónica, extensibilidad, mantenibilidad
-- ROI: Facilita agregar checks, decisiones contextuales, preparado para IA
-
-**Resultado:**
-- ✅ Decisión arquitectónica documentada formalmente
-- ✅ Análisis de impacto completo
-- ✅ 5 de 6 documentos actualizados
-- ✅ Plan de implementación rediseñado
-- ⏳ Código sin cambios (solo documentación)
+**Arquitectura implementada:**
+- Cada check es independiente, auto-descubrible
+- Decide contextualmente cuándo ejecutarse (`should_run`)
+- Prioridades bien definidas (1-6)
+- Manejo robusto de errores
+- Parsing específico por herramienta (regex, JSON)
 
 ---
 
-### Progreso de sesión anterior (2026-01-20):
+### Resumen de Sesiones Anteriores
 
-**CodeGuard Fase 1 COMPLETADA** ✅ - 3 commits realizados:
+**Fase 1.5 (Febrero 2026)**: Fundamentos de arquitectura modular ✅
+- Clase base `Verifiable` + `ExecutionContext`
+- `CheckOrchestrator` con auto-discovery
+- Estructura de directorios modular
+- 71 tests, 5 archivos nuevos
 
-1. **9cb11b0**: Ticket 1.1 - Soporte para pyproject.toml y configuración de IA
-   - Implementado método `from_pyproject_toml()` en `CodeGuardConfig`
-   - Creada dataclass `AIConfig` (opt-in por defecto)
-   - Soporte para `[tool.codeguard]` y `[tool.codeguard.ai]`
-   - Agregada dependencia condicional `tomli` para Python < 3.11
-   - 11 tests unitarios creados (todos pasando)
+**Decisión Arquitectónica (Febrero 2026)**: Sistema modular con orquestación ✅
+- Documento de decisión completo (820 líneas)
+- Análisis de impacto en 6 documentos
+- Plan de implementación rediseñado (9 fases, 30 tickets)
 
-2. **fcf52c3**: Ticket 1.2 - Implementar búsqueda en orden de prioridad
-   - Función `load_config()` con búsqueda automática
-   - Orden: config_path explícito → pyproject.toml → .codeguard.yml → defaults
-   - Logging de archivo de configuración usado
-   - 8 tests adicionales (19 tests totales pasando)
-   - Actualizado `PLAN_IMPLEMENTACION.md` con progreso
-
-3. **13a9967**: Actualizar CLAUDE.md con progreso de CodeGuard Fase 1
-   - Nueva sección "CodeGuard Configuration" con ejemplos
-   - Actualizado estado: 30% → 45%
-   - Documentadas referencias a archivos nuevos
-   - Agregada sección de dependencias (tomllib/tomli)
-
-**Resultado:**
-- ✅ Fase 1 completa: Sistema de configuración moderna
-- ✅ 19 tests unitarios (100% pasando)
-- ✅ Soporte completo para pyproject.toml
-- ✅ Configuración de IA opcional (opt-in)
-- ✅ Documentación actualizada
-
-**Plan de implementación completo:**
-- `src/quality_agents/codeguard/PLAN_IMPLEMENTACION.md`
-- 7 fases, 27 tickets, 42-54 horas estimadas
-- Fase 1: ✅ Completada (~3.5 horas)
-- Fase 2: Pendiente (implementar 6 checks reales, ~13-16 horas)
+**Fase 1 (Enero 2026)**: Configuración moderna ✅
+- Soporte pyproject.toml (`[tool.codeguard]`)
+- AIConfig opcional (opt-in)
+- Función `load_config()` con búsqueda automática
+- 19 tests unitarios
 
 ### Para la próxima sesión:
 
-- **Branch actual**: `decision-arquitectura-modular`
-- **Último commit**: `9f8c5c8` - Decisión arquitectónica commiteada ✅
-- **Estado del proyecto**: 30% completo (Documentación arquitectónica completa, código limpio)
-- **Próximo paso**: Fase 1.5 - Fundamentos de Arquitectura Modular ⚠️ CRÍTICO
-  - Ticket 1.5.1: Crear clase base `Verifiable` + `ExecutionContext` (~2-3h)
-  - Ticket 1.5.2: Crear `CheckOrchestrator` con auto-discovery (~3-4h)
-  - Ticket 1.5.3: Estructura de directorios modular (~0.5h)
-  - **Luego:** Fase 2 - Migrar checks a clases modulares
-- **Documentación actualizada (2026-02-02)**: ✅ COMPLETADA Y COMMITEADA
-  - ✅ 8 archivos actualizados (+3,058 líneas, -239 líneas)
-  - ✅ Todos los documentos reflejan arquitectura modular
-  - ✅ Plan de implementación rediseñado (9 fases, 30 tickets, 49-67.5h)
-  - ✅ Commit limpio sin código de implementación
-- **Tests**: 19 tests pasando (solo configuración - código de checks descartado)
-- **Referencias importantes**:
-  - **`docs/agentes/decision_arquitectura_checks_modulares.md`** - Decisión arquitectónica (LEER PRIMERO - 820 líneas)
-  - `docs/agentes/analisis_impacto_arquitectura_modular.md` - Análisis de impacto
-  - `src/quality_agents/codeguard/PLAN_IMPLEMENTACION.md` - Roadmap actualizado (9 fases, 30 tickets)
-  - `docs/agentes/especificacion_agentes_calidad.md` - Arquitectura de 3 agentes (+290 líneas)
-  - `docs/agentes/guia_implementacion_agentes.md` - Guía para contribuidores (+240 líneas)
-  - `CLAUDE.md` - Actualizado con arquitectura modular
+- **Branch actual**: `fase-2-arquitectura-modular-codeguard`
+- **Último commit**: `f1455d1` - Ticket 2.6: Implementar ImportCheck ✅
+- **Estado del proyecto**: Fase 2 COMPLETA (100%), 6/6 checks implementados ✅
+- **Próximo paso**: Fase 2.5 - Integración con Orquestador ⚠️ CRÍTICO
+  - **Ticket 2.5.1**: Integrar orquestador en `CodeGuard.run()` (~2-3h)
+  - **Ticket 2.5.2**: Tests de orquestación end-to-end (~2-3h)
+  - **Ticket 2.5.3**: CLI con `--analysis-type` (~1h)
+  - **Estimación total**: 5-7 horas
 
-**Importante:**
-- La arquitectura modular está DOCUMENTADA pero NO implementada en código
-- Antes de implementar Fase 1.5, revisar `decision_arquitectura_checks_modulares.md`
-- Seguir estrictamente el patrón `Verifiable` + `Orchestrator`
-- Branch limpio: solo documentación, sin código de implementación funcional
+- **Tests**: 220/220 tests pasando (100%) ✅
+- **Checks implementados**: 6/6 (100%) ✅
+  1. SecurityCheck (priority=1, 1.5s) - 24 tests
+  2. PEP8Check (priority=2, 0.5s) - 15 tests
+  3. ComplexityCheck (priority=3, 1.0s) - 27 tests
+  4. PylintCheck (priority=4, 2.0s) - 23 tests
+  5. TypeCheck (priority=5, 3.0s) - 35 tests
+  6. ImportCheck (priority=6, 0.5s) - 25 tests
+
+- **Auto-discovery**: Orquestador descubre automáticamente los 6 checks ✅
+- **Duración total**: 8.5s (suma de todos los checks)
+
+**Referencias importantes**:
+- `src/quality_agents/codeguard/checks/` - 6 checks implementados
+- `src/quality_agents/codeguard/orchestrator.py` - Auto-discovery listo
+- `src/quality_agents/codeguard/PLAN_IMPLEMENTACION.md` - Roadmap (Fase 2.5 siguiente)
+- `docs/agentes/guia_implementacion_agentes.md` - Guía arquitectura modular
+
+**Logros de Fase 2:**
+- ✅ 6 checks modulares funcionando
+- ✅ Patrón `Verifiable` aplicado consistentemente
+- ✅ Auto-discovery operativo
+- ✅ 220 tests (100% pasando)
+- ✅ ~2,780 líneas nuevas (código + tests)
+- ✅ 6 commits realizados
 
 ---
 
-*Última actualización: 2026-02-02 (Commit 9f8c5c8 - Decisión arquitectónica)*
+*Última actualización: 2026-02-03 (Commit f1455d1 - Fase 2 COMPLETA 100%)*

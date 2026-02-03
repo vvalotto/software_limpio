@@ -129,17 +129,20 @@ def test_orchestrator_initialization():
 
     assert orchestrator.config == config
     assert isinstance(orchestrator.checks, list)
-    # En este punto no hay checks porque el módulo checks/ no existe todavía
-    assert len(orchestrator.checks) == 0
+    # Ahora hay checks reales descubiertos (PEP8Check implementado en Fase 2)
+    assert len(orchestrator.checks) >= 1  # Al menos PEP8Check
+    # Verificar que PEP8Check fue descubierto
+    assert any(c.name == "PEP8" for c in orchestrator.checks)
 
 
 def test_orchestrator_discover_checks_module_not_found():
-    """Verifica que _discover_checks maneja correctamente módulo no encontrado."""
+    """Verifica que _discover_checks encuentra checks reales del módulo."""
     config = CodeGuardConfig()
     orchestrator = CheckOrchestrator(config)
 
-    # El módulo checks no existe todavía (Fase 1.5)
-    assert orchestrator.checks == []
+    # El módulo checks ahora existe con PEP8Check (Fase 2)
+    assert len(orchestrator.checks) >= 1
+    assert any(c.name == "PEP8" for c in orchestrator.checks)
 
 
 # ========== Tests de Auto-Discovery con Mocks ==========
@@ -185,14 +188,16 @@ def test_discover_checks_with_mock_module(mock_import):
 
 
 def test_select_checks_empty_list():
-    """Verifica que select_checks maneja lista vacía de checks."""
+    """Verifica que select_checks funciona con checks reales."""
     config = CodeGuardConfig()
     orchestrator = CheckOrchestrator(config)
     context = ExecutionContext(file_path=Path("test.py"))
 
     selected = orchestrator.select_checks(context)
 
-    assert selected == []
+    # Ahora hay checks reales (PEP8Check)
+    assert len(selected) >= 1
+    assert any(c.name == "PEP8" for c in selected)
 
 
 def test_select_checks_with_manual_checks():
