@@ -102,9 +102,9 @@ Ticket: 1.5.3
 
 # Imports de checks implementados
 from .pep8_check import PEP8Check
+from .pylint_check import PylintCheck
 
 # Próximos checks a implementar:
-# from .pylint_check import PylintCheck
 # from .security_check import SecurityCheck
 # from .complexity_check import ComplexityCheck
 # from .type_check import TypeCheck
@@ -113,7 +113,7 @@ from .pep8_check import PEP8Check
 # Lista de checks exportados (actualizar cuando se agreguen checks)
 __all__ = [
     "PEP8Check",
-    # "PylintCheck",
+    "PylintCheck",
     # "SecurityCheck",
     # "ComplexityCheck",
     # "TypeCheck",
