@@ -31,11 +31,11 @@ Transformar a los desarrolladores de "escritores de código" a "evaluadores de c
 
 ## Estado Actual
 
-### Última Sesión: 2026-02-03
+### Última Sesión: 2026-02-04
 
-**Branch activo**: `fase-2.5-orchestrator-integration`
+**Branch activo**: `fase-4-output-rich`
 
-**Último commit**: `57602a2` - Ticket 2.5.2: Tests de orquestación end-to-end
+**Último commit**: `7c2152e` - Actualizar PLAN_IMPLEMENTACION.md - Fase 4 completada
 
 ### Completado
 
@@ -144,6 +144,29 @@ Transformar a los desarrolladores de "escritores de código" a "evaluadores de c
     - [x] Documentado en `--help`
     - [x] Tests incluidos en 2.5.2
   - [x] **Total Fase 2.5**: 31 tests nuevos (15 integración + 16 e2e), 251 tests totales
+- [x] **Fase 4: Output Formateado con Rich** ✅ COMPLETA (2026-02-04)
+  - [x] **Ticket 4.1**: Implementar formatter con Rich (~3h)
+    - [x] Creado `formatter.py` (325 líneas)
+    - [x] Función `format_results()` con Rich Console, Panel, Table
+    - [x] Header con logo, estadísticas, tablas por severidad
+    - [x] Sugerencias contextuales (black, autoflake, security, etc.)
+    - [x] 18 tests unitarios
+    - [x] **Commit 1aed60c** en branch `fase-4-output-rich`
+  - [x] **Ticket 4.2**: Agregar modo JSON mejorado (~1.5h)
+    - [x] Función `format_json()` con estructura completa
+    - [x] Summary, results, by_severity, timestamp ISO
+    - [x] Pretty-printed con ensure_ascii=False
+    - [x] 7 tests unitarios
+    - [x] **Commit d5b1c44** en branch `fase-4-output-rich`
+  - [x] **Ticket 4.3**: Integrar formatters en CLI (~1h)
+    - [x] Import de formatters en agent.py
+    - [x] Medición de tiempo de ejecución
+    - [x] Output limpio según formato (text/json)
+    - [x] Eliminadas funciones antiguas
+    - [x] Tests e2e actualizados (16 tests)
+    - [x] **Commit ce0baa1** en branch `fase-4-output-rich`
+  - [x] **Total Fase 4**: 25 tests nuevos (18 + 7), 276 tests totales
+  - [x] **Commit 7c2152e**: PLAN_IMPLEMENTACION.md actualizado
 
 ### En Progreso
 
@@ -153,20 +176,22 @@ Transformar a los desarrolladores de "escritores de código" a "evaluadores de c
 
 **Prioridad CRÍTICA (P0):**
 1. ✅ ~~Fase 2.5: Integrar orquestador~~ **COMPLETADA**
+2. ✅ ~~Fase 4: Output con Rich~~ **COMPLETADA**
 
 **Prioridad Alta (P1):**
-2. **Fase 3**: IA opcional con Claude (~7-8h) ⚠️ PRÓXIMO
+3. **Fase 3**: IA opcional con Claude (~7-8h) 🚫 **SUSPENDIDA**
    - Ticket 3.1: Crear módulo de integración IA
    - Ticket 3.2: Integrar con CodeGuard
    - Ticket 3.3: Tests de IA (mocks)
-3. **Fase 4**: Output con Rich (~5-7h)
-   - Ticket 4.1: Formatear output con Rich
-   - Ticket 4.2: Barra de progreso
-   - Ticket 4.3: Tabla de resultados
 
 **Prioridad Media (P2):**
-4. **Fase 5**: Soporte pre-commit (~2h)
+4. **Fase 5**: Soporte pre-commit (~2h) ⚠️ **PRÓXIMO**
+   - Ticket 5.1: Crear .pre-commit-hooks.yaml
+   - Ticket 5.2: Documentar uso con pre-commit
 5. **Fase 6**: Tests y documentación (~7-9h)
+   - Ticket 6.1: Tests de integración completos
+   - Ticket 6.2: Actualizar README.md
+   - Ticket 6.3: Crear ejemplo funcional
 6. Implementar `designreviewer/analyzers.py` con arquitectura modular
 7. Implementar `architectanalyst/metrics.py` con arquitectura modular
 
@@ -174,7 +199,7 @@ Transformar a los desarrolladores de "escritores de código" a "evaluadores de c
 8. GitHub Actions CI/CD
 9. Documentación académica para publicación
 
-**Estimación total actualizada:** 49-67.5h (vs 42-54h original) = +11-13.5h por arquitectura modular
+**Estimación actualizada:** 42-59.5h (sin Fase 3) / Completado: ~35h (85%)
 
 ---
 
@@ -183,10 +208,11 @@ Transformar a los desarrolladores de "escritores de código" a "evaluadores de c
 ```
 software_limpio/
 ├── src/quality_agents/       # Código fuente (paquete instalable)
-│   ├── codeguard/            # ← Fases 1, 1.5, 2, 2.5 COMPLETAS ✅
+│   ├── codeguard/            # ← Fases 1, 1.5, 2, 2.5, 4 COMPLETAS ✅
 │   │   ├── agent.py          # ✅ CLI + run() con orquestación
 │   │   ├── config.py         # ✅ pyproject.toml + AIConfig + load_config()
 │   │   ├── orchestrator.py   # ✅ CheckOrchestrator con auto-discovery
+│   │   ├── formatter.py      # ✅ Rich formatter + JSON (NUEVO)
 │   │   ├── checks/           # ✅ 6/6 checks implementados
 │   │   │   ├── __init__.py   # ✅ Exports: todos los checks
 │   │   │   ├── pep8_check.py         # ✅ Ticket 2.1
@@ -195,7 +221,7 @@ software_limpio/
 │   │   │   ├── complexity_check.py   # ✅ Ticket 2.4
 │   │   │   ├── type_check.py         # ✅ Ticket 2.5
 │   │   │   └── import_check.py       # ✅ Ticket 2.6
-│   │   └── PLAN_IMPLEMENTACION.md  # ✅ Roadmap completo
+│   │   └── PLAN_IMPLEMENTACION.md  # ✅ Roadmap completo (actualizado)
 │   ├── designreviewer/       # ← IMPLEMENTAR ANÁLISIS + IA
 │   ├── architectanalyst/     # ← IMPLEMENTAR MÉTRICAS
 │   └── shared/               # Utilidades comunes
@@ -203,7 +229,7 @@ software_limpio/
 │       ├── config.py         # ✅ QualityConfig
 │       └── reporting.py      # ✅ Utilidades de reporte
 ├── tests/                    # Tests (unit, integration, e2e)
-│   ├── unit/                 # ✅ 220 tests unitarios
+│   ├── unit/                 # ✅ 245 tests unitarios (incluyendo formatter)
 │   ├── integration/          # ✅ 15 tests de integración
 │   └── e2e/                  # ✅ 16 tests end-to-end
 ├── docs/                     # Documentación
@@ -253,7 +279,7 @@ software_limpio/
 4. **SQLite para histórico** de métricas de arquitectura
 5. **Plotly para dashboards** (no Dash, no Streamlit)
 6. **Claude API** para sugerencias inteligentes (modelo: claude-sonnet-4-20250514)
-7. **Rich** para salida de consola con colores
+7. **Rich** para salida de consola con colores ✅ **IMPLEMENTADO**
 8. **Jinja2** para reportes HTML
 9. **Click** para CLI de los agentes
 10. **tomllib/tomli** para parsear pyproject.toml (3.11+ / < 3.11)
@@ -290,6 +316,10 @@ pytest tests/integration/ -v
 # Ejecutar tests end-to-end
 pytest tests/e2e/ -v
 
+# Probar CodeGuard con diferentes formatos
+codeguard . --format text                  # Rich formatter (NUEVO)
+codeguard . --format json                  # JSON con metadata (MEJORADO)
+
 # Probar CodeGuard con diferentes análisis
 codeguard .                                # Pre-commit (default)
 codeguard . --analysis-type pr-review      # PR review
@@ -306,73 +336,95 @@ codeguard --help
 
 > Actualizar esta sección al final de cada sesión con contexto relevante.
 
-### Progreso de esta sesión (2026-02-03) - FASE 2.5 COMPLETADA:
+### Progreso de esta sesión (2026-02-04) - FASE 4 COMPLETADA:
 
-**FASE 2.5 COMPLETADA AL 100%** ✅
+**FASE 4 COMPLETADA AL 100%** ✅
 
 **Trabajo realizado:**
-Integración completa del orquestador con CodeGuard, con 31 tests nuevos (15 integración + 16 e2e).
+Implementación completa de Rich formatter y JSON mejorado para CodeGuard CLI, con 25 tests nuevos.
 
 **Tickets completados (3/3):**
-1. ✅ **Ticket 2.5.1**: Integrar orquestador en `CodeGuard.run()`
-   - Integrado `CheckOrchestrator` en `__init__()`
-   - Reescrito `run()` con `ExecutionContext` por archivo
-   - Selección contextual de checks vía `orchestrator.select_checks()`
-   - Parámetros: `analysis_type` (pre-commit/pr-review/full), `time_budget`
-   - CLI actualizado con `--analysis-type` y `--time-budget`
-   - Manejo robusto de errores (checks pueden fallar sin romper ejecución)
-   - 15 tests de integración
+1. ✅ **Ticket 4.1**: Implementar formatter con Rich (~3h)
+   - Creado `formatter.py` (325 líneas)
+   - Función `format_results()` con Rich Console, Panel, Table
+   - Header con logo CodeGuard
+   - Estadísticas generales (archivos, checks, tiempo)
+   - Tablas por severidad con colores (ERROR=rojo, WARNING=amarillo, INFO=azul)
+   - Resumen final con contadores
+   - Sugerencias contextuales automáticas (black, autoflake, refactoring, security)
+   - Manejo de mensajes largos con truncamiento
+   - 18 tests unitarios
 
-2. ✅ **Ticket 2.5.2**: Tests de orquestación end-to-end
-   - 16 tests e2e en 4 categorías:
-     * TestCodeGuardCLIEndToEnd (8 tests): CLI, formatos, configuración
-     * TestCodeGuardRealChecksEndToEnd (4 tests): Detección real de problemas
-     * TestCodeGuardOrchestrationEndToEnd (2 tests): Orquestación contextual
-     * TestCodeGuardWithExampleProject (2 tests): Proyecto de ejemplo
-   - Helper `extract_json_from_output()` para parsear JSON del CLI
-   - Fixtures con proyectos temporales realistas
+2. ✅ **Ticket 4.2**: Agregar modo JSON mejorado (~1.5h)
+   - Función `format_json()` con estructura completa
+   - Summary: total_files, checks_executed, elapsed_seconds, timestamp, contadores
+   - Results: lista completa de resultados
+   - By_severity: agrupación por ERROR/WARNING/INFO
+   - Pretty-printed con indent=2, ensure_ascii=False
+   - 7 tests unitarios
 
-3. ✅ **Ticket 2.5.3**: CLI con `--analysis-type`
-   - Implementado en Ticket 2.5.1
-   - Opciones: pre-commit (default), pr-review, full
-   - Documentado en `--help`
-   - Tests incluidos en 2.5.2
+3. ✅ **Ticket 4.3**: Integrar formatters en CLI (~1h)
+   - Modificado `agent.py` para usar nuevos formatters
+   - Import de `format_results` y `format_json`
+   - Medición de tiempo de ejecución (import time)
+   - Output limpio: mensajes informativos solo en modo text
+   - Eliminadas funciones antiguas `_display_results_*`
+   - Tests e2e actualizados para nuevo formato JSON (16 tests)
 
-**Commits realizados (2):**
+**Commits realizados (4):**
 ```
-57602a2 Ticket 2.5.2: Tests de orquestación end-to-end
-85f4c0b Ticket 2.5.1: Integrar orquestador en CodeGuard.run()
+7c2152e Actualizar PLAN_IMPLEMENTACION.md - Fase 4 completada
+ce0baa1 Ticket 4.3: Integrar formatters en CLI de CodeGuard
+d5b1c44 Ticket 4.2: Agregar modo JSON mejorado
+1aed60c Ticket 4.1: Implementar formatter con Rich
 ```
 
 **Estadísticas:**
-- ✅ **251/251 tests pasando** (100%)
-  - 220 tests unitarios
+- ✅ **276/276 tests pasando** (100%)
+  - 245 tests unitarios (incluyendo 25 nuevos de formatter)
   - 15 tests integración
-  - 16 tests e2e
-- ✅ **Orquestación contextual** completamente funcional
-- ✅ **CLI completo** con todas las opciones
-- ✅ **3 tipos de análisis**: pre-commit (<5s), pr-review (todos), full (sin límite)
-- ✅ **Auto-discovery** operativo (6 checks detectados)
-- ✅ **Configuración** desde pyproject.toml funcionando
+  - 16 tests e2e (actualizados para nuevo JSON)
+- ✅ **Rich formatter** completamente funcional
+- ✅ **JSON mejorado** con metadata completa
+- ✅ **CLI actualizado** con formatters integrados
+- ✅ **PLAN_IMPLEMENTACION.md** actualizado (85% completo)
 
 **Funcionalidad verificada:**
-- ✅ CLI produce output correcto (texto y JSON)
-- ✅ Orquestador selecciona checks según `analysis_type`
-- ✅ Presupuesto de tiempo se respeta
-- ✅ Checks detectan problemas reales
-- ✅ Exclusión de archivos funciona
-- ✅ Proyecto de ejemplo se analiza sin errores
-- ✅ Manejo de errores robusto
+- ✅ `codeguard . --format text` produce output con Rich (colores, tablas, sugerencias)
+- ✅ `codeguard . --format json` produce JSON con summary/results/by_severity
+- ✅ Medición automática de tiempo de ejecución
+- ✅ Output limpio en JSON (sin mensajes informativos)
+- ✅ Sugerencias contextuales según tipo de problemas detectados
+- ✅ Compatibilidad con todos los tipos de análisis (pre-commit, pr-review, full)
 
 **Estado del sistema:**
-- CodeGuard ahora es **completamente funcional** con orquestación
-- Listo para usar en pre-commit hooks
-- Preparado para agregar IA opcional (Fase 3)
-- Output básico funcionando (Fase 4 agregará Rich)
+- CodeGuard ahora tiene **output profesional** con Rich
+- JSON estructurado con metadata completa
+- **85% del proyecto completado** (~35h de 42h sin Fase 3)
+- Listo para uso en producción
+- Preparado para Fase 5 (pre-commit hooks)
+
+**Archivos nuevos/modificados:**
+- `src/quality_agents/codeguard/formatter.py` - NUEVO (325 líneas)
+- `tests/unit/test_formatter.py` - NUEVO (453 líneas, 25 tests)
+- `src/quality_agents/codeguard/agent.py` - MODIFICADO (-18 líneas netas)
+- `tests/e2e/test_codeguard_e2e.py` - MODIFICADO (actualizado para nuevo JSON)
+- `src/quality_agents/codeguard/PLAN_IMPLEMENTACION.md` - ACTUALIZADO
 
 ---
 
 ### Resumen de Sesiones Anteriores
+
+**Fase 4 (2026-02-04)**: Output formateado con Rich ✅
+- Rich formatter con colores, tablas y sugerencias
+- JSON mejorado con metadata completa
+- Integración en CLI
+- 25 tests nuevos (276 tests totales)
+
+**Fase 2.5 (2026-02-03)**: Integración con orquestador ✅
+- Orquestación contextual completa
+- CLI con --analysis-type y --time-budget
+- 31 tests nuevos (integración + e2e)
 
 **Fase 2 (2026-02-03)**: Migración a arquitectura modular ✅
 - 6 checks modulares implementados
@@ -399,55 +451,49 @@ Integración completa del orquestador con CodeGuard, con 31 tests nuevos (15 int
 
 ### Para la próxima sesión:
 
-- **Branch actual**: `fase-2.5-orchestrator-integration`
-- **Último commit**: `57602a2` - Ticket 2.5.2 ✅
-- **Estado del proyecto**: Fase 2.5 COMPLETA (100%) ✅
-- **Próximo paso**: Decidir entre:
-  1. **Merge a main** y crear PR (Fases 1.5, 2, 2.5 completas)
-  2. **Actualizar PLAN_IMPLEMENTACION.md** para marcar progreso
-  3. **Fase 3: IA opcional** (~7-8h) - Integración con Claude API
-  4. **Fase 4: Output Rich** (~5-7h) - Formatear salida con colores
+- **Branch actual**: `fase-4-output-rich`
+- **Último commit**: `7c2152e` - Actualizar PLAN_IMPLEMENTACION.md ✅
+- **Estado del proyecto**: Fase 4 COMPLETA (100%) ✅
+- **Progreso total**: 85% completado (35h de ~42h sin Fase 3 suspendida)
+- **Próximo paso**: Opciones:
+  1. **Merge a main** y crear PR (Fases 1.5, 2, 2.5, 4 completas)
+  2. **Fase 5: Pre-commit hooks** (~2h) - Integración con pre-commit framework
+  3. **Fase 6: Documentación** (~7-9h) - Tests finales y README completo
 
-- **Tests**: 251/251 tests pasando (100%) ✅
-  - 220 unitarios
+- **Tests**: 276/276 tests pasando (100%) ✅
+  - 245 unitarios (incluyendo 25 del formatter)
   - 15 integración
   - 16 e2e
 
-- **Checks implementados**: 6/6 (100%) ✅
-  1. SecurityCheck (priority=1, 1.5s) - 24 tests
-  2. PEP8Check (priority=2, 0.5s) - 15 tests
-  3. ComplexityCheck (priority=3, 1.0s) - 27 tests
-  4. PylintCheck (priority=4, 2.0s) - 23 tests
-  5. TypeCheck (priority=5, 3.0s) - 35 tests
-  6. ImportCheck (priority=6, 0.5s) - 25 tests
-
-- **Orquestación**: 100% funcional ✅
-  - Selección contextual según `analysis_type`
-  - Respeto de `time_budget`
-  - Auto-discovery de checks
-  - Manejo robusto de errores
+- **Funcionalidad completada**:
+  - ✅ Arquitectura modular (6 checks)
+  - ✅ Orquestación contextual
+  - ✅ Rich formatter profesional
+  - ✅ JSON con metadata
+  - ✅ CLI completo
 
 **Referencias importantes**:
-- `src/quality_agents/codeguard/agent.py` - CLI y run() con orquestación
+- `src/quality_agents/codeguard/formatter.py` - Rich formatter + JSON mejorado
+- `src/quality_agents/codeguard/agent.py` - CLI con formatters integrados
 - `src/quality_agents/codeguard/orchestrator.py` - Orquestador completo
 - `src/quality_agents/codeguard/checks/` - 6 checks modulares
-- `tests/integration/test_codeguard_integration.py` - 15 tests integración
-- `tests/e2e/test_codeguard_e2e.py` - 16 tests end-to-end
-- `src/quality_agents/codeguard/PLAN_IMPLEMENTACION.md` - Roadmap
+- `tests/unit/test_formatter.py` - 25 tests del formatter
+- `tests/e2e/test_codeguard_e2e.py` - 16 tests e2e
+- `src/quality_agents/codeguard/PLAN_IMPLEMENTACION.md` - Roadmap (85% completo)
 
-**Logros de Fase 2.5:**
-- ✅ Orquestación contextual funcionando
-- ✅ CLI completo con todas las opciones
-- ✅ 31 tests nuevos (integración + e2e)
-- ✅ 251 tests totales (100% pasando)
-- ✅ CodeGuard completamente funcional
-- ✅ Listo para producción (falta IA y Rich opcionales)
+**Logros de Fase 4:**
+- ✅ Output profesional con Rich (colores, tablas, sugerencias)
+- ✅ JSON estructurado con metadata completa
+- ✅ 25 tests nuevos del formatter
+- ✅ 276 tests totales (100% pasando)
+- ✅ CodeGuard listo para producción
+- ✅ Integración CLI completa
 
 **Decisión pendiente:**
-- ¿Merge a main o continuar con Fase 3/4?
-- Actualizar PLAN_IMPLEMENTACION.md con progreso
-- Considerar crear PR para review
+- ¿Merge a main o continuar con Fase 5/6?
+- Fase 3 (IA) queda suspendida
+- Estimación restante: ~9-11h (Fases 5 y 6)
 
 ---
 
-*Última actualización: 2026-02-03 (Commit 57602a2 - Fase 2.5 COMPLETA 100%)*
+*Última actualización: 2026-02-04 (Commit 7c2152e - Fase 4 COMPLETA 100%)*
