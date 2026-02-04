@@ -24,16 +24,17 @@ from click.testing import CliRunner
 from quality_agents.codeguard.agent import main
 
 
-def extract_json_from_output(output: str) -> list:
+def extract_json_from_output(output: str):
     """
     Extrae el JSON del output del CLI.
 
-    El CLI imprime información antes del JSON, así que buscamos
-    el array JSON que empieza con '['.
+    El nuevo formato es un objeto JSON que empieza con '{'.
+    Si no hay '{', asumimos que el output completo es JSON.
     """
-    json_start = output.find('[')
+    json_start = output.find('{')
     if json_start == -1:
-        raise ValueError("No se encontró JSON en el output")
+        # Si no encontramos '{', intentar parsear todo el output
+        return json.loads(output.strip())
     json_str = output[json_start:]
     return json.loads(json_str)
 
@@ -143,7 +144,7 @@ class TestCodeGuardCLIEndToEnd:
         assert "Analizando:" in result.output
 
     def test_cli_analyze_single_file_json_output(self, sample_project):
-        """Verifica que el CLI produce output JSON válido."""
+        """Verifica que el CLI produce output JSON válido con nuevo formato."""
         runner = CliRunner()
         app_py = sample_project / "src" / "app.py"
 
@@ -151,7 +152,19 @@ class TestCodeGuardCLIEndToEnd:
 
         assert result.exit_code == 0
         data = extract_json_from_output(result.output)
-        assert isinstance(data, list)
+
+        # Nuevo formato: objeto con summary, results, by_severity
+        assert isinstance(data, dict)
+        assert "summary" in data
+        assert "results" in data
+        assert isinstance(data["summary"], dict)
+        assert isinstance(data["results"], list)
+
+        # Verificar campos del summary
+        assert "total_files" in data["summary"]
+        assert "checks_executed" in data["summary"]
+        assert "elapsed_seconds" in data["summary"]
+        assert "total_issues" in data["summary"]
 
     def test_cli_analyze_directory(self, sample_project):
         """Verifica que el CLI analiza un directorio completo."""
@@ -309,8 +322,8 @@ class TestCodeGuardRealChecksEndToEnd:
         assert result.exit_code == 0
         data = extract_json_from_output(result.output)
 
-        # Debe detectar problemas PEP8
-        pep8_results = [r for r in data if r["check"] == "PEP8"]
+        # Nuevo formato: usar data["results"]
+        pep8_results = [r for r in data["results"] if r["check"] == "PEP8"]
         assert len(pep8_results) > 0
 
     def test_detects_complexity_issues(self, project_with_issues):
@@ -323,8 +336,8 @@ class TestCodeGuardRealChecksEndToEnd:
         assert result.exit_code == 0
         data = extract_json_from_output(result.output)
 
-        # Debe detectar complejidad alta
-        complexity_results = [r for r in data if r["check"] == "Complexity"]
+        # Nuevo formato: usar data["results"]
+        complexity_results = [r for r in data["results"] if r["check"] == "Complexity"]
         # Puede haber warnings o info dependiendo del umbral
         assert len(complexity_results) >= 0  # Al menos se ejecutó el check
 
@@ -341,8 +354,8 @@ class TestCodeGuardRealChecksEndToEnd:
         assert result.exit_code == 0
         data = extract_json_from_output(result.output)
 
-        # Debe detectar imports sin uso
-        import_results = [r for r in data if r["check"] == "UnusedImports"]
+        # Nuevo formato: usar data["results"]
+        import_results = [r for r in data["results"] if r["check"] == "UnusedImports"]
         assert len(import_results) > 0
 
     def test_detects_security_issues(self, project_with_issues):
@@ -355,8 +368,8 @@ class TestCodeGuardRealChecksEndToEnd:
         assert result.exit_code == 0
         data = extract_json_from_output(result.output)
 
-        # Debe detectar shell=True como riesgo
-        security_results = [r for r in data if r["check"] == "Security"]
+        # Nuevo formato: usar data["results"]
+        security_results = [r for r in data["results"] if r["check"] == "Security"]
         assert len(security_results) > 0
         # Verificar que menciona shell=True
         messages = " ".join([r["message"] for r in security_results])
@@ -415,9 +428,10 @@ class TestCodeGuardOrchestrationEndToEnd:
         data_precommit = extract_json_from_output(result_precommit.output)
         data_full = extract_json_from_output(result_full.output)
 
+        # Nuevo formato: usar data["results"]
         # Full puede tener más o igual cantidad de checks
-        checks_precommit = {r["check"] for r in data_precommit}
-        checks_full = {r["check"] for r in data_full}
+        checks_precommit = {r["check"] for r in data_precommit["results"]}
+        checks_full = {r["check"] for r in data_full["results"]}
 
         # Pre-commit es un subconjunto de full (o iguales si todos son rápidos)
         assert checks_precommit.issubset(checks_full) or checks_precommit == checks_full

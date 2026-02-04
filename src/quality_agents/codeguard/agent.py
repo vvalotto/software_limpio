@@ -3,8 +3,10 @@ CodeGuard Agent - Implementación principal
 
 Fecha de actualización: 2026-02-03
 Ticket: 2.5.1 - Integración con orquestador
+Ticket: 4.3 - Integración con formatter Rich
 """
 
+import time
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -177,6 +179,8 @@ class CodeGuard:
 
 import click
 
+from quality_agents.codeguard.formatter import format_results, format_json
+
 
 @click.command()
 @click.argument("path", type=click.Path(exists=True), default=".")
@@ -226,82 +230,46 @@ def main(
     guard = CodeGuard(config_path=config_path, project_root=target if target.is_dir() else target.parent)
     files = guard.collect_files(target)
 
-    click.echo(f"CodeGuard v0.2.0 (Arquitectura Modular)")
-    click.echo(f"Analizando: {target.absolute()}")
-    click.echo(f"Archivos Python encontrados: {len(files)}")
-    click.echo(f"Tipo de análisis: {analysis_type}")
-
-    if time_budget:
-        click.echo(f"Presupuesto de tiempo: {time_budget}s")
-
-    if config_path:
-        click.echo(f"Configuración: {config_path}")
-
-    click.echo(f"\nChecks disponibles: {len(guard.orchestrator.checks)}")
-    click.echo("---")
-
-    # Ejecutar checks con orquestador
-    results = guard.run(files, analysis_type=analysis_type, time_budget=time_budget)
-
-    # Mostrar resultados
+    # Solo mostrar información si formato es texto
+    # (en JSON solo queremos el JSON puro para facilitar parsing)
     if format == "text":
-        _display_results_text(results)
+        click.echo(f"CodeGuard v0.2.0 (Arquitectura Modular)")
+        click.echo(f"Analizando: {target.absolute()}")
+        click.echo(f"Archivos Python encontrados: {len(files)}")
+        click.echo(f"Tipo de análisis: {analysis_type}")
+
+        if time_budget:
+            click.echo(f"Presupuesto de tiempo: {time_budget}s")
+
+        if config_path:
+            click.echo(f"Configuración: {config_path}")
+
+        click.echo(f"\nChecks disponibles: {len(guard.orchestrator.checks)}")
+        click.echo("---")
+
+    # Ejecutar checks con orquestador (medir tiempo)
+    start_time = time.time()
+    results = guard.run(files, analysis_type=analysis_type, time_budget=time_budget)
+    elapsed = time.time() - start_time
+
+    # Mostrar resultados con formatters nuevos
+    if format == "text":
+        # Usar Rich formatter
+        format_results(
+            results,
+            elapsed=elapsed,
+            total_files=len(files),
+            checks_executed=len(guard.orchestrator.checks),
+        )
     else:
-        _display_results_json(results)
-
-
-def _display_results_text(results: List[CheckResult]) -> None:
-    """
-    Muestra resultados en formato texto.
-
-    Args:
-        results: Lista de resultados de verificación
-    """
-    if not results:
-        click.echo("\n✓ No se encontraron problemas")
-        return
-
-    # Agrupar por severidad
-    errors = [r for r in results if r.severity == Severity.ERROR]
-    warnings = [r for r in results if r.severity == Severity.WARNING]
-    infos = [r for r in results if r.severity == Severity.INFO]
-
-    click.echo(f"\nResultados: {len(results)} total")
-    click.echo(f"  Errores: {len(errors)}")
-    click.echo(f"  Advertencias: {len(warnings)}")
-    click.echo(f"  Informativos: {len(infos)}")
-    click.echo()
-
-    # Mostrar solo errores y warnings por defecto
-    for result in errors + warnings:
-        severity_icon = "✗" if result.severity == Severity.ERROR else "⚠"
-        location = f"{result.file_path}:{result.line_number}" if result.line_number else result.file_path
-
-        click.echo(f"{severity_icon} [{result.check_name}] {location}")
-        click.echo(f"  {result.message}")
-
-
-def _display_results_json(results: List[CheckResult]) -> None:
-    """
-    Muestra resultados en formato JSON.
-
-    Args:
-        results: Lista de resultados de verificación
-    """
-    import json
-
-    output = [
-        {
-            "check": r.check_name,
-            "severity": r.severity.value,
-            "message": r.message,
-            "file": r.file_path,
-            "line": r.line_number,
-        }
-        for r in results
-    ]
-
-    click.echo(json.dumps(output, indent=2))
+        # Usar JSON formatter
+        json_output = format_json(
+            results,
+            elapsed=elapsed,
+            total_files=len(files),
+            checks_executed=len(guard.orchestrator.checks),
+        )
+        click.echo(json_output)
 
 
 if __name__ == "__main__":
