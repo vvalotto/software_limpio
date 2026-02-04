@@ -3,8 +3,10 @@ Tests para formatter.py (Rich output)
 
 Fecha de creación: 2026-02-04
 Ticket: 4.1 - Implementar formatter con Rich
+Ticket: 4.2 - Agregar modo JSON
 """
 
+import json
 from io import StringIO
 from unittest.mock import patch
 
@@ -14,6 +16,7 @@ from rich.console import Console
 from quality_agents.codeguard.agent import CheckResult, Severity
 from quality_agents.codeguard.formatter import (
     format_results,
+    format_json,
     _print_header,
     _print_stats,
     _print_success,
@@ -319,3 +322,151 @@ class TestPrintSuggestions:
         captured = capsys.readouterr()
         # No debe imprimir nada
         assert "Sugerencias" not in captured.out
+
+
+class TestFormatJson:
+    """Tests para format_json()."""
+
+    def test_format_json_empty_results(self):
+        """Test con resultados vacíos."""
+        json_output = format_json([], elapsed=1.5, total_files=5, checks_executed=3)
+        data = json.loads(json_output)
+
+        # Verificar estructura
+        assert "summary" in data
+        assert "results" in data
+        assert "by_severity" not in data  # No se incluye si no hay resultados
+
+        # Verificar summary
+        assert data["summary"]["total_files"] == 5
+        assert data["summary"]["checks_executed"] == 3
+        assert data["summary"]["elapsed_seconds"] == 1.5
+        assert data["summary"]["total_issues"] == 0
+        assert data["summary"]["errors"] == 0
+        assert data["summary"]["warnings"] == 0
+        assert data["summary"]["infos"] == 0
+
+        # Verificar results vacío
+        assert data["results"] == []
+
+    def test_format_json_with_results(self):
+        """Test con resultados."""
+        results = [
+            CheckResult(
+                check_name="PEP8",
+                severity=Severity.ERROR,
+                message="Line too long",
+                file_path="src/app.py",
+                line_number=42,
+            ),
+            CheckResult(
+                check_name="Pylint",
+                severity=Severity.WARNING,
+                message="Low score",
+                file_path="src/utils.py",
+            ),
+        ]
+
+        json_output = format_json(results, elapsed=2.3, total_files=10, checks_executed=6)
+        data = json.loads(json_output)
+
+        # Verificar summary
+        assert data["summary"]["total_issues"] == 2
+        assert data["summary"]["errors"] == 1
+        assert data["summary"]["warnings"] == 1
+        assert data["summary"]["infos"] == 0
+
+        # Verificar results
+        assert len(data["results"]) == 2
+        assert data["results"][0]["check"] == "PEP8"
+        assert data["results"][0]["severity"] == "error"
+        assert data["results"][0]["message"] == "Line too long"
+        assert data["results"][0]["file"] == "src/app.py"
+        assert data["results"][0]["line"] == 42
+
+        # Verificar by_severity
+        assert "by_severity" in data
+        assert len(data["by_severity"]["errors"]) == 1
+        assert len(data["by_severity"]["warnings"]) == 1
+        assert len(data["by_severity"]["infos"]) == 0
+
+    def test_format_json_mixed_severity(self):
+        """Test con múltiples severidades."""
+        results = [
+            CheckResult("Security", Severity.ERROR, "Vuln", "a.py", 1),
+            CheckResult("PEP8", Severity.WARNING, "Style", "b.py", 2),
+            CheckResult("Complexity", Severity.INFO, "CC high", "c.py", 3),
+        ]
+
+        json_output = format_json(results, elapsed=3.5, total_files=15, checks_executed=6)
+        data = json.loads(json_output)
+
+        # Verificar contadores
+        assert data["summary"]["total_issues"] == 3
+        assert data["summary"]["errors"] == 1
+        assert data["summary"]["warnings"] == 1
+        assert data["summary"]["infos"] == 1
+
+        # Verificar agrupación por severidad
+        assert len(data["by_severity"]["errors"]) == 1
+        assert data["by_severity"]["errors"][0]["check"] == "Security"
+        assert len(data["by_severity"]["warnings"]) == 1
+        assert data["by_severity"]["warnings"][0]["check"] == "PEP8"
+        assert len(data["by_severity"]["infos"]) == 1
+        assert data["by_severity"]["infos"][0]["check"] == "Complexity"
+
+    def test_format_json_valid_structure(self):
+        """Test que el JSON tiene estructura válida."""
+        results = [CheckResult("Test", Severity.ERROR, "msg", "file.py")]
+        json_output = format_json(results)
+
+        # Debe ser JSON válido
+        data = json.loads(json_output)
+
+        # Verificar campos requeridos
+        assert "summary" in data
+        assert "results" in data
+        assert "by_severity" in data
+
+        # Verificar tipos
+        assert isinstance(data["summary"], dict)
+        assert isinstance(data["results"], list)
+        assert isinstance(data["by_severity"], dict)
+
+    def test_format_json_pretty_printed(self):
+        """Test que el JSON está pretty-printed."""
+        results = [CheckResult("Test", Severity.ERROR, "msg", "file.py")]
+        json_output = format_json(results)
+
+        # Debe tener múltiples líneas (pretty-printed)
+        assert "\n" in json_output
+        # Debe tener indentación
+        assert "  " in json_output
+
+    def test_format_json_timestamp_present(self):
+        """Test que incluye timestamp."""
+        json_output = format_json([])
+        data = json.loads(json_output)
+
+        assert "timestamp" in data["summary"]
+        # Verificar formato ISO
+        assert "T" in data["summary"]["timestamp"]  # Formato ISO tiene 'T'
+
+    def test_format_json_handles_none_values(self):
+        """Test que maneja valores None correctamente."""
+        results = [
+            CheckResult(
+                check_name="Test",
+                severity=Severity.INFO,
+                message="test message",
+                file_path=None,  # Puede ser None
+                line_number=None,  # Puede ser None
+            ),
+        ]
+
+        json_output = format_json(results)
+        data = json.loads(json_output)
+
+        # Debe serializar None como null en JSON
+        assert data["results"][0]["file"] is None
+        assert data["results"][0]["line"] is None

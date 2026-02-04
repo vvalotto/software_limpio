@@ -3,9 +3,12 @@ Formatter - Output formateado con Rich
 
 Fecha de creación: 2026-02-04
 Ticket: 4.1 - Implementar formatter con Rich
+Ticket: 4.2 - Agregar modo JSON
 """
 
-from typing import List
+import json
+from datetime import datetime
+from typing import Any, Dict, List
 
 from rich.console import Console
 from rich.panel import Panel
@@ -231,3 +234,90 @@ def _print_suggestions(
             border_style="yellow",
             padding=(1, 2),
         ))
+
+
+def format_json(
+    results: List[CheckResult],
+    elapsed: float = 0.0,
+    total_files: int = 0,
+    checks_executed: int = 0,
+) -> str:
+    """
+    Formatea resultados en formato JSON estructurado.
+
+    Args:
+        results: Lista de resultados de verificación
+        elapsed: Tiempo de ejecución en segundos
+        total_files: Número total de archivos analizados
+        checks_executed: Número de checks ejecutados
+
+    Returns:
+        String con JSON formateado (pretty-printed)
+
+    Example:
+        >>> results = [CheckResult(...), CheckResult(...)]
+        >>> json_output = format_json(results, elapsed=2.5, total_files=10, checks_executed=6)
+        >>> print(json_output)
+    """
+    # Agrupar por severidad para estadísticas
+    errors = [r for r in results if r.severity == Severity.ERROR]
+    warnings = [r for r in results if r.severity == Severity.WARNING]
+    infos = [r for r in results if r.severity == Severity.INFO]
+
+    # Estructura JSON mejorada
+    output: Dict[str, Any] = {
+        "summary": {
+            "total_files": total_files,
+            "checks_executed": checks_executed,
+            "elapsed_seconds": round(elapsed, 2),
+            "timestamp": datetime.now().isoformat(),
+            "total_issues": len(results),
+            "errors": len(errors),
+            "warnings": len(warnings),
+            "infos": len(infos),
+        },
+        "results": [
+            {
+                "check": r.check_name,
+                "severity": r.severity.value,
+                "message": r.message,
+                "file": r.file_path,
+                "line": r.line_number,
+            }
+            for r in results
+        ],
+    }
+
+    # Si hay resultados, agregar agrupación por severidad (opcional pero útil)
+    if results:
+        output["by_severity"] = {
+            "errors": [
+                {
+                    "check": r.check_name,
+                    "message": r.message,
+                    "file": r.file_path,
+                    "line": r.line_number,
+                }
+                for r in errors
+            ],
+            "warnings": [
+                {
+                    "check": r.check_name,
+                    "message": r.message,
+                    "file": r.file_path,
+                    "line": r.line_number,
+                }
+                for r in warnings
+            ],
+            "infos": [
+                {
+                    "check": r.check_name,
+                    "message": r.message,
+                    "file": r.file_path,
+                    "line": r.line_number,
+                }
+                for r in infos
+            ],
+        }
+
+    return json.dumps(output, indent=2, ensure_ascii=False)
