@@ -1,0 +1,38 @@
+# Pre-commit hooks for CodeGuard
+# https://pre-commit.com/
+
+- id: codeguard
+  name: CodeGuard Quality Check
+  description: Fast quality checks for Python code (< 5s)
+  entry: codeguard
+  language: python
+  types: [python]
+  pass_filenames: false
+  args: ['--analysis-type', 'pre-commit', '--format', 'text']
+  additional_dependencies: []
+  always_run: false
+  stages: [commit]
+
+- id: codeguard-full
+  name: CodeGuard Full Analysis
+  description: Comprehensive quality analysis (all checks)
+  entry: codeguard
+  language: python
+  types: [python]
+  pass_filenames: false
+  args: ['--analysis-type', 'full', '--format', 'text']
+  additional_dependencies: []
+  always_run: false
+  stages: [manual]
+
+- id: codeguard-pr
+  name: CodeGuard PR Review
+  description: Quality checks for pull request review
+  entry: codeguard
+  language: python
+  types: [python]
+  pass_filenames: false
+  args: ['--analysis-type', 'pr-review', '--format', 'text']
+  additional_dependencies: []
+  always_run: false
+  stages: [manual, push]
