@@ -255,3 +255,269 @@ def   bad_function( x,y ):
         warnings = [r for r in results if r.severity == Severity.WARNING]
         # El archivo tiene espaciado incorrecto, debería detectarlo PEP8Check
         assert len(warnings) > 0
+
+
+class TestCodeGuardWithFullProject:
+    """Tests end-to-end con proyecto completo."""
+
+    @pytest.fixture
+    def temp_project(self):
+        """Crea un proyecto Python temporal completo."""
+        import os
+        import shutil
+
+        # Crear directorio temporal
+        temp_dir = Path(tempfile.mkdtemp(prefix="test_project_"))
+
+        # Crear estructura de proyecto
+        src_dir = temp_dir / "src"
+        src_dir.mkdir()
+
+        # Archivo con problemas de calidad
+        bad_file = src_dir / "bad_code.py"
+        bad_file.write_text("""
+import os
+import sys
+import json
+
+def   bad_function( x,y ):
+    a=x+y
+    b=a*2
+    c=b+1
+    d=c*2
+    e=d+1
+    f=e*2
+    g=f+1
+    h=g*2
+    return h
+
+def unused_function():
+    pass
+""")
+
+        # Archivo válido
+        good_file = src_dir / "good_code.py"
+        good_file.write_text("""
+def hello(name: str) -> str:
+    \"\"\"Say hello to someone.
+
+    Args:
+        name: Name of the person
+
+    Returns:
+        Greeting message
+    \"\"\"
+    return f"Hello, {name}!"
+""")
+
+        yield temp_dir
+
+        # Cleanup
+        shutil.rmtree(temp_dir)
+
+    def test_run_on_full_project(self, temp_project):
+        """Verifica que CodeGuard analiza un proyecto completo."""
+        guard = CodeGuard()
+
+        # Recolectar todos los archivos .py
+        py_files = list((temp_project / "src").rglob("*.py"))
+        assert len(py_files) == 2
+
+        # Ejecutar análisis
+        results = guard.run(py_files, analysis_type="full")
+
+        # Debe detectar problemas en bad_code.py
+        assert len(results) > 0
+
+        # Verificar que detecta problemas específicos
+        bad_file_results = [r for r in results if "bad_code.py" in str(r.file_path)]
+        assert len(bad_file_results) > 0
+
+    def test_precommit_analysis_under_5_seconds(self, temp_project):
+        """Verifica que análisis pre-commit termina en < 5 segundos."""
+        import time
+
+        guard = CodeGuard()
+        py_files = list((temp_project / "src").rglob("*.py"))
+
+        # Medir tiempo de ejecución
+        start = time.time()
+        guard.run(py_files, analysis_type="pre-commit", time_budget=5.0)
+        elapsed = time.time() - start
+
+        # Debe terminar en menos de 5 segundos
+        assert elapsed < 5.0, f"Pre-commit analysis took {elapsed:.2f}s (> 5s)"
+
+
+class TestCodeGuardWithConfiguration:
+    """Tests de configuración desde diferentes fuentes."""
+
+    @pytest.fixture
+    def project_with_pyproject_toml(self):
+        """Crea proyecto con pyproject.toml."""
+        import shutil
+
+        temp_dir = Path(tempfile.mkdtemp(prefix="test_config_"))
+
+        # Crear pyproject.toml
+        pyproject = temp_dir / "pyproject.toml"
+        pyproject.write_text("""
+[tool.codeguard]
+min_pylint_score = 9.0
+max_cyclomatic_complexity = 5
+check_pep8 = true
+check_security = true
+exclude_patterns = ["test_*.py", "__pycache__"]
+
+[tool.codeguard.ai]
+enabled = false
+""")
+
+        # Crear archivo Python
+        src_dir = temp_dir / "src"
+        src_dir.mkdir()
+        (src_dir / "app.py").write_text("print('hello')\n")
+
+        yield temp_dir
+
+        shutil.rmtree(temp_dir)
+
+    @pytest.fixture
+    def project_with_yaml_config(self):
+        """Crea proyecto con .codeguard.yml."""
+        import shutil
+
+        temp_dir = Path(tempfile.mkdtemp(prefix="test_yaml_"))
+
+        # Crear .codeguard.yml con formato correcto (campos directos)
+        yaml_config = temp_dir / ".codeguard.yml"
+        yaml_config.write_text("""
+min_pylint_score: 8.5
+max_cyclomatic_complexity: 8
+check_pep8: true
+check_security: true
+exclude_patterns:
+  - "*.pyc"
+  - "__pycache__"
+""")
+
+        # Crear archivo Python
+        (temp_dir / "app.py").write_text("print('hello')\n")
+
+        yield temp_dir
+
+        shutil.rmtree(temp_dir)
+
+    def test_load_config_from_pyproject_toml(self, project_with_pyproject_toml):
+        """Verifica que carga configuración desde pyproject.toml."""
+        from quality_agents.codeguard.config import load_config
+
+        config = load_config(project_root=project_with_pyproject_toml)
+
+        # Verificar que cargó la configuración
+        assert config.min_pylint_score == 9.0
+        assert config.max_cyclomatic_complexity == 5
+        assert config.check_pep8 is True
+        assert config.check_security is True
+        assert "test_*.py" in config.exclude_patterns
+        assert config.ai.enabled is False
+
+    def test_load_config_from_yaml(self, project_with_yaml_config):
+        """Verifica que carga configuración desde .yml."""
+        from quality_agents.codeguard.config import load_config
+
+        # Buscar config en directorio del proyecto
+        config_path = project_with_yaml_config / ".codeguard.yml"
+        config = load_config(config_path=config_path, project_root=project_with_yaml_config)
+
+        # Verificar que cargó la configuración
+        assert config.min_pylint_score == 8.5
+        assert config.max_cyclomatic_complexity == 8
+        assert config.check_pep8 is True
+        assert config.check_security is True
+
+    def test_load_config_defaults_when_no_file(self):
+        """Verifica que usa defaults cuando no hay archivo de configuración."""
+        import tempfile
+        import shutil
+
+        temp_dir = Path(tempfile.mkdtemp(prefix="test_defaults_"))
+
+        try:
+            from quality_agents.codeguard.config import load_config
+
+            config = load_config(project_root=temp_dir)
+
+            # Debe usar valores por defecto
+            assert config.min_pylint_score == 8.0  # Default
+            assert config.max_cyclomatic_complexity == 10  # Default
+        finally:
+            shutil.rmtree(temp_dir)
+
+    def test_run_with_pyproject_toml_config(self, project_with_pyproject_toml):
+        """Verifica que CodeGuard usa configuración de pyproject.toml."""
+        from quality_agents.codeguard.config import load_config
+
+        # Cargar config
+        config = load_config(project_root=project_with_pyproject_toml)
+
+        # Crear CodeGuard con la config
+        guard = CodeGuard()
+        guard.config = config
+
+        # Ejecutar
+        py_files = list(project_with_pyproject_toml.rglob("*.py"))
+        results = guard.run(py_files)
+
+        # Debe ejecutar sin errores
+        assert isinstance(results, list)
+
+    def test_run_with_ai_disabled(self):
+        """Verifica que CodeGuard funciona con IA deshabilitada."""
+        from quality_agents.codeguard.config import CodeGuardConfig, AIConfig
+
+        # Config con IA deshabilitada
+        config = CodeGuardConfig(ai=AIConfig(enabled=False))
+        guard = CodeGuard()
+        guard.config = config
+
+        # Crear archivo temporal
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
+            f.write("print('hello')\n")
+            temp_path = Path(f.name)
+
+        try:
+            results = guard.run([temp_path])
+            assert isinstance(results, list)
+        finally:
+            temp_path.unlink()
+
+    def test_run_with_ai_enabled_but_no_api_key(self):
+        """Verifica que CodeGuard funciona con IA habilitada pero sin API key."""
+        from quality_agents.codeguard.config import CodeGuardConfig, AIConfig
+        import os
+
+        # Asegurar que no hay API key
+        old_key = os.environ.pop("ANTHROPIC_API_KEY", None)
+
+        try:
+            # Config con IA habilitada
+            config = CodeGuardConfig(ai=AIConfig(enabled=True))
+            guard = CodeGuard()
+            guard.config = config
+
+            # Crear archivo temporal
+            with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
+                f.write("print('hello')\n")
+                temp_path = Path(f.name)
+
+            try:
+                # Debe funcionar sin IA (degradar gracefully)
+                results = guard.run([temp_path])
+                assert isinstance(results, list)
+            finally:
+                temp_path.unlink()
+        finally:
+            # Restaurar API key si existía
+            if old_key:
+                os.environ["ANTHROPIC_API_KEY"] = old_key
