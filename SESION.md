@@ -33,9 +33,9 @@ Transformar a los desarrolladores de "escritores de código" a "evaluadores de c
 
 ### Última Sesión: 2026-02-04
 
-**Branch activo**: `fase-4-output-rich`
+**Branch activo**: `fase-5-pre-commit-hook`
 
-**Último commit**: `7c2152e` - Actualizar PLAN_IMPLEMENTACION.md - Fase 4 completada
+**Último commit**: `571c427` - Actualizar PLAN_IMPLEMENTACION.md - Fase 5 completada
 
 ### Completado
 
@@ -167,6 +167,20 @@ Transformar a los desarrolladores de "escritores de código" a "evaluadores de c
     - [x] **Commit ce0baa1** en branch `fase-4-output-rich`
   - [x] **Total Fase 4**: 25 tests nuevos (18 + 7), 276 tests totales
   - [x] **Commit 7c2152e**: PLAN_IMPLEMENTACION.md actualizado
+- [x] **Fase 5: Soporte Pre-commit Framework** ✅ COMPLETA (2026-02-04)
+  - [x] **Ticket 5.1**: Crear .pre-commit-hooks.yaml (~1h)
+    - [x] Archivo `.pre-commit-hooks.yaml` en raíz (3 hooks: codeguard, codeguard-pr, codeguard-full)
+    - [x] Configuración de stages (commit, push, manual)
+    - [x] Archivo de ejemplo `.pre-commit-config.yaml.example`
+    - [x] **Commit bb86c07** en branch `fase-5-pre-commit-hook`
+  - [x] **Ticket 5.2**: Documentar uso con pre-commit (~1h)
+    - [x] Actualizada `docs/guias/codeguard.md` (sección completa "Integración con Git")
+    - [x] Opción 1: Pre-commit Framework (instalación, 3 hooks, ejemplos, troubleshooting)
+    - [x] Opción 2: Hooks manuales de Git (legacy)
+    - [x] 16 tests de validación
+    - [x] **Commit bb86c07** en branch `fase-5-pre-commit-hook`
+  - [x] **Total Fase 5**: 16 tests nuevos, 292 tests totales
+  - [x] **Commit 571c427**: PLAN_IMPLEMENTACION.md actualizado
 
 ### En Progreso
 
@@ -177,18 +191,16 @@ Transformar a los desarrolladores de "escritores de código" a "evaluadores de c
 **Prioridad CRÍTICA (P0):**
 1. ✅ ~~Fase 2.5: Integrar orquestador~~ **COMPLETADA**
 2. ✅ ~~Fase 4: Output con Rich~~ **COMPLETADA**
+3. ✅ ~~Fase 5: Soporte pre-commit~~ **COMPLETADA**
 
 **Prioridad Alta (P1):**
-3. **Fase 3**: IA opcional con Claude (~7-8h) 🚫 **SUSPENDIDA**
+4. **Fase 3**: IA opcional con Claude (~7-8h) 🚫 **SUSPENDIDA**
    - Ticket 3.1: Crear módulo de integración IA
    - Ticket 3.2: Integrar con CodeGuard
    - Ticket 3.3: Tests de IA (mocks)
 
 **Prioridad Media (P2):**
-4. **Fase 5**: Soporte pre-commit (~2h) ⚠️ **PRÓXIMO**
-   - Ticket 5.1: Crear .pre-commit-hooks.yaml
-   - Ticket 5.2: Documentar uso con pre-commit
-5. **Fase 6**: Tests y documentación (~7-9h)
+5. **Fase 6**: Tests y documentación (~7-9h) ⚠️ **PRÓXIMO**
    - Ticket 6.1: Tests de integración completos
    - Ticket 6.2: Actualizar README.md
    - Ticket 6.3: Crear ejemplo funcional
@@ -199,7 +211,7 @@ Transformar a los desarrolladores de "escritores de código" a "evaluadores de c
 8. GitHub Actions CI/CD
 9. Documentación académica para publicación
 
-**Estimación actualizada:** 42-59.5h (sin Fase 3) / Completado: ~35h (85%)
+**Estimación actualizada:** 42-59.5h (sin Fase 3) / Completado: ~37h (90%)
 
 ---
 
@@ -208,11 +220,11 @@ Transformar a los desarrolladores de "escritores de código" a "evaluadores de c
 ```
 software_limpio/
 ├── src/quality_agents/       # Código fuente (paquete instalable)
-│   ├── codeguard/            # ← Fases 1, 1.5, 2, 2.5, 4 COMPLETAS ✅
+│   ├── codeguard/            # ← Fases 1, 1.5, 2, 2.5, 4, 5 COMPLETAS ✅
 │   │   ├── agent.py          # ✅ CLI + run() con orquestación
 │   │   ├── config.py         # ✅ pyproject.toml + AIConfig + load_config()
 │   │   ├── orchestrator.py   # ✅ CheckOrchestrator con auto-discovery
-│   │   ├── formatter.py      # ✅ Rich formatter + JSON (NUEVO)
+│   │   ├── formatter.py      # ✅ Rich formatter + JSON
 │   │   ├── checks/           # ✅ 6/6 checks implementados
 │   │   │   ├── __init__.py   # ✅ Exports: todos los checks
 │   │   │   ├── pep8_check.py         # ✅ Ticket 2.1
@@ -230,8 +242,10 @@ software_limpio/
 │       └── reporting.py      # ✅ Utilidades de reporte
 ├── tests/                    # Tests (unit, integration, e2e)
 │   ├── unit/                 # ✅ 245 tests unitarios (incluyendo formatter)
-│   ├── integration/          # ✅ 15 tests de integración
+│   ├── integration/          # ✅ 31 tests de integración (incluyendo pre-commit)
 │   └── e2e/                  # ✅ 16 tests end-to-end
+├── .pre-commit-hooks.yaml    # ✅ Definición de hooks (NUEVO - Fase 5)
+├── .pre-commit-config.yaml.example # ✅ Ejemplo de configuración (NUEVO)
 ├── docs/                     # Documentación
 │   ├── teoria/               # ✓ COMPLETA (4 secciones)
 │   ├── metricas/             # ✓ Catálogo completo
@@ -336,84 +350,88 @@ codeguard --help
 
 > Actualizar esta sección al final de cada sesión con contexto relevante.
 
-### Progreso de esta sesión (2026-02-04) - FASE 4 COMPLETADA:
+### Progreso de esta sesión (2026-02-04) - FASE 5 COMPLETADA:
 
-**FASE 4 COMPLETADA AL 100%** ✅
+**FASE 5 COMPLETADA AL 100%** ✅
 
 **Trabajo realizado:**
-Implementación completa de Rich formatter y JSON mejorado para CodeGuard CLI, con 25 tests nuevos.
+Integración completa de CodeGuard con el framework pre-commit, incluyendo 3 hooks diferentes, documentación completa y 16 tests de validación.
 
-**Tickets completados (3/3):**
-1. ✅ **Ticket 4.1**: Implementar formatter con Rich (~3h)
-   - Creado `formatter.py` (325 líneas)
-   - Función `format_results()` con Rich Console, Panel, Table
-   - Header con logo CodeGuard
-   - Estadísticas generales (archivos, checks, tiempo)
-   - Tablas por severidad con colores (ERROR=rojo, WARNING=amarillo, INFO=azul)
-   - Resumen final con contadores
-   - Sugerencias contextuales automáticas (black, autoflake, refactoring, security)
-   - Manejo de mensajes largos con truncamiento
-   - 18 tests unitarios
+**Tickets completados (2/2):**
+1. ✅ **Ticket 5.1**: Crear .pre-commit-hooks.yaml (~1h)
+   - Creado `.pre-commit-hooks.yaml` en raíz del proyecto
+   - 3 hooks definidos:
+     - `codeguard`: Análisis rápido para commits (< 5s, stages: commit)
+     - `codeguard-pr`: Análisis para PR review (~10-15s, stages: push)
+     - `codeguard-full`: Análisis completo (~20-30s, stages: manual)
+   - Configuración completa: id, name, description, entry, language, types, args, stages
+   - Creado `.pre-commit-config.yaml.example` con ejemplos completos
 
-2. ✅ **Ticket 4.2**: Agregar modo JSON mejorado (~1.5h)
-   - Función `format_json()` con estructura completa
-   - Summary: total_files, checks_executed, elapsed_seconds, timestamp, contadores
-   - Results: lista completa de resultados
-   - By_severity: agrupación por ERROR/WARNING/INFO
-   - Pretty-printed con indent=2, ensure_ascii=False
-   - 7 tests unitarios
+2. ✅ **Ticket 5.2**: Documentar uso con pre-commit (~1h)
+   - Actualizada `docs/guias/codeguard.md` con sección completa "Integración con Git"
+   - **Opción 1: Pre-commit Framework (recomendado)**:
+     - Instalación paso a paso (4 pasos)
+     - Tabla de hooks disponibles (3 variantes)
+     - Ejemplos de configuración (básica, completa, manual)
+     - Comandos útiles (run, autoupdate, clean, skip)
+     - Ventajas del framework (6 puntos)
+   - **Troubleshooting específico** (5 casos comunes):
+     - Hook no se ejecuta
+     - Command not found: codeguard
+     - Pre-commit tarda mucho
+     - Saltar CodeGuard solo una vez
+     - Actualizar a nueva versión
+   - **Opción 2: Hooks manuales de Git (legacy)**
+   - 16 tests de validación (YAML, configuración, documentación)
 
-3. ✅ **Ticket 4.3**: Integrar formatters en CLI (~1h)
-   - Modificado `agent.py` para usar nuevos formatters
-   - Import de `format_results` y `format_json`
-   - Medición de tiempo de ejecución (import time)
-   - Output limpio: mensajes informativos solo en modo text
-   - Eliminadas funciones antiguas `_display_results_*`
-   - Tests e2e actualizados para nuevo formato JSON (16 tests)
-
-**Commits realizados (4):**
+**Commits realizados (2):**
 ```
-7c2152e Actualizar PLAN_IMPLEMENTACION.md - Fase 4 completada
-ce0baa1 Ticket 4.3: Integrar formatters en CLI de CodeGuard
-d5b1c44 Ticket 4.2: Agregar modo JSON mejorado
-1aed60c Ticket 4.1: Implementar formatter con Rich
+571c427 Actualizar PLAN_IMPLEMENTACION.md - Fase 5 completada
+bb86c07 Fase 5: Soporte pre-commit framework completo
 ```
 
 **Estadísticas:**
-- ✅ **276/276 tests pasando** (100%)
-  - 245 tests unitarios (incluyendo 25 nuevos de formatter)
-  - 15 tests integración
-  - 16 tests e2e (actualizados para nuevo JSON)
-- ✅ **Rich formatter** completamente funcional
-- ✅ **JSON mejorado** con metadata completa
-- ✅ **CLI actualizado** con formatters integrados
-- ✅ **PLAN_IMPLEMENTACION.md** actualizado (85% completo)
+- ✅ **292/292 tests pasando** (100%)
+  - 245 tests unitarios
+  - 31 tests integración (15 + 16 nuevos de pre-commit)
+  - 16 tests e2e
+- ✅ **Pre-commit framework** completamente soportado
+- ✅ **3 hooks disponibles** (rápido, PR, completo)
+- ✅ **Documentación completa** con troubleshooting
+- ✅ **PLAN_IMPLEMENTACION.md** actualizado (90% completo)
 
 **Funcionalidad verificada:**
-- ✅ `codeguard . --format text` produce output con Rich (colores, tablas, sugerencias)
-- ✅ `codeguard . --format json` produce JSON con summary/results/by_severity
-- ✅ Medición automática de tiempo de ejecución
-- ✅ Output limpio en JSON (sin mensajes informativos)
-- ✅ Sugerencias contextuales según tipo de problemas detectados
-- ✅ Compatibilidad con todos los tipos de análisis (pre-commit, pr-review, full)
+- ✅ Archivo `.pre-commit-hooks.yaml` válido según especificación
+- ✅ 3 hooks configurados con diferentes analysis-type
+- ✅ Stages correctamente configurados (commit, push, manual)
+- ✅ Documentación incluye instalación, ejemplos y troubleshooting
+- ✅ Tests validan YAML, campos requeridos y documentación
+- ✅ Archivo de ejemplo `.pre-commit-config.yaml.example` funcional
 
 **Estado del sistema:**
-- CodeGuard ahora tiene **output profesional** con Rich
-- JSON estructurado con metadata completa
-- **85% del proyecto completado** (~35h de 42h sin Fase 3)
-- Listo para uso en producción
-- Preparado para Fase 5 (pre-commit hooks)
+- CodeGuard ahora **soporta pre-commit framework**
+- 3 variantes de hooks para diferentes usos
+- Documentación completa con casos de uso
+- **90% del proyecto completado** (~37h de 42h sin Fase 3)
+- Listo para distribución vía pre-commit
+- Solo falta Fase 6 (documentación final)
 
 **Archivos nuevos/modificados:**
-- `src/quality_agents/codeguard/formatter.py` - NUEVO (325 líneas)
-- `tests/unit/test_formatter.py` - NUEVO (453 líneas, 25 tests)
-- `src/quality_agents/codeguard/agent.py` - MODIFICADO (-18 líneas netas)
-- `tests/e2e/test_codeguard_e2e.py` - MODIFICADO (actualizado para nuevo JSON)
+- `.pre-commit-hooks.yaml` - NUEVO (definición de 3 hooks)
+- `.pre-commit-config.yaml.example` - NUEVO (ejemplo completo)
+- `tests/integration/test_pre_commit_hooks.py` - NUEVO (16 tests)
+- `docs/guias/codeguard.md` - MODIFICADO (sección completa de integración Git)
 - `src/quality_agents/codeguard/PLAN_IMPLEMENTACION.md` - ACTUALIZADO
 
 ---
 
 ### Resumen de Sesiones Anteriores
+
+**Fase 5 (2026-02-04)**: Soporte pre-commit framework ✅
+- Integración completa con framework pre-commit
+- 3 hooks (codeguard, codeguard-pr, codeguard-full)
+- Documentación completa con troubleshooting
+- 16 tests nuevos (292 tests totales)
 
 **Fase 4 (2026-02-04)**: Output formateado con Rich ✅
 - Rich formatter con colores, tablas y sugerencias
@@ -451,18 +469,18 @@ d5b1c44 Ticket 4.2: Agregar modo JSON mejorado
 
 ### Para la próxima sesión:
 
-- **Branch actual**: `fase-4-output-rich`
-- **Último commit**: `7c2152e` - Actualizar PLAN_IMPLEMENTACION.md ✅
-- **Estado del proyecto**: Fase 4 COMPLETA (100%) ✅
-- **Progreso total**: 85% completado (35h de ~42h sin Fase 3 suspendida)
+- **Branch actual**: `fase-5-pre-commit-hook`
+- **Último commit**: `571c427` - Actualizar PLAN_IMPLEMENTACION.md - Fase 5 completada ✅
+- **Estado del proyecto**: Fase 5 COMPLETA (100%) ✅
+- **Progreso total**: 90% completado (37h de ~42h sin Fase 3 suspendida)
 - **Próximo paso**: Opciones:
-  1. **Merge a main** y crear PR (Fases 1.5, 2, 2.5, 4 completas)
-  2. **Fase 5: Pre-commit hooks** (~2h) - Integración con pre-commit framework
-  3. **Fase 6: Documentación** (~7-9h) - Tests finales y README completo
+  1. **Merge a main** y crear PR (Fases 1.5, 2, 2.5, 4, 5 completas)
+  2. **Fase 6: Documentación** (~7-9h) - Tests finales y README completo
+  3. Release v0.1.0 (MVP funcional)
 
-- **Tests**: 276/276 tests pasando (100%) ✅
-  - 245 unitarios (incluyendo 25 del formatter)
-  - 15 integración
+- **Tests**: 292/292 tests pasando (100%) ✅
+  - 245 unitarios
+  - 31 integración (incluyendo 16 de pre-commit)
   - 16 e2e
 
 - **Funcionalidad completada**:
@@ -471,29 +489,33 @@ d5b1c44 Ticket 4.2: Agregar modo JSON mejorado
   - ✅ Rich formatter profesional
   - ✅ JSON con metadata
   - ✅ CLI completo
+  - ✅ Pre-commit framework (NUEVO)
 
 **Referencias importantes**:
+- `.pre-commit-hooks.yaml` - Definición de 3 hooks (NUEVO)
+- `.pre-commit-config.yaml.example` - Ejemplo de configuración (NUEVO)
+- `tests/integration/test_pre_commit_hooks.py` - 16 tests de validación (NUEVO)
+- `docs/guias/codeguard.md` - Guía completa con pre-commit (ACTUALIZADO)
 - `src/quality_agents/codeguard/formatter.py` - Rich formatter + JSON mejorado
 - `src/quality_agents/codeguard/agent.py` - CLI con formatters integrados
 - `src/quality_agents/codeguard/orchestrator.py` - Orquestador completo
 - `src/quality_agents/codeguard/checks/` - 6 checks modulares
-- `tests/unit/test_formatter.py` - 25 tests del formatter
-- `tests/e2e/test_codeguard_e2e.py` - 16 tests e2e
-- `src/quality_agents/codeguard/PLAN_IMPLEMENTACION.md` - Roadmap (85% completo)
+- `src/quality_agents/codeguard/PLAN_IMPLEMENTACION.md` - Roadmap (90% completo)
 
-**Logros de Fase 4:**
-- ✅ Output profesional con Rich (colores, tablas, sugerencias)
-- ✅ JSON estructurado con metadata completa
-- ✅ 25 tests nuevos del formatter
-- ✅ 276 tests totales (100% pasando)
-- ✅ CodeGuard listo para producción
-- ✅ Integración CLI completa
+**Logros de Fase 5:**
+- ✅ Soporte completo para pre-commit framework
+- ✅ 3 hooks disponibles (rápido, PR, completo)
+- ✅ Documentación completa con troubleshooting
+- ✅ 16 tests nuevos de validación
+- ✅ 292 tests totales (100% pasando)
+- ✅ CodeGuard listo para distribución
+- ✅ Ejemplo de configuración incluido
 
 **Decisión pendiente:**
-- ¿Merge a main o continuar con Fase 5/6?
+- ¿Merge a main o continuar con Fase 6?
 - Fase 3 (IA) queda suspendida
-- Estimación restante: ~9-11h (Fases 5 y 6)
+- Estimación restante: ~7-9h (solo Fase 6)
 
 ---
 
-*Última actualización: 2026-02-04 (Commit 7c2152e - Fase 4 COMPLETA 100%)*
+*Última actualización: 2026-02-04 (Commit 571c427 - Fase 5 COMPLETA 100%)*
