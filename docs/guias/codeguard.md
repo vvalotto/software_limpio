@@ -122,7 +122,6 @@ exclude_patterns = [
 enabled = false              # Cambiar a true para habilitar sugerencias con IA
 explain_errors = true        # IA explica los errores detectados
 suggest_fixes = true         # IA sugiere correcciones
-model = "claude-sonnet-4-20250514"  # Modelo de Claude a usar
 max_tokens = 500            # Máximo de tokens por respuesta
 ```
 
@@ -437,7 +436,6 @@ En tu `pyproject.toml`:
 enabled = true                          # Habilitar sugerencias con IA
 explain_errors = true                   # IA explica los errores
 suggest_fixes = true                    # IA sugiere correcciones
-model = "claude-sonnet-4-20250514"     # Modelo de Claude
 max_tokens = 500                        # Máximo de tokens por respuesta
 ```
 
@@ -448,7 +446,6 @@ ai:
   enabled: true
   explain_errors: true
   suggest_fixes: true
-  model: "claude-sonnet-4-20250514"
   max_tokens: 500
 ```
 

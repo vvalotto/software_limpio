@@ -45,7 +45,6 @@ exclude_patterns = [
 enabled = false  # Cambiar a true si tienes ANTHROPIC_API_KEY
 explain_errors = true
 suggest_fixes = true
-model = "claude-sonnet-4-20250514"
 max_tokens = 500
 
 # =============================================================================
