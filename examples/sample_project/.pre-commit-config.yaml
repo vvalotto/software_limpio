@@ -1,0 +1,57 @@
+# Configuración de pre-commit para el proyecto de ejemplo
+# Ver: https://pre-commit.com/
+
+repos:
+  # CodeGuard - Análisis de calidad rápido
+  - repo: local
+    hooks:
+      - id: codeguard
+        name: CodeGuard Quality Check
+        entry: codeguard
+        language: system
+        types: [python]
+        args: ['--analysis-type', 'pre-commit', '--format', 'text']
+        stages: [commit]
+
+  # CodeGuard para PR (análisis más completo)
+  # Descomenta para habilitar en pre-push
+  #   - id: codeguard-pr
+  #     name: CodeGuard PR Review
+  #     entry: codeguard
+  #     language: system
+  #     types: [python]
+  #     args: ['--analysis-type', 'pr-review']
+  #     stages: [push]
+
+  # Black - Formateo automático de código
+  - repo: https://github.com/psf/black
+    rev: 24.1.1
+    hooks:
+      - id: black
+        args: [--line-length=100]
+
+  # isort - Ordenar imports
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args: [--profile, black, --line-length=100]
+
+  # Hooks básicos de pre-commit
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace  # Elimina espacios al final de línea
+      - id: end-of-file-fixer    # Asegura newline al final del archivo
+      - id: check-yaml           # Valida sintaxis YAML
+      - id: check-toml           # Valida sintaxis TOML
+      - id: check-added-large-files  # Previene commits de archivos grandes
+        args: [--maxkb=500]
+
+# Configuración global
+default_language_version:
+  python: python3.11
+
+# Ejecutar hooks en paralelo (más rápido)
+default_stages: [commit]
+fail_fast: false  # Ejecutar todos los hooks aunque uno falle

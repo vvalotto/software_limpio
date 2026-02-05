@@ -1,0 +1,79 @@
+[project]
+name = "sample-project"
+version = "0.1.0"
+description = "Proyecto de ejemplo para demostrar CodeGuard"
+requires-python = ">=3.11"
+
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+]
+
+# =============================================================================
+# CONFIGURACIÓN DE CODEGUARD
+# =============================================================================
+
+[tool.codeguard]
+# Umbrales de calidad
+min_pylint_score = 7.0  # Más permisivo para el ejemplo
+max_cyclomatic_complexity = 10
+max_line_length = 100
+max_function_lines = 25  # Más permisivo
+
+# Verificaciones habilitadas
+check_pep8 = true
+check_pylint = true
+check_security = true
+check_complexity = true
+check_types = true
+check_imports = true
+
+# Exclusiones
+exclude_patterns = [
+    "*.pyc",
+    "__pycache__",
+    ".venv",
+    "venv",
+    ".git",
+    ".pytest_cache",
+]
+
+# Configuración de IA (deshabilitada por defecto)
+[tool.codeguard.ai]
+enabled = false  # Cambiar a true si tienes ANTHROPIC_API_KEY
+explain_errors = true
+suggest_fixes = true
+model = "claude-sonnet-4-20250514"
+max_tokens = 500
+
+# =============================================================================
+# OTRAS HERRAMIENTAS DE CALIDAD
+# =============================================================================
+
+[tool.black]
+line-length = 100
+target-version = ['py311']
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+addopts = "-v --tb=short"
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false  # Más permisivo para el ejemplo
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
