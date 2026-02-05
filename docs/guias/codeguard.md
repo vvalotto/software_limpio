@@ -228,7 +228,125 @@ codeguard $(git diff --name-only --cached | grep '\.py$')
 
 ## Integración con Git
 
-### Pre-commit Hook (Recomendado)
+### Opción 1: Pre-commit Framework (Recomendado)
+
+CodeGuard se integra con el [framework pre-commit](https://pre-commit.com/), la forma moderna y estándar de gestionar hooks de Git.
+
+#### Instalación
+
+```bash
+# 1. Instalar pre-commit en tu proyecto
+pip install pre-commit
+
+# 2. Crear archivo .pre-commit-config.yaml en la raíz del proyecto
+cat > .pre-commit-config.yaml << 'EOF'
+repos:
+  # CodeGuard - Análisis rápido para commits
+  - repo: https://github.com/vvalotto/software_limpio
+    rev: v0.1.0  # Usar la última versión
+    hooks:
+      - id: codeguard
+        name: CodeGuard Quality Check
+        args: ['--format', 'text']
+
+  # Hooks opcionales adicionales
+  - repo: https://github.com/psf/black
+    rev: 24.1.1
+    hooks:
+      - id: black
+        args: [--line-length=100]
+
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args: [--profile, black]
+EOF
+
+# 3. Instalar los hooks en tu repositorio Git
+pre-commit install
+
+# 4. (Opcional) Ejecutar en todos los archivos
+pre-commit run --all-files
+```
+
+#### Hooks Disponibles
+
+CodeGuard proporciona 3 hooks diferentes:
+
+| Hook ID | Descripción | Uso | Tiempo |
+|---------|-------------|-----|--------|
+| `codeguard` | Análisis rápido (default) | Pre-commit | < 5s |
+| `codeguard-pr` | Análisis para PR review | Pre-push / Manual | ~10-15s |
+| `codeguard-full` | Análisis completo | Manual | ~20-30s |
+
+#### Ejemplos de Configuración
+
+**Análisis rápido (solo pre-commit):**
+```yaml
+repos:
+  - repo: https://github.com/vvalotto/software_limpio
+    rev: v0.1.0
+    hooks:
+      - id: codeguard
+```
+
+**Análisis completo en pre-push:**
+```yaml
+repos:
+  - repo: https://github.com/vvalotto/software_limpio
+    rev: v0.1.0
+    hooks:
+      - id: codeguard         # Pre-commit rápido
+      - id: codeguard-pr      # Pre-push completo
+        stages: [push]
+```
+
+**Solo análisis manual:**
+```yaml
+repos:
+  - repo: https://github.com/vvalotto/software_limpio
+    rev: v0.1.0
+    hooks:
+      - id: codeguard-full
+        stages: [manual]
+```
+
+#### Comandos Útiles
+
+```bash
+# Ejecutar todos los hooks manualmente
+pre-commit run --all-files
+
+# Ejecutar solo CodeGuard
+pre-commit run codeguard --all-files
+
+# Ejecutar análisis completo
+pre-commit run codeguard-full --all-files
+
+# Saltar hooks en un commit (no recomendado)
+git commit --no-verify -m "Mensaje"
+
+# Actualizar versiones de hooks
+pre-commit autoupdate
+```
+
+#### Ventajas del Framework pre-commit
+
+- ✅ Gestión centralizada de hooks en `.pre-commit-config.yaml`
+- ✅ Actualización automática de versiones
+- ✅ Aislamiento de dependencias (entornos virtuales por hook)
+- ✅ Fácil compartir configuración con el equipo
+- ✅ Integración con CI/CD
+- ✅ No requiere scripts bash manuales
+
+---
+
+### Opción 2: Hooks Manuales de Git
+
+Si preferís no usar el framework pre-commit, podés crear hooks de Git tradicionales.
+
+#### Pre-commit Hook Manual
 
 Crear archivo `.git/hooks/pre-commit`:
 
@@ -261,7 +379,7 @@ Hacer el hook ejecutable:
 chmod +x .git/hooks/pre-commit
 ```
 
-### Pre-push Hook (Análisis Completo)
+#### Pre-push Hook Manual
 
 Crear archivo `.git/hooks/pre-push`:
 
@@ -281,6 +399,84 @@ if [ $? -ne 0 ]; then
 fi
 
 exit 0
+```
+
+**Limitaciones de hooks manuales:**
+- ❌ No se comparten en el repositorio (están en `.git/hooks/`)
+- ❌ Cada desarrollador debe crearlos manualmente
+- ❌ Difícil mantener versiones sincronizadas
+- ❌ No hay gestión de dependencias automática
+
+---
+
+## Troubleshooting Pre-commit
+
+### El hook no se ejecuta
+
+```bash
+# Verificar que los hooks estén instalados
+ls -la .git/hooks/pre-commit
+
+# Reinstalar hooks
+pre-commit install
+```
+
+### Error "command not found: codeguard"
+
+El hook intenta ejecutar `codeguard` pero no lo encuentra. Soluciones:
+
+```bash
+# Opción 1: Instalar software_limpio en el entorno de pre-commit
+# Agregar en .pre-commit-config.yaml:
+repos:
+  - repo: local
+    hooks:
+      - id: codeguard
+        name: CodeGuard Quality Check
+        entry: codeguard
+        language: system  # Usa el codeguard instalado localmente
+        types: [python]
+        args: ['--analysis-type', 'pre-commit']
+
+# Opción 2: Especificar el path completo
+# Si instalaste en un venv específico
+entry: /path/to/.venv/bin/codeguard
+```
+
+### Pre-commit tarda mucho
+
+```bash
+# Ver qué hooks están tomando tiempo
+pre-commit run --all-files --verbose
+
+# Usar solo el hook rápido de CodeGuard
+# En .pre-commit-config.yaml:
+hooks:
+  - id: codeguard  # < 5s
+  # Evitar:
+  # - id: codeguard-full  # ~30s
+```
+
+### Quiero saltar CodeGuard solo una vez
+
+```bash
+# Saltar todos los hooks (no recomendado)
+git commit --no-verify -m "Mensaje"
+
+# Mejor: deshabilitar temporalmente CodeGuard
+# Comentar en .pre-commit-config.yaml:
+# - id: codeguard
+```
+
+### Actualizar CodeGuard a nueva versión
+
+```bash
+# En .pre-commit-config.yaml, cambiar:
+# rev: v0.1.0  → rev: v0.2.0
+
+# Luego ejecutar:
+pre-commit autoupdate
+pre-commit clean  # Limpiar caché si hay problemas
 ```
 
 ---
