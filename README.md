@@ -10,6 +10,97 @@ Completar la trilogía de Robert C. Martin (Clean Code, Clean Architecture) con 
 
 La IA transforma al profesional de software de "escritor de código" a **director y evaluador de calidad**, usando métricas como herramientas objetivas de verificación.
 
+---
+
+## 🚀 Quick Start - CodeGuard
+
+**CodeGuard** es el primer agente implementado: análisis de calidad rápido para pre-commit.
+
+### Instalación
+
+```bash
+# Clonar el repositorio
+git clone https://github.com/vvalotto/software_limpio.git
+cd software_limpio
+
+# Instalar en modo desarrollo
+python3.11 -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+pip install -e ".[dev]"
+
+# Verificar instalación
+codeguard --version
+```
+
+### Uso Básico
+
+```bash
+# Analizar proyecto actual
+codeguard .
+
+# Análisis para PR review
+codeguard --analysis-type pr-review .
+
+# Salida en JSON
+codeguard --format json . > report.json
+```
+
+### Ejemplo de Output
+
+```
+╭─────────────────────────────────────────────────────────────╮
+│               🛡️  CodeGuard Quality Report                  │
+│  📊 Files: 5 | Issues: 8 (2 errors, 4 warnings) | 2.8s    │
+╰─────────────────────────────────────────────────────────────╯
+
+❌ ERRORS (2)
+┃ src/auth.py:45      │ Hardcoded password detected
+┃ src/utils/api.py:78 │ Use of insecure function: eval()
+
+💡 Suggestions: Run black, fix security issues
+```
+
+### Integración con Git
+
+```bash
+# Opción 1: Pre-commit Framework (recomendado)
+pip install pre-commit
+cat > .pre-commit-config.yaml << 'EOF'
+repos:
+  - repo: https://github.com/vvalotto/software_limpio
+    rev: v0.1.0
+    hooks:
+      - id: codeguard
+EOF
+pre-commit install
+
+# Opción 2: Hook manual
+# Ver guía completa en docs/guias/codeguard.md
+```
+
+### Configuración
+
+En tu `pyproject.toml`:
+
+```toml
+[tool.codeguard]
+min_pylint_score = 8.0
+max_cyclomatic_complexity = 10
+check_pep8 = true
+check_security = true
+exclude_patterns = ["tests/*", "migrations/*"]
+```
+
+### Documentación Completa
+
+📖 **[Guía de Usuario Completa](docs/guias/codeguard.md)** - Instalación, configuración, integración con Git, FAQ
+
+🔧 **[README Técnico](src/quality_agents/codeguard/README.md)** - Arquitectura modular, cómo contribuir
+
+📋 **[Plan de Implementación](src/quality_agents/codeguard/PLAN_IMPLEMENTACION.md)** - Roadmap y progreso
+
+---
+
 ## Contenido
 
 ```
@@ -41,11 +132,28 @@ Seis principios universales de diseño (paradigma-agnósticos):
 
 ## Agentes de Calidad
 
-| Agente | Momento | Acción |
-|--------|---------|--------|
-| CodeGuard | Pre-commit | Advierte (no bloquea) |
-| DesignReviewer | Review/PR | Bloquea si crítico |
-| ArchitectAnalyst | Fin de sprint | Analiza tendencias |
+| Agente | Momento | Duración | Acción | Estado |
+|--------|---------|----------|--------|--------|
+| **CodeGuard** | Pre-commit | < 5s | Advierte (no bloquea) | ✅ **Implementado** |
+| **DesignReviewer** | Review/PR | 2-5 min | Bloquea si crítico | 🚧 Próximamente |
+| **ArchitectAnalyst** | Fin de sprint | 10-30 min | Analiza tendencias | 🚧 Próximamente |
+
+### CodeGuard (Agente de Código)
+
+Sistema modular con 6 checks independientes:
+- **PEP8Check** - Estilo de código (flake8)
+- **SecurityCheck** - Vulnerabilidades (bandit)
+- **ComplexityCheck** - Complejidad ciclomática (radon)
+- **PylintCheck** - Calidad general
+- **TypeCheck** - Tipos (mypy)
+- **ImportCheck** - Imports sin usar
+
+**Features:**
+- ✅ Orquestación contextual (pre-commit, PR-review, full)
+- ✅ Rich formatter profesional
+- ✅ Configuración vía pyproject.toml (PEP 518)
+- ✅ Integración con pre-commit framework
+- ⏳ IA opcional con Claude API (opt-in)
 
 ## Herramientas Base
 
@@ -55,9 +163,36 @@ Seis principios universales de diseño (paradigma-agnósticos):
 - `pydeps` - Dependencias
 - `coverage.py` - Cobertura de tests
 
-## Estado
+## Estado del Proyecto
 
-🚧 En construcción
+### Implementación
+
+| Componente | Estado | Progreso |
+|------------|--------|----------|
+| **Teoría y Fundamentos** | ✅ Completo | 100% |
+| **CodeGuard (Agente de Código)** | ✅ MVP Funcional | 90% |
+| **DesignReviewer (Agente de Diseño)** | 🚧 Próximamente | 0% |
+| **ArchitectAnalyst (Agente de Arquitectura)** | 🚧 Próximamente | 0% |
+
+### CodeGuard - Roadmap
+
+- [x] **Fase 1:** Configuración moderna (pyproject.toml)
+- [x] **Fase 1.5:** Fundamentos arquitectura modular
+- [x] **Fase 2:** 6 checks modulares implementados
+- [x] **Fase 2.5:** Orquestación contextual
+- [x] **Fase 4:** Output profesional con Rich
+- [x] **Fase 5:** Integración pre-commit framework
+- [x] **Fase 6:** Documentación completa (en progreso)
+- [ ] **Fase 3:** IA opcional con Claude (suspendida temporalmente)
+
+**Tests:** 300/300 pasando (100%)
+
+### Próximos Pasos
+
+1. Completar documentación de CodeGuard
+2. Release v0.1.0 (MVP CodeGuard)
+3. Implementar DesignReviewer
+4. Implementar ArchitectAnalyst
 
 ## Autor
 
