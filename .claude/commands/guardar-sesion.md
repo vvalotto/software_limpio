@@ -1,11 +1,11 @@
 ---
-description: Actualizar SESION.md con el progreso de la sesión actual
+description: Actualizar .dev/SESION.md con el progreso de la sesión actual
 allowed-tools: Read, Write
 ---
 
-Actualiza el archivo SESION.md con el progreso de esta sesión. Sigue estos pasos:
+Actualiza el archivo .dev/SESION.md con el progreso de esta sesión. Sigue estos pasos:
 
-1. Lee el archivo SESION.md actual
+1. Lee el archivo .dev/SESION.md actual
 2. Actualiza las siguientes secciones basándote en lo que hicimos en esta conversación:
    - **Estado Actual**: Actualiza la fecha, branch, último commit
    - **Completado**: Marca como [x] las tareas que terminamos
