@@ -1,0 +1,42 @@
+# MANIFEST.in - Archivos adicionales para incluir en el paquete distribuible
+
+# Documentación principal
+include README.md
+include CHANGELOG.md
+include LICENSE
+
+# Documentación de distribución
+include packaging/QUICKSTART.md
+include packaging/DISTRIBUTION.md
+include packaging/RESUMEN.md
+
+# Configuraciones de ejemplo
+include configs/codeguard.yml
+include .pre-commit-hooks.yaml
+
+# Documentación
+recursive-include docs *.md
+recursive-include docs *.yaml
+recursive-include docs *.yml
+
+# Ejemplos
+recursive-include examples *.py
+recursive-include examples *.md
+recursive-include examples *.toml
+recursive-include examples *.yaml
+recursive-include examples *.sh
+
+# Archivos de desarrollo (opcional, para contribuidores)
+include .dev/CLAUDE.md
+recursive-include .dev/plan *.md
+
+# Excluir archivos innecesarios
+global-exclude __pycache__
+global-exclude *.py[co]
+global-exclude *.so
+global-exclude .DS_Store
+global-exclude .pytest_cache
+global-exclude .coverage
+global-exclude htmlcov
+global-exclude .venv
+global-exclude venv
