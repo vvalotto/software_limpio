@@ -7,11 +7,9 @@ Ticket: 2.5
 
 import subprocess
 from pathlib import Path
-from unittest.mock import MagicMock, patch, mock_open
+from unittest.mock import MagicMock, patch
 
-import pytest
-
-from quality_agents.codeguard.agent import CheckResult, Severity
+from quality_agents.codeguard.agent import Severity
 from quality_agents.codeguard.checks.type_check import TypeCheck
 from quality_agents.codeguard.config import CodeGuardConfig
 from quality_agents.shared.verifiable import ExecutionContext

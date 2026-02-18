@@ -13,8 +13,8 @@ import subprocess
 from pathlib import Path
 from typing import List
 
-from quality_agents.shared.verifiable import ExecutionContext, Verifiable
 from quality_agents.codeguard.agent import CheckResult, Severity
+from quality_agents.shared.verifiable import ExecutionContext, Verifiable
 
 
 class ImportCheck(Verifiable):

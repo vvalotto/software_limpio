@@ -13,7 +13,6 @@ Ticket: 2.5.2
 """
 
 import json
-import subprocess
 import tempfile
 from pathlib import Path
 from textwrap import dedent

@@ -9,9 +9,7 @@ import subprocess
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-import pytest
-
-from quality_agents.codeguard.agent import CheckResult, Severity
+from quality_agents.codeguard.agent import Severity
 from quality_agents.codeguard.checks.pylint_check import PylintCheck
 from quality_agents.codeguard.config import CodeGuardConfig
 from quality_agents.shared.verifiable import ExecutionContext

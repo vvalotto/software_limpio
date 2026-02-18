@@ -5,7 +5,7 @@ DesignReviewer Agent - Implementación principal
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import List, Optional, Dict, Any
+from typing import List, Optional
 
 
 class ReviewSeverity(Enum):

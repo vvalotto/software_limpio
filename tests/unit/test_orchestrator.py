@@ -15,12 +15,9 @@ from pathlib import Path
 from typing import Any, List
 from unittest.mock import Mock, patch
 
-import pytest
-
-from quality_agents.shared.verifiable import ExecutionContext, Verifiable
 from quality_agents.codeguard.config import CodeGuardConfig
 from quality_agents.codeguard.orchestrator import CheckOrchestrator
-
+from quality_agents.shared.verifiable import ExecutionContext, Verifiable
 
 # ========== Mock Checks para Tests ==========
 

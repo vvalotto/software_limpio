@@ -3,9 +3,7 @@ Generadores de reportes para DesignReviewer.
 """
 
 from pathlib import Path
-from typing import List, Any
-
-from jinja2 import Environment, FileSystemLoader
+from typing import List
 
 from .agent import ReviewResult
 

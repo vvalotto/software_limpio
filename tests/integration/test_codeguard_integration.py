@@ -5,13 +5,13 @@ Fecha de creación: 2026-02-03
 Ticket: 2.5.1
 """
 
+import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
-import tempfile
 
 import pytest
 
-from quality_agents.codeguard.agent import CodeGuard, CheckResult, Severity
+from quality_agents.codeguard.agent import CheckResult, CodeGuard, Severity
 from quality_agents.codeguard.config import CodeGuardConfig
 
 
@@ -263,7 +263,6 @@ class TestCodeGuardWithFullProject:
     @pytest.fixture
     def temp_project(self):
         """Crea un proyecto Python temporal completo."""
-        import os
         import shutil
 
         # Crear directorio temporal
@@ -438,8 +437,8 @@ exclude_patterns:
 
     def test_load_config_defaults_when_no_file(self):
         """Verifica que usa defaults cuando no hay archivo de configuración."""
-        import tempfile
         import shutil
+        import tempfile
 
         temp_dir = Path(tempfile.mkdtemp(prefix="test_defaults_"))
 
@@ -474,7 +473,7 @@ exclude_patterns:
 
     def test_run_with_ai_disabled(self):
         """Verifica que CodeGuard funciona con IA deshabilitada."""
-        from quality_agents.codeguard.config import CodeGuardConfig, AIConfig
+        from quality_agents.codeguard.config import AIConfig, CodeGuardConfig
 
         # Config con IA deshabilitada
         config = CodeGuardConfig(ai=AIConfig(enabled=False))
@@ -494,8 +493,9 @@ exclude_patterns:
 
     def test_run_with_ai_enabled_but_no_api_key(self):
         """Verifica que CodeGuard funciona con IA habilitada pero sin API key."""
-        from quality_agents.codeguard.config import CodeGuardConfig, AIConfig
         import os
+
+        from quality_agents.codeguard.config import AIConfig, CodeGuardConfig
 
         # Asegurar que no hay API key
         old_key = os.environ.pop("ANTHROPIC_API_KEY", None)

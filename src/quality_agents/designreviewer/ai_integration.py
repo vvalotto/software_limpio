@@ -23,14 +23,15 @@ class AIAssistant:
             api_key: API key de Anthropic (usa env var si no se provee)
         """
         self.api_key = api_key
-        self._client = None
+        self._client: Optional[object] = None
 
-    def _get_client(self):
+    def _get_client(self) -> object:
         """Obtiene cliente de Anthropic (lazy initialization)."""
         if self._client is None:
             try:
-                import anthropic
                 import os
+
+                import anthropic
 
                 key = self.api_key or os.getenv("ANTHROPIC_API_KEY")
                 if key:

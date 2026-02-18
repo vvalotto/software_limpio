@@ -3,9 +3,8 @@ Sistema de snapshots y persistencia para ArchitectAnalyst.
 """
 
 import sqlite3
-from datetime import datetime
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional
 
 from .agent import ArchitectureSnapshot
 
@@ -91,6 +90,7 @@ class SnapshotStore:
 
             conn.commit()
 
+        assert snapshot_id is not None
         return snapshot_id
 
     def get_history(self, metric_name: str, limit: int = 10) -> List[Dict[str, Any]]:

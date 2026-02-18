@@ -16,7 +16,6 @@ import pytest
 
 from quality_agents.shared.verifiable import ExecutionContext, Verifiable
 
-
 # ========== Tests de ExecutionContext ==========
 
 

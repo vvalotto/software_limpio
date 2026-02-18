@@ -3,7 +3,8 @@ Utilidades de reporting compartidas.
 """
 
 from enum import Enum
-from typing import Any, List, Dict
+from typing import Any, Dict, List, Optional
+
 from rich.console import Console
 from rich.table import Table
 
@@ -28,8 +29,8 @@ def format_result(
     check_name: str,
     severity: Severity,
     message: str,
-    file_path: str = None,
-    line_number: int = None
+    file_path: Optional[str] = None,
+    line_number: Optional[int] = None
 ) -> str:
     """
     Formatea un resultado para salida en consola.
@@ -66,7 +67,7 @@ def generate_summary(results: List[Dict[str, Any]]) -> str:
     if not results:
         return "No se encontraron problemas."
 
-    counts = {s: 0 for s in Severity}
+    counts = dict.fromkeys(Severity, 0)
     for r in results:
         severity = r.get("severity", Severity.INFO)
         if isinstance(severity, str):

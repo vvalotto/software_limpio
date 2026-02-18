@@ -12,8 +12,8 @@ import subprocess
 from pathlib import Path
 from typing import List
 
-from quality_agents.shared.verifiable import ExecutionContext, Verifiable
 from quality_agents.codeguard.agent import CheckResult, Severity
+from quality_agents.shared.verifiable import ExecutionContext, Verifiable
 
 
 class PEP8Check(Verifiable):
@@ -122,7 +122,6 @@ class PEP8Check(Verifiable):
                     parts = line.split(":", 3)
                     if len(parts) >= 4:
                         line_num = int(parts[1])
-                        error_code = parts[3].strip().split()[0]
                         message = parts[3].strip()
 
                         results.append(
