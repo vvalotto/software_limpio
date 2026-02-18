@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "if [ -f \"$CLAUDE_PROJECT_DIR/SESION.md\" ]; then echo '📋 CONTEXTO DE SESIÓN CARGADO:'; echo ''; cat \"$CLAUDE_PROJECT_DIR/SESION.md\"; fi"
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/check-session-start.sh"
           }
         ]
       }
@@ -15,7 +15,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo ''; echo '⚠️  Recuerda ejecutar /guardar-sesion antes de salir para guardar el progreso'"
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/save-session.sh"
           }
         ]
       }
