@@ -7,7 +7,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
-## [0.1.0] - 2026-02-05
+## [0.1.0] - 2026-02-18
 
 ### 🎉 Primera Release - MVP CodeGuard
 
