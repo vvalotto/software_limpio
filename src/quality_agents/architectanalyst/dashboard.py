@@ -5,8 +5,8 @@ Dashboard interactivo para ArchitectAnalyst.
 from pathlib import Path
 from typing import Any, Dict, List
 
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
+import plotly.graph_objects as go  # type: ignore[import-untyped]
+from plotly.subplots import make_subplots  # type: ignore[import-untyped]
 
 
 def create_metrics_dashboard(

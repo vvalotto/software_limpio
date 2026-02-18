@@ -90,6 +90,7 @@ class SnapshotStore:
 
             conn.commit()
 
+        assert snapshot_id is not None
         return snapshot_id
 
     def get_history(self, metric_name: str, limit: int = 10) -> List[Dict[str, Any]]:

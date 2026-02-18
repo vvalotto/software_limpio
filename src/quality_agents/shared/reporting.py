@@ -3,7 +3,7 @@ Utilidades de reporting compartidas.
 """
 
 from enum import Enum
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from rich.console import Console
 from rich.table import Table
@@ -29,8 +29,8 @@ def format_result(
     check_name: str,
     severity: Severity,
     message: str,
-    file_path: str = None,
-    line_number: int = None
+    file_path: Optional[str] = None,
+    line_number: Optional[int] = None
 ) -> str:
     """
     Formatea un resultado para salida en consola.
