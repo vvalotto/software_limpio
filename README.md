@@ -29,7 +29,7 @@ source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -e ".[dev]"
 
 # Verificar instalación
-codeguard --version
+codeguard --help
 ```
 
 ### Uso Básico
@@ -170,7 +170,7 @@ Sistema modular con 6 checks independientes:
 | Componente | Estado | Progreso |
 |------------|--------|----------|
 | **Teoría y Fundamentos** | ✅ Completo | 100% |
-| **CodeGuard (Agente de Código)** | ✅ MVP Funcional | 90% |
+| **CodeGuard (Agente de Código)** | ✅ MVP Completo | 100% |
 | **DesignReviewer (Agente de Diseño)** | 🚧 Próximamente | 0% |
 | **ArchitectAnalyst (Agente de Arquitectura)** | 🚧 Próximamente | 0% |
 
@@ -182,17 +182,16 @@ Sistema modular con 6 checks independientes:
 - [x] **Fase 2.5:** Orquestación contextual
 - [x] **Fase 4:** Output profesional con Rich
 - [x] **Fase 5:** Integración pre-commit framework
-- [x] **Fase 6:** Documentación completa (en progreso)
+- [x] **Fase 6:** Documentación completa
 - [ ] **Fase 3:** IA opcional con Claude (suspendida temporalmente)
 
 **Tests:** 300/300 pasando (100%)
 
 ### Próximos Pasos
 
-1. Completar documentación de CodeGuard
-2. Release v0.1.0 (MVP CodeGuard)
-3. Implementar DesignReviewer
-4. Implementar ArchitectAnalyst
+1. Release v0.1.0 (en progreso)
+2. Implementar DesignReviewer (v0.2.0)
+3. Implementar ArchitectAnalyst (v0.3.0)
 
 ## Autor
 
