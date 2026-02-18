@@ -12,7 +12,7 @@ from enum import Enum
 from pathlib import Path
 from typing import List, Optional
 
-from quality_agents.codeguard.config import CodeGuardConfig, load_config
+from quality_agents.codeguard.config import load_config
 from quality_agents.codeguard.orchestrator import CheckOrchestrator
 from quality_agents.shared.verifiable import ExecutionContext
 
@@ -175,11 +175,11 @@ class CodeGuard:
         return list(path.rglob("*.py"))
 
 
-# --- CLI ---
+# --- CLI --- (imports aquí para evitar importación circular con formatter.py)
 
-import click
+import click  # noqa: E402
 
-from quality_agents.codeguard.formatter import format_results, format_json
+from quality_agents.codeguard.formatter import format_json, format_results  # noqa: E402
 
 
 @click.command()
@@ -233,7 +233,7 @@ def main(
     # Solo mostrar información si formato es texto
     # (en JSON solo queremos el JSON puro para facilitar parsing)
     if format == "text":
-        click.echo(f"CodeGuard v0.2.0 (Arquitectura Modular)")
+        click.echo("CodeGuard v0.2.0 (Arquitectura Modular)")
         click.echo(f"Analizando: {target.absolute()}")
         click.echo(f"Archivos Python encontrados: {len(files)}")
         click.echo(f"Tipo de análisis: {analysis_type}")

@@ -14,8 +14,8 @@ import inspect
 import logging
 from typing import List
 
-from quality_agents.shared.verifiable import ExecutionContext, Verifiable
 from quality_agents.codeguard.config import CodeGuardConfig
+from quality_agents.shared.verifiable import ExecutionContext, Verifiable
 
 logger = logging.getLogger(__name__)
 

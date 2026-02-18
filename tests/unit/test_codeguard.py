@@ -2,11 +2,9 @@
 Tests unitarios para CodeGuard.
 """
 
-import pytest
-from pathlib import Path
 
 from quality_agents.codeguard import CodeGuard
-from quality_agents.codeguard.agent import Severity, CheckResult
+from quality_agents.codeguard.agent import CheckResult, Severity
 
 
 class TestCodeGuard:

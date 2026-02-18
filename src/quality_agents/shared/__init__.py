@@ -2,7 +2,7 @@
 Módulo compartido entre agentes.
 """
 
-from .config import load_config, QualityConfig
+from .config import QualityConfig, load_config
 from .reporting import format_result, generate_summary
 from .verifiable import ExecutionContext, Verifiable
 

@@ -3,7 +3,8 @@ Utilidades de reporting compartidas.
 """
 
 from enum import Enum
-from typing import Any, List, Dict
+from typing import Any, Dict, List
+
 from rich.console import Console
 from rich.table import Table
 
@@ -66,7 +67,7 @@ def generate_summary(results: List[Dict[str, Any]]) -> str:
     if not results:
         return "No se encontraron problemas."
 
-    counts = {s: 0 for s in Severity}
+    counts = dict.fromkeys(Severity, 0)
     for r in results:
         severity = r.get("severity", Severity.INFO)
         if isinstance(severity, str):

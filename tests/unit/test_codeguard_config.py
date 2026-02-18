@@ -2,11 +2,10 @@
 Tests unitarios para configuración de CodeGuard.
 """
 
-import pytest
-import tempfile
-from pathlib import Path
 
-from quality_agents.codeguard.config import CodeGuardConfig, AIConfig, load_config
+import pytest
+
+from quality_agents.codeguard.config import AIConfig, CodeGuardConfig, load_config
 
 
 class TestAIConfig:

@@ -3,7 +3,7 @@ Cálculo de métricas de arquitectura.
 """
 
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict
 
 
 def calculate_afferent_coupling(module_path: Path) -> int:

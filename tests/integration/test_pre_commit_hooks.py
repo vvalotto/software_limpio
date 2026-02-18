@@ -5,11 +5,10 @@ Verifica que el archivo .pre-commit-hooks.yaml está correctamente configurado
 según las especificaciones del framework pre-commit.
 """
 
-import yaml
 from pathlib import Path
 
 import pytest
-
+import yaml
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 HOOKS_FILE = PROJECT_ROOT / ".pre-commit-hooks.yaml"

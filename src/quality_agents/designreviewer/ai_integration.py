@@ -29,8 +29,9 @@ class AIAssistant:
         """Obtiene cliente de Anthropic (lazy initialization)."""
         if self._client is None:
             try:
-                import anthropic
                 import os
+
+                import anthropic
 
                 key = self.api_key or os.getenv("ANTHROPIC_API_KEY")
                 if key:

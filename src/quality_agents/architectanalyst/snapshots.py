@@ -3,9 +3,8 @@ Sistema de snapshots y persistencia para ArchitectAnalyst.
 """
 
 import sqlite3
-from datetime import datetime
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional
 
 from .agent import ArchitectureSnapshot
 

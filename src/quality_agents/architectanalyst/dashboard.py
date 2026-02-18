@@ -3,7 +3,7 @@ Dashboard interactivo para ArchitectAnalyst.
 """
 
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots

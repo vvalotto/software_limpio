@@ -9,8 +9,8 @@ Agentes:
 
 __version__ = "0.1.0"
 
+from .architectanalyst import ArchitectAnalyst
 from .codeguard import CodeGuard
 from .designreviewer import DesignReviewer
-from .architectanalyst import ArchitectAnalyst
 
 __all__ = ["CodeGuard", "DesignReviewer", "ArchitectAnalyst"]

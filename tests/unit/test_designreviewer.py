@@ -2,11 +2,9 @@
 Tests unitarios para DesignReviewer.
 """
 
-import pytest
-from pathlib import Path
 
 from quality_agents.designreviewer import DesignReviewer
-from quality_agents.designreviewer.agent import ReviewSeverity, ReviewResult
+from quality_agents.designreviewer.agent import ReviewResult, ReviewSeverity
 
 
 class TestDesignReviewer:

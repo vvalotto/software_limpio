@@ -7,22 +7,19 @@ Ticket: 4.2 - Agregar modo JSON
 """
 
 import json
-from io import StringIO
-from unittest.mock import patch
 
-import pytest
 from rich.console import Console
 
 from quality_agents.codeguard.agent import CheckResult, Severity
 from quality_agents.codeguard.formatter import (
-    format_results,
-    format_json,
     _print_header,
+    _print_results_table,
     _print_stats,
     _print_success,
-    _print_results_table,
-    _print_summary,
     _print_suggestions,
+    _print_summary,
+    format_json,
+    format_results,
 )
 
 

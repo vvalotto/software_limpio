@@ -3,7 +3,7 @@ Analizadores de métricas para DesignReviewer.
 """
 
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Any, Dict, List
 
 
 def analyze_lcom(file_path: Path) -> Dict[str, Any]:

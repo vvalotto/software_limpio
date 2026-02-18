@@ -2,15 +2,14 @@
 Tests unitarios para ArchitectAnalyst.
 """
 
-import pytest
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 from quality_agents.architectanalyst import ArchitectAnalyst
-from quality_agents.architectanalyst.agent import ArchitectureSnapshot, ArchitectureMetric
+from quality_agents.architectanalyst.agent import ArchitectureMetric, ArchitectureSnapshot
 from quality_agents.architectanalyst.metrics import (
+    calculate_distance_from_main_sequence,
     calculate_instability,
-    calculate_distance_from_main_sequence
 )
 
 

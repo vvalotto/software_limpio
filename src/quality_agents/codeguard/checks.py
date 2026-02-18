@@ -3,9 +3,9 @@ Verificaciones individuales para CodeGuard.
 """
 
 from pathlib import Path
-from typing import List, Optional
+from typing import List
 
-from .agent import CheckResult, Severity
+from .agent import CheckResult
 
 
 def check_pep8(file_path: Path) -> List[CheckResult]:

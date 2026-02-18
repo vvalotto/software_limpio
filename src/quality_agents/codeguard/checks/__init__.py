@@ -101,12 +101,12 @@ Ticket: 1.5.3
 """
 
 # Imports de checks implementados
+from .complexity_check import ComplexityCheck
+from .import_check import ImportCheck
 from .pep8_check import PEP8Check
 from .pylint_check import PylintCheck
 from .security_check import SecurityCheck
-from .complexity_check import ComplexityCheck
 from .type_check import TypeCheck
-from .import_check import ImportCheck
 
 # Lista de checks exportados (actualizar cuando se agreguen checks)
 __all__ = [
