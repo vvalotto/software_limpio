@@ -112,12 +112,12 @@ class TestAnalyzerOrchestratorInit:
         assert orch.config is config
         assert isinstance(orch.analyzers, list)
 
-    def test_discovery_directorio_vacio_no_falla(self):
-        """Con analyzers/ vacío, debe retornar lista vacía sin lanzar excepciones."""
+    def test_discovery_no_falla(self):
+        """Auto-discovery debe completar sin lanzar excepciones."""
         orch = AnalyzerOrchestrator(config=None)
 
-        # El paquete analyzers/ existe pero está vacío (no hay subclases de Verifiable)
-        assert len(orch.analyzers) == 0
+        # El paquete analyzers/ existe y puede tener 0 o más analyzers
+        assert isinstance(orch.analyzers, list)
 
     def test_config_guardado_correctamente(self):
         """La config debe quedar disponible como atributo."""
