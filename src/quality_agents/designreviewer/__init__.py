@@ -6,5 +6,6 @@ Puede bloquear si encuentra problemas críticos.
 """
 
 from .agent import DesignReviewer
+from .models import ReviewResult, ReviewSeverity
 
-__all__ = ["DesignReviewer"]
+__all__ = ["DesignReviewer", "ReviewResult", "ReviewSeverity"]
