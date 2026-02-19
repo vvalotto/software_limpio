@@ -99,5 +99,6 @@ Ticket: 1.1
 
 # Imports de analyzers implementados
 from .cbo_analyzer import CBOAnalyzer
+from .fan_out_analyzer import FanOutAnalyzer
 
-__all__ = ["CBOAnalyzer"]
+__all__ = ["CBOAnalyzer", "FanOutAnalyzer"]
