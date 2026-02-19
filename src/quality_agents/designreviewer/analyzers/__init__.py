@@ -97,7 +97,9 @@ Fecha de creación: 2026-02-19
 Ticket: 1.1
 """
 
-# Imports de analyzers implementados (se agregan a medida que se implementan)
-# from .cbo_analyzer import CBOAnalyzer
+# Imports de analyzers implementados
+from .cbo_analyzer import CBOAnalyzer
+from .circular_imports_analyzer import CircularImportsAnalyzer
+from .fan_out_analyzer import FanOutAnalyzer
 
-__all__: list[str] = []
+__all__ = ["CBOAnalyzer", "CircularImportsAnalyzer", "FanOutAnalyzer"]
