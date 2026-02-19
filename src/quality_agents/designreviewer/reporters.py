@@ -5,7 +5,7 @@ Generadores de reportes para DesignReviewer.
 from pathlib import Path
 from typing import List
 
-from .agent import ReviewResult
+from .models import ReviewResult
 
 
 def generate_html_report(results: List[ReviewResult], output_path: Path) -> None:
