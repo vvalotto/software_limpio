@@ -11,7 +11,9 @@ Ticket: 1.3 - Refactorizar DesignReviewer como clase principal
 from pathlib import Path
 from typing import List, Optional
 
+from quality_agents.designreviewer.config import DesignReviewerConfig, load_config
 from quality_agents.designreviewer.models import ReviewResult, ReviewSeverity
+from quality_agents.designreviewer.orchestrator import AnalyzerOrchestrator
 
 # Re-exportar para compatibilidad con imports externos
 __all__ = ["DesignReviewer", "ReviewResult", "ReviewSeverity"]
@@ -50,9 +52,11 @@ class DesignReviewer:
         self.config_path = config_path
         self.results: List[ReviewResult] = []
 
-        # config y orchestrator se inicializan en tickets 1.4 y 1.5
-        self._config = None
-        self._orchestrator = None
+        self._config: DesignReviewerConfig = load_config(
+            config_path=config_path,
+            project_root=path if path.is_dir() else path.parent,
+        )
+        self._orchestrator: AnalyzerOrchestrator = AnalyzerOrchestrator(self._config)
 
     def run(self, files: Optional[List[Path]] = None) -> List[ReviewResult]:
         """
