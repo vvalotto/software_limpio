@@ -1,117 +1,157 @@
 """
 DesignReviewer Agent - Implementación principal
+
+Analiza la calidad de diseño del delta de un PR. A diferencia de CodeGuard,
+puede bloquear el merge si detecta violaciones críticas.
+
+Fecha de creación: 2026-02-19
+Ticket: 1.3 - Refactorizar DesignReviewer como clase principal
 """
 
-from dataclasses import dataclass
-from enum import Enum
 from pathlib import Path
 from typing import List, Optional
 
+from quality_agents.designreviewer.models import ReviewResult, ReviewSeverity
 
-class ReviewSeverity(Enum):
-    """Niveles de severidad para los resultados de review."""
-    INFO = "info"
-    WARNING = "warning"
-    CRITICAL = "critical"  # Bloquea el merge
-
-
-@dataclass
-class ReviewResult:
-    """Resultado de un análisis de diseño."""
-    metric_name: str
-    severity: ReviewSeverity
-    current_value: float
-    threshold: float
-    message: str
-    suggestion: Optional[str] = None
-    file_path: Optional[str] = None
+# Re-exportar para compatibilidad con imports externos
+__all__ = ["DesignReviewer", "ReviewResult", "ReviewSeverity"]
 
 
 class DesignReviewer:
     """
-    Agente de review para análisis profundo de diseño.
+    Agente de review para análisis profundo de calidad de diseño.
 
     Características:
-        - Ejecuta en 2-5 minutos
-        - Puede bloquear si hay problemas críticos
-        - Analiza: code smells, cohesión, acoplamiento, mantenibilidad, deuda técnica
-        - Genera reportes HTML con sugerencias de IA
+        - Ejecuta en 2-5 minutos (modo PR review)
+        - Puede bloquear el merge si hay violaciones CRITICAL
+        - Analiza el delta del PR: solo archivos modificados + dependencias directas
+        - Métricas: CBO, Fan-Out, Circular Imports, DIT, NOP, LCOM, WMC, Code Smells
+        - Delega en AnalyzerOrchestrator para auto-discovery y ejecución de analyzers
+
+    Attributes:
+        path: Directorio raíz del proyecto a analizar.
+        config_path: Ruta al archivo de configuración (opcional).
+        results: Lista de resultados del último análisis ejecutado.
     """
 
-    def __init__(self, config_path: Optional[Path] = None, ai_enabled: bool = True):
+    def __init__(
+        self,
+        path: Path = Path("."),
+        config_path: Optional[Path] = None,
+    ) -> None:
         """
         Inicializa DesignReviewer.
 
         Args:
-            config_path: Ruta al archivo de configuración YAML
-            ai_enabled: Habilitar sugerencias con IA
+            path: Directorio raíz del proyecto.
+            config_path: Ruta al archivo de configuración (pyproject.toml o YAML).
         """
+        self.path = path
         self.config_path = config_path
-        self.ai_enabled = ai_enabled
         self.results: List[ReviewResult] = []
 
-    def analyze(self, target_path: Path) -> List[ReviewResult]:
+        # config y orchestrator se inicializan en tickets 1.4 y 1.5
+        self._config = None
+        self._orchestrator = None
+
+    def run(self, files: Optional[List[Path]] = None) -> List[ReviewResult]:
         """
-        Ejecuta análisis completo sobre el código.
+        Ejecuta análisis sobre los archivos especificados.
+
+        Delega en AnalyzerOrchestrator para seleccionar y ejecutar los analyzers
+        apropiados según el contexto.
 
         Args:
-            target_path: Ruta al directorio o archivo a analizar
+            files: Archivos a analizar. Si es None, analiza todos los Python en self.path.
 
         Returns:
-            Lista de resultados de análisis
+            Lista de resultados del análisis.
         """
         self.results = []
 
-        self._analyze_cohesion(target_path)
-        self._analyze_coupling(target_path)
-        self._analyze_maintainability(target_path)
-        self._analyze_code_smells(target_path)
+        if files is None:
+            files = self.collect_files(self.path)
 
-        if self.ai_enabled:
-            self._generate_ai_suggestions()
+        python_files = [f for f in files if f.suffix == ".py"]
+
+        if self._orchestrator is not None:
+            self.results = self._orchestrator.run(python_files)
 
         return self.results
+
+    def analyze_delta(self, changed_files: List[Path]) -> List[ReviewResult]:
+        """
+        Analiza solo los archivos modificados en el PR (delta).
+
+        Es el modo principal de uso: recibe la lista de archivos cambiados
+        en el PR y analiza su calidad de diseño.
+
+        Args:
+            changed_files: Lista de archivos modificados en el PR.
+
+        Returns:
+            Lista de resultados del análisis.
+        """
+        return self.run(files=changed_files)
 
     def should_block(self) -> bool:
         """
         Determina si el merge debe ser bloqueado.
 
         Returns:
-            True si hay resultados críticos
+            True si hay al menos un resultado con severidad CRITICAL.
         """
-        return any(r.severity == ReviewSeverity.CRITICAL for r in self.results)
+        return any(r.is_blocking() for r in self.results)
 
-    def generate_report(self, output_path: Path) -> None:
+    def collect_files(self, path: Path) -> List[Path]:
         """
-        Genera reporte HTML con los resultados.
+        Recolecta archivos Python a analizar.
 
         Args:
-            output_path: Ruta donde guardar el reporte
+            path: Directorio o archivo a analizar.
+
+        Returns:
+            Lista de archivos Python encontrados.
         """
-        # TODO: Implementar con Jinja2
-        pass
+        if path.is_file():
+            return [path] if path.suffix == ".py" else []
+        return list(path.rglob("*.py"))
 
-    def _analyze_cohesion(self, target_path: Path) -> None:
-        """Analiza métricas de cohesión (LCOM)."""
-        # TODO: Implementar
-        pass
 
-    def _analyze_coupling(self, target_path: Path) -> None:
-        """Analiza métricas de acoplamiento (CBO, Fan-Out)."""
-        # TODO: Implementar
-        pass
+# --- CLI --- (imports aquí para evitar importación circular con formatter.py)
 
-    def _analyze_maintainability(self, target_path: Path) -> None:
-        """Analiza índice de mantenibilidad."""
-        # TODO: Implementar con radon
-        pass
+import click  # noqa: E402
 
-    def _analyze_code_smells(self, target_path: Path) -> None:
-        """Detecta code smells comunes."""
-        # TODO: Implementar
-        pass
 
-    def _generate_ai_suggestions(self) -> None:
-        """Genera sugerencias usando Claude API."""
-        # TODO: Implementar con anthropic SDK
-        pass
+@click.command()
+@click.argument("path", type=click.Path(exists=True), default=".")
+@click.option(
+    "--config", "-c",
+    type=click.Path(exists=True),
+    help="Archivo de configuración (pyproject.toml o YAML)",
+)
+@click.option(
+    "--format", "-f",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Formato de salida",
+)
+@click.option(
+    "--no-ai",
+    is_flag=True,
+    default=False,
+    help="Deshabilitar sugerencias de IA",
+)
+def main(path: str, config: Optional[str], format: str, no_ai: bool) -> None:
+    """
+    DesignReviewer - Análisis de calidad de diseño sobre el delta de un PR.
+
+    Analiza archivos Python en PATH (archivo o directorio).
+    Bloquea (exit code 1) si detecta violaciones CRITICAL.
+    """
+    click.echo("DesignReviewer v0.2.0 — en construcción")
+    click.echo("Implementación completa disponible próximamente.")
+
+
+if __name__ == "__main__":
+    main()
