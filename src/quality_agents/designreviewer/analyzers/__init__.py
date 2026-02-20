@@ -109,13 +109,17 @@ from .dit_analyzer import DITAnalyzer
 from .lcom_analyzer import LCOMAnalyzer
 from .nop_analyzer import NOPAnalyzer
 from .wmc_analyzer import WMCAnalyzer
+from .god_object_analyzer import GodObjectAnalyzer
+from .long_method_analyzer import LongMethodAnalyzer
 
 __all__ = [
     "CBOAnalyzer",
     "CircularImportsAnalyzer",
     "DITAnalyzer",
     "FanOutAnalyzer",
+    "GodObjectAnalyzer",
     "LCOMAnalyzer",
+    "LongMethodAnalyzer",
     "NOPAnalyzer",
     "WMCAnalyzer",
 ]
