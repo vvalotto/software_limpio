@@ -111,6 +111,7 @@ from .nop_analyzer import NOPAnalyzer
 from .wmc_analyzer import WMCAnalyzer
 from .god_object_analyzer import GodObjectAnalyzer
 from .long_method_analyzer import LongMethodAnalyzer
+from .long_parameter_list_analyzer import LongParameterListAnalyzer
 
 __all__ = [
     "CBOAnalyzer",
@@ -120,6 +121,7 @@ __all__ = [
     "GodObjectAnalyzer",
     "LCOMAnalyzer",
     "LongMethodAnalyzer",
+    "LongParameterListAnalyzer",
     "NOPAnalyzer",
     "WMCAnalyzer",
 ]
