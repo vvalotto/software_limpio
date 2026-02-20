@@ -427,12 +427,11 @@ class TestCircularImportsAnalyzer:
 
 class TestAutoDiscovery:
 
-    def test_orquestador_descubre_tres_analyzers(self):
-        """El orquestador debe descubrir los 3 analyzers de acoplamiento."""
+    def test_orquestador_descubre_analyzers_de_acoplamiento(self):
+        """El orquestador debe descubrir los 3 analyzers de acoplamiento entre los disponibles."""
         orch = AnalyzerOrchestrator(DesignReviewerConfig())
 
         nombres = {a.name for a in orch.analyzers}
         assert "CBOAnalyzer" in nombres
         assert "FanOutAnalyzer" in nombres
         assert "CircularImportsAnalyzer" in nombres
-        assert len(orch.analyzers) == 3

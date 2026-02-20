@@ -101,5 +101,17 @@ Ticket: 1.1
 from .cbo_analyzer import CBOAnalyzer
 from .circular_imports_analyzer import CircularImportsAnalyzer
 from .fan_out_analyzer import FanOutAnalyzer
+from .dit_analyzer import DITAnalyzer
+from .lcom_analyzer import LCOMAnalyzer
+from .nop_analyzer import NOPAnalyzer
+from .wmc_analyzer import WMCAnalyzer
 
-__all__ = ["CBOAnalyzer", "CircularImportsAnalyzer", "FanOutAnalyzer"]
+__all__ = [
+    "CBOAnalyzer",
+    "CircularImportsAnalyzer",
+    "DITAnalyzer",
+    "FanOutAnalyzer",
+    "LCOMAnalyzer",
+    "NOPAnalyzer",
+    "WMCAnalyzer",
+]
