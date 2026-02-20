@@ -112,11 +112,13 @@ from .wmc_analyzer import WMCAnalyzer
 from .god_object_analyzer import GodObjectAnalyzer
 from .long_method_analyzer import LongMethodAnalyzer
 from .long_parameter_list_analyzer import LongParameterListAnalyzer
+from .feature_envy_analyzer import FeatureEnvyAnalyzer
 
 __all__ = [
     "CBOAnalyzer",
     "CircularImportsAnalyzer",
     "DITAnalyzer",
+    "FeatureEnvyAnalyzer",
     "FanOutAnalyzer",
     "GodObjectAnalyzer",
     "LCOMAnalyzer",
