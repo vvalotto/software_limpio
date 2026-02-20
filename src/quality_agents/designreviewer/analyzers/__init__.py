@@ -85,7 +85,11 @@ Fase 3 — Cohesión y Herencia:
 - NOPAnalyzer: Number of Parents
 
 Fase 4 — Code Smells y SOLID:
-- CodeSmellsAnalyzer: God Object, Feature Envy, Data Clumps, etc.
+- GodObjectAnalyzer: clase con demasiadas responsabilidades (SRP)
+- LongMethodAnalyzer: métodos con demasiadas líneas (SRP)
+- LongParameterListAnalyzer: métodos con demasiados parámetros (ISP)
+- FeatureEnvyAnalyzer: método que usa más datos de otra clase que los propios (SRP)
+- DataClumpsAnalyzer: grupos de parámetros que siempre aparecen juntos (SRP)
 
 Referencias
 ===========
