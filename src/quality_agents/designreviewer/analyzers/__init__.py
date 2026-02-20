@@ -85,7 +85,11 @@ Fase 3 — Cohesión y Herencia:
 - NOPAnalyzer: Number of Parents
 
 Fase 4 — Code Smells y SOLID:
-- CodeSmellsAnalyzer: God Object, Feature Envy, Data Clumps, etc.
+- GodObjectAnalyzer: clase con demasiadas responsabilidades (SRP)
+- LongMethodAnalyzer: métodos con demasiadas líneas (SRP)
+- LongParameterListAnalyzer: métodos con demasiados parámetros (ISP)
+- FeatureEnvyAnalyzer: método que usa más datos de otra clase que los propios (SRP)
+- DataClumpsAnalyzer: grupos de parámetros que siempre aparecen juntos (SRP)
 
 Referencias
 ===========
@@ -105,13 +109,23 @@ from .dit_analyzer import DITAnalyzer
 from .lcom_analyzer import LCOMAnalyzer
 from .nop_analyzer import NOPAnalyzer
 from .wmc_analyzer import WMCAnalyzer
+from .god_object_analyzer import GodObjectAnalyzer
+from .long_method_analyzer import LongMethodAnalyzer
+from .long_parameter_list_analyzer import LongParameterListAnalyzer
+from .feature_envy_analyzer import FeatureEnvyAnalyzer
+from .data_clumps_analyzer import DataClumpsAnalyzer
 
 __all__ = [
     "CBOAnalyzer",
     "CircularImportsAnalyzer",
+    "DataClumpsAnalyzer",
     "DITAnalyzer",
+    "FeatureEnvyAnalyzer",
     "FanOutAnalyzer",
+    "GodObjectAnalyzer",
     "LCOMAnalyzer",
+    "LongMethodAnalyzer",
+    "LongParameterListAnalyzer",
     "NOPAnalyzer",
     "WMCAnalyzer",
 ]

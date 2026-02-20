@@ -731,8 +731,8 @@ class TestNOPAnalyzer:
 
 class TestAutoDiscoveryCohesionHerencia:
 
-    def test_orquestador_descubre_siete_analyzers(self):
-        """El orquestador debe descubrir los 7 analyzers (3 acoplamiento + 4 cohesión/herencia)."""
+    def test_orquestador_descubre_analyzers_cohesion_herencia(self):
+        """El orquestador debe incluir los 4 analyzers de cohesión y herencia."""
         orch = AnalyzerOrchestrator(DesignReviewerConfig())
 
         nombres = {a.name for a in orch.analyzers}
@@ -740,7 +740,7 @@ class TestAutoDiscoveryCohesionHerencia:
         assert "WMCAnalyzer" in nombres
         assert "DITAnalyzer" in nombres
         assert "NOPAnalyzer" in nombres
-        assert len(orch.analyzers) == 7
+        assert len(orch.analyzers) >= 7
 
     def test_lcom_categoria_cohesion(self):
         """LCOMAnalyzer debe tener categoría 'cohesion'."""

@@ -55,6 +55,14 @@ class DesignReviewerConfig:
     # Complejidad de clase
     max_wmc: int = 20      # Weighted Methods per Class
 
+    # Code Smells (Fase 4)
+    max_god_object_methods: int = 20   # Métodos públicos en una clase (God Object)
+    max_god_object_lines: int = 300    # Líneas de código en una clase (God Object)
+    max_method_lines: int = 20         # Líneas en un método (Long Method)
+    max_parameters: int = 5            # Parámetros de un método (Long Parameter List)
+    min_data_clump_size: int = 3       # Mínimo parámetros para considerar Data Clump
+    min_data_clump_occurrences: int = 2  # Mínimo de apariciones para Data Clump
+
     # Exclusiones
     exclude_patterns: List[str] = field(default_factory=lambda: [
         "__pycache__",
