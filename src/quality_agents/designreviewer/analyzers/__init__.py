@@ -113,10 +113,12 @@ from .god_object_analyzer import GodObjectAnalyzer
 from .long_method_analyzer import LongMethodAnalyzer
 from .long_parameter_list_analyzer import LongParameterListAnalyzer
 from .feature_envy_analyzer import FeatureEnvyAnalyzer
+from .data_clumps_analyzer import DataClumpsAnalyzer
 
 __all__ = [
     "CBOAnalyzer",
     "CircularImportsAnalyzer",
+    "DataClumpsAnalyzer",
     "DITAnalyzer",
     "FeatureEnvyAnalyzer",
     "FanOutAnalyzer",
