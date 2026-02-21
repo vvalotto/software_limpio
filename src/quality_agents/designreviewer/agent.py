@@ -177,7 +177,7 @@ def main(path: str, config: Optional[str], output_format: str, no_ai: bool) -> N
     else:
         format_results(results, elapsed, total_files, analyzers_executed)
 
-    if reviewer.should_block():
+    if any(r.is_blocking() for r in results):
         sys.exit(1)
 
 
