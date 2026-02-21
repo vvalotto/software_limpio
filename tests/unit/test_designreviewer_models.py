@@ -6,8 +6,6 @@ Ticket: 1.7
 
 from pathlib import Path
 
-import pytest
-
 from quality_agents.designreviewer.models import ReviewResult, ReviewSeverity
 
 

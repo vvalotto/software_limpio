@@ -93,9 +93,9 @@ class CircularImportsAnalyzer(Verifiable):
                     ),
                     file_path=file_path,
                     suggestion=(
-                        f"Romper el ciclo extrayendo las dependencias comunes a un "
-                        f"tercer módulo, o invirtiendo una de las dependencias mediante "
-                        f"una interfaz/protocolo."
+                        "Romper el ciclo extrayendo las dependencias comunes a un "
+                        "tercer módulo, o invirtiendo una de las dependencias mediante "
+                        "una interfaz/protocolo."
                     ),
                     estimated_effort=2.0,
                 ))

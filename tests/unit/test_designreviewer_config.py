@@ -4,7 +4,6 @@ Tests unitarios para DesignReviewerConfig y load_config().
 Ticket: 1.7
 """
 
-from pathlib import Path
 
 import pytest
 

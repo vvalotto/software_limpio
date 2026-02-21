@@ -10,8 +10,6 @@ Ticket: 3.6
 import textwrap
 from pathlib import Path
 
-import pytest
-
 from quality_agents.designreviewer.analyzers.dit_analyzer import DITAnalyzer
 from quality_agents.designreviewer.analyzers.lcom_analyzer import LCOMAnalyzer
 from quality_agents.designreviewer.analyzers.nop_analyzer import NOPAnalyzer
@@ -20,7 +18,6 @@ from quality_agents.designreviewer.config import DesignReviewerConfig
 from quality_agents.designreviewer.models import ReviewResult, ReviewSeverity
 from quality_agents.designreviewer.orchestrator import AnalyzerOrchestrator
 from quality_agents.shared.verifiable import ExecutionContext
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Helpers

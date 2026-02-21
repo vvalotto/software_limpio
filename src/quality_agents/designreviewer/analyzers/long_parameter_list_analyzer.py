@@ -15,7 +15,7 @@ Ticket: 4.3
 
 import ast
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Union
 
 from quality_agents.designreviewer.models import ReviewResult, ReviewSeverity, SolidPrinciple
 from quality_agents.shared.verifiable import ExecutionContext, Verifiable
@@ -110,7 +110,7 @@ class LongParameterListAnalyzer(Verifiable):
 
     def _evaluar_funcion(
         self,
-        func: ast.FunctionDef,
+        func: Union[ast.FunctionDef, ast.AsyncFunctionDef],
         file_path: Path,
         threshold: int,
         results: List[ReviewResult],
@@ -144,7 +144,7 @@ class LongParameterListAnalyzer(Verifiable):
             smell_type="LongParameterList",
         ))
 
-    def _contar_parametros(self, func: ast.FunctionDef) -> int:
+    def _contar_parametros(self, func: Union[ast.FunctionDef, ast.AsyncFunctionDef]) -> int:
         """
         Cuenta los parámetros explícitos de la función, excluyendo self/cls, *args y **kwargs.
 

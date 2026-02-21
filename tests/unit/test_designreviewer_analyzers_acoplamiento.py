@@ -10,8 +10,6 @@ Ticket: 2.5
 import textwrap
 from pathlib import Path
 
-import pytest
-
 from quality_agents.designreviewer.analyzers.cbo_analyzer import CBOAnalyzer
 from quality_agents.designreviewer.analyzers.circular_imports_analyzer import (
     CircularImportsAnalyzer,
@@ -21,7 +19,6 @@ from quality_agents.designreviewer.config import DesignReviewerConfig
 from quality_agents.designreviewer.models import ReviewResult, ReviewSeverity
 from quality_agents.designreviewer.orchestrator import AnalyzerOrchestrator
 from quality_agents.shared.verifiable import ExecutionContext
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Helpers

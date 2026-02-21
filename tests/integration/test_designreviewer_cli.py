@@ -21,7 +21,6 @@ from click.testing import CliRunner
 from quality_agents.designreviewer.agent import main
 from quality_agents.designreviewer.models import ReviewResult, ReviewSeverity
 
-
 # --- Fixtures ---
 
 PYTHON_LIMPIO = "# Archivo sin problemas\ndef suma(a, b):\n    return a + b\n"

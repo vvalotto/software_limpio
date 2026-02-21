@@ -11,17 +11,10 @@ from pathlib import Path
 import pytest
 
 from quality_agents.designreviewer.formatter import (
-    _print_blocking_issues,
-    _print_effort_summary,
-    _print_header,
-    _print_stats,
-    _print_success,
-    _print_summary,
     format_json,
     format_results,
 )
 from quality_agents.designreviewer.models import ReviewResult, ReviewSeverity, SolidPrinciple
-
 
 # --- Fixtures ---
 

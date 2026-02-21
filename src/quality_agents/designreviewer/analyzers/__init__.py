@@ -104,16 +104,16 @@ Ticket: 1.1
 # Imports de analyzers implementados
 from .cbo_analyzer import CBOAnalyzer
 from .circular_imports_analyzer import CircularImportsAnalyzer
-from .fan_out_analyzer import FanOutAnalyzer
+from .data_clumps_analyzer import DataClumpsAnalyzer
 from .dit_analyzer import DITAnalyzer
-from .lcom_analyzer import LCOMAnalyzer
-from .nop_analyzer import NOPAnalyzer
-from .wmc_analyzer import WMCAnalyzer
+from .fan_out_analyzer import FanOutAnalyzer
+from .feature_envy_analyzer import FeatureEnvyAnalyzer
 from .god_object_analyzer import GodObjectAnalyzer
+from .lcom_analyzer import LCOMAnalyzer
 from .long_method_analyzer import LongMethodAnalyzer
 from .long_parameter_list_analyzer import LongParameterListAnalyzer
-from .feature_envy_analyzer import FeatureEnvyAnalyzer
-from .data_clumps_analyzer import DataClumpsAnalyzer
+from .nop_analyzer import NOPAnalyzer
+from .wmc_analyzer import WMCAnalyzer
 
 __all__ = [
     "CBOAnalyzer",

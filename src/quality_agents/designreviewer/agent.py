@@ -124,8 +124,8 @@ class DesignReviewer:
 
 # --- CLI --- (imports aquí para evitar importación circular con formatter.py)
 
-import sys
-import time
+import sys  # noqa: E402
+import time  # noqa: E402
 
 import click  # noqa: E402
 

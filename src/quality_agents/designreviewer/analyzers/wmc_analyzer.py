@@ -18,8 +18,8 @@ from quality_agents.designreviewer.models import ReviewResult, ReviewSeverity
 from quality_agents.shared.verifiable import ExecutionContext, Verifiable
 
 try:
-    from radon.complexity import cc_visit
-    from radon.visitors import Class as RadonClass
+    from radon.complexity import cc_visit  # type: ignore[import-untyped]
+    from radon.visitors import Class as RadonClass  # type: ignore[import-untyped]
 
     _RADON_DISPONIBLE = True
 except ImportError:

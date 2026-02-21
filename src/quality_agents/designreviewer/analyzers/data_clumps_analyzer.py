@@ -24,7 +24,7 @@ import ast
 from collections import defaultdict
 from itertools import combinations
 from pathlib import Path
-from typing import Any, Dict, FrozenSet, List, Optional, Set, Tuple
+from typing import Any, Dict, FrozenSet, List, Optional, Set, Tuple, Union
 
 from quality_agents.designreviewer.models import ReviewResult, ReviewSeverity, SolidPrinciple
 from quality_agents.shared.verifiable import ExecutionContext, Verifiable
@@ -154,7 +154,7 @@ class DataClumpsAnalyzer(Verifiable):
                     nombre = f"{class_name}.{nodo.name}" if class_name else nodo.name
                     firmas.append((nombre, frozenset(params)))
 
-    def _obtener_params(self, func_node: ast.FunctionDef) -> List[str]:
+    def _obtener_params(self, func_node: Union[ast.FunctionDef, ast.AsyncFunctionDef]) -> List[str]:
         """
         Retorna los parámetros de la función excluyendo self, cls, *args y **kwargs.
         """
