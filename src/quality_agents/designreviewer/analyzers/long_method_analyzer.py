@@ -13,7 +13,7 @@ Ticket: 4.2
 
 import ast
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Union
 
 from quality_agents.designreviewer.models import ReviewResult, ReviewSeverity, SolidPrinciple
 from quality_agents.shared.verifiable import ExecutionContext, Verifiable
@@ -107,14 +107,14 @@ class LongMethodAnalyzer(Verifiable):
 
     def _evaluar_funcion(
         self,
-        func: ast.FunctionDef,
+        func: Union[ast.FunctionDef, ast.AsyncFunctionDef],
         file_path: Path,
         threshold: int,
         results: List[ReviewResult],
         class_name: Optional[str],
     ) -> None:
         """Evalúa una función y agrega un resultado si supera el umbral."""
-        lineas = func.end_lineno - func.lineno + 1  # type: ignore[attr-defined]
+        lineas = (func.end_lineno or func.lineno) - func.lineno + 1
         if lineas <= threshold:
             return
 

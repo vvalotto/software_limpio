@@ -22,7 +22,7 @@ Ticket: 4.4
 
 import ast
 from pathlib import Path
-from typing import Any, Dict, List, Set
+from typing import Any, Dict, List, Set, Union
 
 from quality_agents.designreviewer.models import ReviewResult, ReviewSeverity, SolidPrinciple
 from quality_agents.shared.verifiable import ExecutionContext, Verifiable
@@ -150,7 +150,7 @@ class FeatureEnvyAnalyzer(Verifiable):
                     smell_type="FeatureEnvy",
                 ))
 
-    def _obtener_params_externos(self, func_node: ast.FunctionDef) -> List[str]:
+    def _obtener_params_externos(self, func_node: Union[ast.FunctionDef, ast.AsyncFunctionDef]) -> List[str]:
         """
         Retorna los nombres de parámetros de la función excluyendo self y cls.
 
@@ -161,7 +161,7 @@ class FeatureEnvyAnalyzer(Verifiable):
         todos = list(args.posonlyargs) + list(args.args) + list(args.kwonlyargs)
         return [a.arg for a in todos if a.arg not in _PARAMS_IMPLICITOS]
 
-    def _contar_accesos(self, func_node: ast.FunctionDef, nombre: str) -> int:
+    def _contar_accesos(self, func_node: Union[ast.FunctionDef, ast.AsyncFunctionDef], nombre: str) -> int:
         """
         Cuenta las ocurrencias de `nombre.algo` en el cuerpo del método.
 

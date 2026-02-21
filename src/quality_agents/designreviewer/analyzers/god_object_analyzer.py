@@ -83,7 +83,7 @@ class GodObjectAnalyzer(Verifiable):
                 continue
 
             n_metodos = self._contar_metodos_publicos(node)
-            n_lineas = node.end_lineno - node.lineno + 1  # type: ignore[attr-defined]
+            n_lineas = (node.end_lineno or node.lineno) - node.lineno + 1
 
             excede_metodos = n_metodos > max_methods
             excede_lineas = n_lineas > max_lines

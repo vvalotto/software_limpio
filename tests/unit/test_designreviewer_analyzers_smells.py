@@ -11,8 +11,6 @@ Ticket: 4.6
 import textwrap
 from pathlib import Path
 
-import pytest
-
 from quality_agents.designreviewer.analyzers.data_clumps_analyzer import DataClumpsAnalyzer
 from quality_agents.designreviewer.analyzers.feature_envy_analyzer import FeatureEnvyAnalyzer
 from quality_agents.designreviewer.analyzers.god_object_analyzer import GodObjectAnalyzer
@@ -24,7 +22,6 @@ from quality_agents.designreviewer.config import DesignReviewerConfig
 from quality_agents.designreviewer.models import ReviewResult, ReviewSeverity, SolidPrinciple
 from quality_agents.designreviewer.orchestrator import AnalyzerOrchestrator
 from quality_agents.shared.verifiable import ExecutionContext
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Helpers

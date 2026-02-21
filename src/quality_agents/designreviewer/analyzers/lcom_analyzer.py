@@ -15,7 +15,7 @@ Ticket: 3.1 + 3.5
 
 import ast
 from pathlib import Path
-from typing import Any, Dict, List, Set
+from typing import Any, Dict, List, Set, Union
 
 from quality_agents.designreviewer.models import ReviewResult, ReviewSeverity
 from quality_agents.shared.verifiable import ExecutionContext, Verifiable
@@ -144,7 +144,7 @@ class LCOMAnalyzer(Verifiable):
 
         return self._contar_componentes(atributos_por_metodo)
 
-    def _es_no_instancia(self, func_node: ast.FunctionDef) -> bool:
+    def _es_no_instancia(self, func_node: Union[ast.FunctionDef, ast.AsyncFunctionDef]) -> bool:
         """Retorna True si el método es estático, de clase o abstracto sin cuerpo real."""
         for decorador in func_node.decorator_list:
             nombre = None
@@ -156,7 +156,7 @@ class LCOMAnalyzer(Verifiable):
                 return True
         return False
 
-    def _atributos_de_instancia(self, func_node: ast.FunctionDef) -> Set[str]:
+    def _atributos_de_instancia(self, func_node: Union[ast.FunctionDef, ast.AsyncFunctionDef]) -> Set[str]:
         """
         Extrae el conjunto de nombres de atributos de instancia (self.X) accedidos
         en el cuerpo del método.

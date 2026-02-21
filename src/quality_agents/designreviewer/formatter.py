@@ -213,9 +213,9 @@ def _print_effort_summary(console: Console, results: List[ReviewResult]) -> None
 
     effort_text = Text()
     effort_text.append("Esfuerzo estimado de refactoring:\n", style="bold")
-    effort_text.append(f"  Blocking issues: ", style="red")
+    effort_text.append("  Blocking issues: ", style="red")
     effort_text.append(f"{critical_effort:.1f}h\n", style="bold red")
-    effort_text.append(f"  Total del changeset: ", style="cyan")
+    effort_text.append("  Total del changeset: ", style="cyan")
     effort_text.append(f"{total_effort:.1f}h", style="bold cyan")
 
     console.print()

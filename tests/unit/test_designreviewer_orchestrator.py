@@ -8,13 +8,10 @@ from pathlib import Path
 from typing import Any, List
 from unittest.mock import patch
 
-import pytest
-
 from quality_agents.designreviewer.config import DesignReviewerConfig
 from quality_agents.designreviewer.models import ReviewResult, ReviewSeverity
 from quality_agents.designreviewer.orchestrator import AnalyzerOrchestrator
 from quality_agents.shared.verifiable import ExecutionContext, Verifiable
-
 
 # ========== Analyzers mock para tests ==========
 

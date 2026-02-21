@@ -13,7 +13,6 @@ Fecha: 2026-02-21
 """
 
 import json
-import tempfile
 from pathlib import Path
 from textwrap import dedent
 
@@ -21,8 +20,6 @@ import pytest
 from click.testing import CliRunner
 
 from quality_agents.designreviewer.agent import main
-from quality_agents.designreviewer.models import ReviewSeverity
-
 
 # ---------------------------------------------------------------------------
 # Fixtures de código sintético con violaciones conocidas
