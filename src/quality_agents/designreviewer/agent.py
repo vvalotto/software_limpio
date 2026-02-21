@@ -124,7 +124,12 @@ class DesignReviewer:
 
 # --- CLI --- (imports aquí para evitar importación circular con formatter.py)
 
+import sys
+import time
+
 import click  # noqa: E402
+
+from quality_agents.designreviewer.formatter import format_json, format_results  # noqa: E402
 
 
 @click.command()
@@ -136,6 +141,7 @@ import click  # noqa: E402
 )
 @click.option(
     "--format", "-f",
+    "output_format",
     type=click.Choice(["text", "json"]),
     default="text",
     help="Formato de salida",
@@ -146,15 +152,33 @@ import click  # noqa: E402
     default=False,
     help="Deshabilitar sugerencias de IA",
 )
-def main(path: str, config: Optional[str], format: str, no_ai: bool) -> None:
+def main(path: str, config: Optional[str], output_format: str, no_ai: bool) -> None:
     """
     DesignReviewer - Análisis de calidad de diseño sobre el delta de un PR.
 
     Analiza archivos Python en PATH (archivo o directorio).
     Bloquea (exit code 1) si detecta violaciones CRITICAL.
     """
-    click.echo("DesignReviewer v0.2.0 — en construcción")
-    click.echo("Implementación completa disponible próximamente.")
+    target = Path(path)
+    config_path = Path(config) if config else None
+
+    reviewer = DesignReviewer(path=target, config_path=config_path)
+
+    start = time.time()
+    results = reviewer.run()
+    elapsed = time.time() - start
+
+    files = reviewer.collect_files(target)
+    total_files = len([f for f in files if f.suffix == ".py"])
+    analyzers_executed = len(reviewer._orchestrator.analyzers)
+
+    if output_format == "json":
+        click.echo(format_json(results, elapsed, total_files, analyzers_executed))
+    else:
+        format_results(results, elapsed, total_files, analyzers_executed)
+
+    if reviewer.should_block():
+        sys.exit(1)
 
 
 if __name__ == "__main__":
