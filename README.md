@@ -134,8 +134,8 @@ Seis principios universales de diseño (paradigma-agnósticos):
 
 | Agente | Momento | Duración | Acción | Estado |
 |--------|---------|----------|--------|--------|
-| **CodeGuard** | Pre-commit | < 5s | Advierte (no bloquea) | ✅ **Implementado** |
-| **DesignReviewer** | Review/PR | 2-5 min | Bloquea si crítico | 🚧 Próximamente |
+| **CodeGuard** | Pre-commit | < 5s | Advierte (no bloquea) | ✅ **v0.1.0** |
+| **DesignReviewer** | Review/PR | 2-5 min | Bloquea si crítico | ✅ **v0.2.0** |
 | **ArchitectAnalyst** | Fin de sprint | 10-30 min | Analiza tendencias | 🚧 Próximamente |
 
 ### CodeGuard (Agente de Código)
@@ -153,7 +153,37 @@ Sistema modular con 6 checks independientes:
 - ✅ Rich formatter profesional
 - ✅ Configuración vía pyproject.toml (PEP 518)
 - ✅ Integración con pre-commit framework
-- ⏳ IA opcional con Claude API (opt-in)
+
+📖 **[Guía de Usuario CodeGuard](docs/guias/codeguard.md)**
+
+---
+
+### DesignReviewer (Agente de Diseño)
+
+12 analyzers AST que detectan problemas de diseño en el delta de un PR. Puede **bloquear el merge** si detecta violaciones críticas.
+
+```bash
+# Analizar archivos del PR
+designreviewer src/
+
+# Salida JSON para CI/CD
+designreviewer src/ --format json
+```
+
+**Analyzers implementados:**
+- **Acoplamiento:** CBOAnalyzer, FanOutAnalyzer, CircularImportsAnalyzer
+- **Cohesión y herencia:** LCOMAnalyzer, WMCAnalyzer, DITAnalyzer, NOPAnalyzer
+- **Code Smells + SOLID:** GodObject, LongMethod, LongParameterList, FeatureEnvy, DataClumps
+
+**Features:**
+- ✅ 12 analyzers AST puro (+ radon para WMC)
+- ✅ Separación visual BLOCKING ISSUES vs. Advertencias
+- ✅ `estimated_effort` en horas por violación
+- ✅ Exit code 1 si CRITICAL, 0 si no
+- ✅ Salida Rich y JSON estructurado
+- ✅ Configuración vía `[tool.designreviewer]` en pyproject.toml
+
+📖 **[Guía de Usuario DesignReviewer](docs/guias/designreviewer.md)**
 
 ## Herramientas Base
 
@@ -170,8 +200,8 @@ Sistema modular con 6 checks independientes:
 | Componente | Estado | Progreso |
 |------------|--------|----------|
 | **Teoría y Fundamentos** | ✅ Completo | 100% |
-| **CodeGuard (Agente de Código)** | ✅ MVP Completo | 100% |
-| **DesignReviewer (Agente de Diseño)** | 🚧 Próximamente | 0% |
+| **CodeGuard (Agente de Código)** | ✅ v0.1.0 | 100% |
+| **DesignReviewer (Agente de Diseño)** | ✅ v0.2.0 | 100% |
 | **ArchitectAnalyst (Agente de Arquitectura)** | 🚧 Próximamente | 0% |
 
 ### CodeGuard - Roadmap
@@ -185,12 +215,12 @@ Sistema modular con 6 checks independientes:
 - [x] **Fase 6:** Documentación completa
 - [ ] **Fase 3:** IA opcional con Claude (suspendida temporalmente)
 
-**Tests:** 300/300 pasando (100%)
+**Tests:** 517/517 pasando (100%)
 
 ### Próximos Pasos
 
-1. Release v0.1.0 (en progreso)
-2. Implementar DesignReviewer (v0.2.0)
+1. ~~Release v0.1.0~~ ✅ Publicada
+2. ~~Implementar DesignReviewer (v0.2.0)~~ ✅ Publicada
 3. Implementar ArchitectAnalyst (v0.3.0)
 
 ## Autor
