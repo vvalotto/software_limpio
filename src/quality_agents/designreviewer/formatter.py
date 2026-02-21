@@ -15,6 +15,7 @@ from typing import Any, Dict, List
 
 from rich.console import Console
 from rich.panel import Panel
+from rich.rule import Rule
 from rich.table import Table
 from rich.text import Text
 
@@ -102,21 +103,22 @@ def _print_success(console: Console) -> None:
 
 
 def _print_blocking_issues(console: Console, criticals: List[ReviewResult]) -> None:
-    """Imprime BLOCKING ISSUES en panel rojo destacado."""
+    """Imprime BLOCKING ISSUES con regla roja destacada (sin Panel anidado)."""
+    console.print(Rule(f"🚫  BLOCKING ISSUES ({len(criticals)})", style="bold red"))
+    console.print()
+
     table = Table(
-        title=f"🚫 BLOCKING ISSUES ({len(criticals)})",
-        title_style="bold red",
         border_style="red",
         show_header=True,
         header_style="bold red",
+        expand=True,
     )
 
-    table.add_column("Analyzer", style="cyan", no_wrap=True)
-    table.add_column("Clase / Módulo", style="white", no_wrap=True)
-    table.add_column("Problema", style="white", max_width=60)
-    table.add_column("Valor", style="red", justify="right")
-    table.add_column("Umbral", style="dim", justify="right")
-    table.add_column("Esfuerzo", style="yellow", justify="right")
+    table.add_column("Analyzer", style="cyan", no_wrap=True, min_width=14)
+    table.add_column("Clase / Módulo", style="white", no_wrap=True, min_width=14)
+    table.add_column("Problema", style="white", ratio=1, no_wrap=True, overflow="ellipsis")
+    table.add_column("Val/Umbral", style="bold red", justify="center", no_wrap=True)
+    table.add_column("Esfuerzo", style="yellow", justify="right", no_wrap=True)
 
     for r in criticals:
         location = r.class_name or r.file_path.name
@@ -125,12 +127,11 @@ def _print_blocking_issues(console: Console, criticals: List[ReviewResult]) -> N
             r.analyzer_name,
             location,
             r.message,
-            str(r.current_value),
-            str(r.threshold),
+            f"{r.current_value}/{r.threshold}",
             effort,
         )
 
-    console.print(Panel(table, border_style="red", padding=(0, 1)))
+    console.print(table)
     console.print()
 
 
@@ -146,14 +147,14 @@ def _print_results_table(
         border_style=color,
         show_header=True,
         header_style=f"bold {color}",
+        expand=True,
     )
 
-    table.add_column("Analyzer", style="cyan", no_wrap=True)
-    table.add_column("Clase / Módulo", style="white", no_wrap=True)
-    table.add_column("Problema", style="white", max_width=70)
-    table.add_column("Valor", justify="right")
-    table.add_column("Umbral", style="dim", justify="right")
-    table.add_column("Esfuerzo", style="yellow", justify="right")
+    table.add_column("Analyzer", style="cyan", no_wrap=True, min_width=14)
+    table.add_column("Clase / Módulo", style="white", no_wrap=True, min_width=14)
+    table.add_column("Problema", style="white", ratio=1, no_wrap=True, overflow="ellipsis")
+    table.add_column("Val/Umbral", justify="center", no_wrap=True)
+    table.add_column("Esfuerzo", style="yellow", justify="right", no_wrap=True)
 
     for r in results:
         location = r.class_name or r.file_path.name
@@ -162,8 +163,7 @@ def _print_results_table(
             r.analyzer_name,
             location,
             r.message,
-            str(r.current_value),
-            str(r.threshold),
+            f"{r.current_value}/{r.threshold}",
             effort,
         )
 

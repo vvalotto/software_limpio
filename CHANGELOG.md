@@ -7,6 +7,76 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
+## [0.2.0] - 2026-02-21
+
+### 🎉 DesignReviewer — Análisis de Calidad de Diseño
+
+Segunda release de **Software Limpio**: el agente **DesignReviewer** completamente funcional. Analiza el delta de un PR y **puede bloquear el merge** si detecta violaciones críticas de diseño.
+
+### ✨ Added — Funcionalidades Nuevas
+
+#### DesignReviewer — Agente de Diseño (PR Review)
+
+**Infraestructura Modular:**
+- Arquitectura de analyzers con auto-discovery (mismo patrón que CodeGuard)
+- Tipos propios: `ReviewSeverity` (INFO/WARNING/CRITICAL) y `ReviewResult` con `estimated_effort`
+- `AnalyzerOrchestrator` con manejo de errores por analyzer
+- `DesignReviewerConfig` con umbrales configurables vía `[tool.designreviewer]`
+
+**12 Analyzers implementados:**
+
+*Acoplamiento:*
+- `CBOAnalyzer` — Coupling Between Objects (umbral: 5, CRITICAL)
+- `FanOutAnalyzer` — Fan-Out de módulos importados (umbral: 7, WARNING)
+- `CircularImportsAnalyzer` — Ciclos de dependencias (CRITICAL)
+
+*Cohesión y Herencia:*
+- `LCOMAnalyzer` — Lack of Cohesion of Methods — LCOM4 via AST (umbral: 1, WARNING)
+- `WMCAnalyzer` — Weighted Methods per Class via radon (umbral: 20, CRITICAL)
+- `DITAnalyzer` — Depth of Inheritance Tree (umbral: 5, CRITICAL)
+- `NOPAnalyzer` — Number of Parents / herencia múltiple (umbral: 1, CRITICAL)
+
+*Code Smells + SOLID:*
+- `GodObjectAnalyzer` — Clases con demasiados métodos (SRP)
+- `LongMethodAnalyzer` — Métodos demasiado largos (SRP)
+- `LongParameterListAnalyzer` — Listas de parámetros excesivas (ISP)
+- `FeatureEnvyAnalyzer` — Envidia de funcionalidad entre clases (SRP/DIP)
+- `DataClumpsAnalyzer` — Grupos de parámetros repetidos (SRP)
+
+**CLI Completo:**
+- Comando `designreviewer` con opciones `--format`, `--config`, `--no-ai`
+- Exit code 1 si hay violaciones CRITICAL, 0 si no
+- Output Rich: panel 🚫 BLOCKING ISSUES separado de ⚠ Advertencias
+- Panel ⏱ Deuda Técnica con `estimated_effort` total del changeset
+- Output JSON estructurado con `summary.should_block` para CI/CD
+
+**`estimated_effort`:**
+- Cada resultado incluye estimación de horas de refactoring
+- El reporte muestra el total acumulado del changeset
+
+### 🧪 Tests
+
+- **517 tests pasando (100%)**
+  - 20 tests E2E con código sintético real (sin mocks)
+  - 18 tests de integración del CLI
+  - 15 tests unitarios del formatter
+  - 111 tests unitarios de los 12 analyzers
+- Dogfooding: `designreviewer src/` corre sin crash sobre el propio proyecto
+
+### 📚 Documentation
+
+- `docs/guias/designreviewer.md` — Guía de usuario completa
+- `README.md` — Sección DesignReviewer actualizada
+- Tablas de métricas con umbrales y severidades
+
+### 🏗️ Infrastructure
+
+- `pyproject.toml` actualizado a version `0.2.0`
+- Entrada CLI `designreviewer` en entry points
+- `[tool.designreviewer]` en pyproject.toml con umbrales por defecto
+
+---
+
 ## [0.1.0] - 2026-02-18
 
 ### 🎉 Primera Release - MVP CodeGuard
@@ -156,25 +226,17 @@ Esta es la primera versión pública de **Software Limpio**, incluyendo el agent
 
 ### Próximas Funcionalidades
 
-#### Fase 7: DesignReviewer (v0.2.0)
-- Análisis profundo de diseño para Pull Requests
-- Detección de code smells
-- Análisis de cohesión y acoplamiento
-- Sugerencias de refactoring con IA
-
-#### Fase 8: ArchitectAnalyst (v0.3.0)
-- Análisis de tendencias arquitectónicas
+#### ArchitectAnalyst (v0.3.0)
+- Análisis de tendencias arquitectónicas a lo largo del tiempo
 - Métricas históricas en SQLite
 - Dashboards interactivos con Plotly
 - Detección de degradación arquitectónica
 
 #### Mejoras Futuras
+- MI (Maintainability Index) en CodeGuard via `radon mi`
 - Soporte para análisis paralelo de checks
-- Cache de resultados para análisis incremental
 - Integración con GitHub Actions (workflows pre-configurados)
 - Soporte para plugins personalizados
-- Dashboard web para visualización de métricas
-- Análisis de dependencias y detección de ciclos
 
 ---
 
