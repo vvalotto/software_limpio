@@ -136,6 +136,21 @@ max_wmc = 20
 [tool.designreviewer.ai]
 enabled = false
 
+[tool.architectanalyst]
+max_instability = 0.8
+max_distance_warning = 0.3
+max_distance_critical = 0.5
+db_path = ".quality_control/architecture.db"
+
+[tool.architectanalyst.ai]
+enabled = false
+
+# Ejemplo de configuración de capas (descomentar y adaptar a tu proyecto):
+# [tool.architectanalyst.layers]
+# domain = []
+# application = ["domain"]
+# infrastructure = ["application", "domain"]
+
 [tool.mypy]
 python_version = "3.11"
 warn_return_any = true

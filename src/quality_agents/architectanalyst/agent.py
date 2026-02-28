@@ -9,13 +9,11 @@ Ticket: 1.2 - Refactorizar ArchitectAnalyst como clase principal
 """
 
 from pathlib import Path
-from typing import TYPE_CHECKING, List, Optional
+from typing import List, Optional
 
+from quality_agents.architectanalyst.config import ArchitectAnalystConfig, load_config
 from quality_agents.architectanalyst.models import ArchitectureResult, ArchitectureSeverity
 from quality_agents.architectanalyst.orchestrator import MetricOrchestrator
-
-if TYPE_CHECKING:
-    from quality_agents.architectanalyst.config import ArchitectAnalystConfig
 
 # Re-exportar para compatibilidad con imports externos
 __all__ = ["ArchitectAnalyst", "ArchitectureResult", "ArchitectureSeverity"]
@@ -59,8 +57,10 @@ class ArchitectAnalyst:
         self.sprint_id = sprint_id
         self.results: List[ArchitectureResult] = []
 
-        # Config wired en ticket 1.4
-        self._config: Optional["ArchitectAnalystConfig"] = None
+        self._config: ArchitectAnalystConfig = load_config(
+            config_path=config_path,
+            project_root=path if path.is_dir() else path.parent,
+        )
         self._orchestrator: MetricOrchestrator = MetricOrchestrator(self._config)
 
     def run(self, files: Optional[List[Path]] = None) -> List[ArchitectureResult]:
