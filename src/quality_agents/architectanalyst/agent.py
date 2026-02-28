@@ -12,10 +12,10 @@ from pathlib import Path
 from typing import TYPE_CHECKING, List, Optional
 
 from quality_agents.architectanalyst.models import ArchitectureResult, ArchitectureSeverity
+from quality_agents.architectanalyst.orchestrator import MetricOrchestrator
 
 if TYPE_CHECKING:
     from quality_agents.architectanalyst.config import ArchitectAnalystConfig
-    from quality_agents.architectanalyst.orchestrator import MetricOrchestrator
 
 # Re-exportar para compatibilidad con imports externos
 __all__ = ["ArchitectAnalyst", "ArchitectureResult", "ArchitectureSeverity"]
@@ -59,9 +59,9 @@ class ArchitectAnalyst:
         self.sprint_id = sprint_id
         self.results: List[ArchitectureResult] = []
 
-        # Wired en ticket 1.4 (config) y 1.3 (orchestrator)
+        # Config wired en ticket 1.4
         self._config: Optional["ArchitectAnalystConfig"] = None
-        self._orchestrator: Optional["MetricOrchestrator"] = None
+        self._orchestrator: MetricOrchestrator = MetricOrchestrator(self._config)
 
     def run(self, files: Optional[List[Path]] = None) -> List[ArchitectureResult]:
         """
