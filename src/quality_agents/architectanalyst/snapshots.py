@@ -6,7 +6,8 @@ import sqlite3
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from .agent import ArchitectureSnapshot
+# SnapshotStore será refactorizado en Ticket 4.1 para usar ArchitectureResult
+# El import de ArchitectureSnapshot (skeleton) fue eliminado en Ticket 1.2
 
 
 class SnapshotStore:
@@ -59,7 +60,7 @@ class SnapshotStore:
 
             conn.commit()
 
-    def save(self, snapshot: ArchitectureSnapshot) -> int:
+    def save(self, snapshot: Any) -> int:  # TODO Ticket 4.1: tipar con el nuevo modelo
         """
         Guarda un snapshot en la base de datos.
 

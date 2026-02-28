@@ -1,30 +1,24 @@
 """
 ArchitectAnalyst Agent - Implementación principal
+
+Analiza la salud arquitectónica del sistema completo al finalizar un sprint.
+A diferencia de CodeGuard y DesignReviewer, nunca bloquea — es informativo y estratégico.
+
+Fecha de creación: 2026-02-28
+Ticket: 1.2 - Refactorizar ArchitectAnalyst como clase principal
 """
 
-from dataclasses import dataclass
-from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import TYPE_CHECKING, List, Optional
 
+from quality_agents.architectanalyst.models import ArchitectureResult, ArchitectureSeverity
 
-@dataclass
-class ArchitectureMetric:
-    """Métrica de arquitectura con su valor y tendencia."""
-    name: str
-    value: float
-    threshold: float
-    trend: str  # "improving", "stable", "degrading"
-    history: List[float]
+if TYPE_CHECKING:
+    from quality_agents.architectanalyst.config import ArchitectAnalystConfig
+    from quality_agents.architectanalyst.orchestrator import MetricOrchestrator
 
-
-@dataclass
-class ArchitectureSnapshot:
-    """Snapshot de métricas de arquitectura en un momento dado."""
-    timestamp: datetime
-    metrics: Dict[str, float]
-    violations: List[str]
-    dependency_cycles: List[List[str]]
+# Re-exportar para compatibilidad con imports externos
+__all__ = ["ArchitectAnalyst", "ArchitectureResult", "ArchitectureSeverity"]
 
 
 class ArchitectAnalyst:
@@ -32,114 +26,85 @@ class ArchitectAnalyst:
     Agente de análisis arquitectónico para fin de sprint.
 
     Características:
-        - Ejecuta en 10-30 minutos
-        - Analiza tendencias históricas
-        - Detecta ciclos de dependencia y violaciones de capas
-        - Genera dashboards interactivos
-        - Proporciona recomendaciones estratégicas
+        - Ejecuta manualmente al finalizar un sprint o milestone
+        - Analiza el sistema completo (no solo el delta del PR)
+        - Métricas: Ca, Ce, I, A, D (Métricas de Martin) + ciclos + violaciones de capas
+        - Nunca bloquea (exit code siempre 0) — es informativo y estratégico
+        - Delega en MetricOrchestrator para auto-discovery y ejecución de analyzers
+        - Persiste snapshots en SQLite para comparación de tendencias entre sprints
+
+    Attributes:
+        path: Directorio raíz del proyecto a analizar.
+        config_path: Ruta al archivo de configuración (opcional).
+        sprint_id: Identificador del sprint actual (opcional, para histórico).
+        results: Lista de resultados del último análisis ejecutado.
     """
 
-    def __init__(self, config_path: Optional[Path] = None, db_path: Optional[Path] = None):
+    def __init__(
+        self,
+        path: Path = Path("."),
+        config_path: Optional[Path] = None,
+        sprint_id: Optional[str] = None,
+    ) -> None:
         """
         Inicializa ArchitectAnalyst.
 
         Args:
-            config_path: Ruta al archivo de configuración YAML
-            db_path: Ruta a la base de datos SQLite para histórico
+            path: Directorio raíz del proyecto.
+            config_path: Ruta al archivo de configuración (pyproject.toml o YAML).
+            sprint_id: Identificador del sprint (ej: "sprint-12", "2026-Q1").
         """
+        self.path = path
         self.config_path = config_path
-        self.db_path = db_path or Path(".quality_control/architecture.db")
-        self.current_snapshot: Optional[ArchitectureSnapshot] = None
+        self.sprint_id = sprint_id
+        self.results: List[ArchitectureResult] = []
 
-    def analyze(self, target_path: Path) -> ArchitectureSnapshot:
+        # Wired en ticket 1.4 (config) y 1.3 (orchestrator)
+        self._config: Optional["ArchitectAnalystConfig"] = None
+        self._orchestrator: Optional["MetricOrchestrator"] = None
+
+    def run(self, files: Optional[List[Path]] = None) -> List[ArchitectureResult]:
         """
-        Ejecuta análisis arquitectónico completo.
+        Ejecuta análisis arquitectónico sobre el proyecto.
+
+        Delega en MetricOrchestrator para seleccionar y ejecutar los analyzers.
 
         Args:
-            target_path: Ruta al directorio del proyecto
+            files: Archivos a analizar. Si es None, analiza todos los Python en self.path.
 
         Returns:
-            Snapshot con métricas actuales
+            Lista de resultados del análisis.
         """
-        metrics = {}
+        self.results = []
 
-        # Métricas de Martin
-        metrics.update(self._calculate_martin_metrics(target_path))
+        if files is None:
+            files = self.collect_files(self.path)
 
-        # Detección de problemas
-        violations = self._detect_layer_violations(target_path)
-        cycles = self._detect_dependency_cycles(target_path)
+        python_files = [f for f in files if f.suffix == ".py"]
 
-        self.current_snapshot = ArchitectureSnapshot(
-            timestamp=datetime.now(),
-            metrics=metrics,
-            violations=violations,
-            dependency_cycles=cycles,
-        )
+        if self._orchestrator is not None:
+            self.results = self._orchestrator.run(python_files)
 
-        self._save_snapshot()
+        return self.results
 
-        return self.current_snapshot
-
-    def get_trends(self, metric_name: str, periods: int = 10) -> List[float]:
+    def collect_files(self, path: Path) -> List[Path]:
         """
-        Obtiene tendencia histórica de una métrica.
+        Recolecta archivos Python a analizar.
 
         Args:
-            metric_name: Nombre de la métrica
-            periods: Número de períodos a obtener
+            path: Directorio o archivo a analizar.
 
         Returns:
-            Lista de valores históricos
+            Lista de archivos Python encontrados.
         """
-        # TODO: Implementar consulta a SQLite
-        return []
+        if path.is_file():
+            return [path] if path.suffix == ".py" else []
+        return list(path.rglob("*.py"))
 
-    def generate_dashboard(self, output_path: Path) -> None:
-        """
-        Genera dashboard HTML interactivo.
+    def has_violations(self) -> bool:
+        """Retorna True si hay alguna violación (WARNING o CRITICAL)."""
+        return any(r.has_violation() for r in self.results)
 
-        Args:
-            output_path: Ruta donde guardar el dashboard
-        """
-        # TODO: Implementar con Plotly
-        pass
-
-    def generate_executive_report(self, output_path: Path) -> None:
-        """
-        Genera reporte ejecutivo en PDF.
-
-        Args:
-            output_path: Ruta donde guardar el reporte
-        """
-        # TODO: Implementar
-        pass
-
-    def _calculate_martin_metrics(self, target_path: Path) -> Dict[str, float]:
-        """
-        Calcula métricas de Robert C. Martin.
-
-        Métricas:
-            - Ca: Afferent Coupling
-            - Ce: Efferent Coupling
-            - I: Instability = Ce / (Ca + Ce)
-            - A: Abstractness
-            - D: Distance from Main Sequence = |A + I - 1|
-        """
-        # TODO: Implementar
-        return {}
-
-    def _detect_layer_violations(self, target_path: Path) -> List[str]:
-        """Detecta violaciones de arquitectura de capas."""
-        # TODO: Implementar
-        return []
-
-    def _detect_dependency_cycles(self, target_path: Path) -> List[List[str]]:
-        """Detecta ciclos de dependencia entre módulos."""
-        # TODO: Implementar con pydeps
-        return []
-
-    def _save_snapshot(self) -> None:
-        """Guarda el snapshot actual en la base de datos."""
-        # TODO: Implementar persistencia SQLite
-        pass
+    def has_critical(self) -> bool:
+        """Retorna True si hay alguna violación CRITICAL."""
+        return any(r.is_critical() for r in self.results)
