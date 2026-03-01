@@ -6,11 +6,11 @@ Guías prácticas para usar los agentes de control de calidad.
 
 ## Agentes Disponibles
 
-| Agente | Guía | Estado |
-|--------|------|--------|
-| CodeGuard | [codeguard.md](codeguard.md) | ✅ Disponible |
-| DesignReviewer | [designreviewer.md](designreviewer.md) | ✅ Disponible |
-| ArchitectAnalyst | [architectanalyst.md](architectanalyst.md) | ✅ Disponible |
+| Agente | Guía de Usuario | Guía de Adopción |
+|--------|----------------|-----------------|
+| CodeGuard | [codeguard.md](codeguard.md) | [adopcion-codeguard.md](adopcion-codeguard.md) |
+| DesignReviewer | [designreviewer.md](designreviewer.md) | [adopcion-designreviewer.md](adopcion-designreviewer.md) |
+| ArchitectAnalyst | [architectanalyst.md](architectanalyst.md) | [adopcion-architectanalyst.md](adopcion-architectanalyst.md) |
 
 ---
 
