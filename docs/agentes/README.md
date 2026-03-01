@@ -20,10 +20,16 @@ Pre-commit (seg)     Review (min)        Sprint-end (horas)
 | DesignReviewer | Review/PR | Bloquea si crítico | 2-5 min |
 | ArchitectAnalyst | Fin de sprint | Analiza tendencias | 10-30 min |
 
-## Contenido pendiente
+## Implementado
 
-- [ ] CodeGuard (implementación básica)
-- [ ] DesignReviewer (con integración IA)
-- [ ] ArchitectAnalyst (dashboard y tendencias)
-- [ ] Configuraciones YAML
-- [ ] Integración CI/CD
+| Agente | Versión | Estado | Guía |
+|--------|---------|--------|------|
+| CodeGuard | v0.1.0 | ✅ Completo | `docs/guias/codeguard.md` |
+| DesignReviewer | v0.2.0 | ✅ Completo (sin IA) | `docs/guias/designreviewer.md` |
+| ArchitectAnalyst | v0.3.0 | ✅ Completo (sin IA, sin dashboard) | `docs/guias/architectanalyst.md` |
+
+## Pendiente
+
+- [ ] Integración IA opt-in (CodeGuard, DesignReviewer, ArchitectAnalyst)
+- [ ] Publicación en PyPI (`pip install quality-agents`)
+- [ ] GitHub Actions CI/CD
