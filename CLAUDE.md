@@ -49,8 +49,12 @@ codeguard .                              # Analiza el directorio actual (pre-com
 codeguard src/ --format json             # Salida en JSON
 codeguard --config configs/codeguard.yml # Configuración personalizada
 
-designreviewer   # (implementación pendiente)
-architectanalyst # (implementación pendiente)
+designreviewer src/                      # Análisis de diseño (bloquea si hay CRITICAL)
+designreviewer src/ --format json        # Salida en JSON
+
+architectanalyst src/                    # Análisis de arquitectura (solo informa, no bloquea)
+architectanalyst src/ --sprint-id sprint-12  # Con ID de sprint para tracking
+architectanalyst src/ --format json      # Salida en JSON
 ```
 
 ## Arquitectura
@@ -64,7 +68,7 @@ Pre-commit (<5s)    →    PR Review (2-5min)    →    Fin de Sprint (10-30min)
  (solo advierte)       (bloquea si crítico)        (análisis de tendencias)
 ```
 
-**CodeGuard es el único agente completo** (MVP). DesignReviewer y ArchitectAnalyst solo tienen estructura esqueleto.
+Los **tres agentes están implementados** (v0.3.0): CodeGuard (v0.1.0), DesignReviewer (v0.2.0), ArchitectAnalyst (v0.3.0). La integración IA es opt-in y está pendiente para v0.4.0.
 
 ### Estructura de Agentes
 

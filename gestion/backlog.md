@@ -4,44 +4,47 @@ Features y mejoras pendientes ordenadas por versión objetivo.
 
 ---
 
-## v0.2.0 — DesignReviewer
+## v0.2.0 — DesignReviewer ✅ (Febrero 2026)
 
 Análisis de diseño para Pull Requests (~2-5 min).
 
-- [ ] Implementar arquitectura modular (analyzers) siguiendo patrón Verifiable
-- [ ] `CodeSmellAnalyzer` — detección de god objects, feature envy, data clumps
-- [ ] `CouplingAnalyzer` — CBO (Coupling Between Objects) con radon/pydeps
-- [ ] `CohesionAnalyzer` — LCOM (Lack of Cohesion of Methods)
-- [ ] `DuplicationAnalyzer` — detección de código duplicado
-- [ ] CLI `designreviewer` funcional
-- [ ] Sugerencias de refactoring (con IA opcional)
-- [ ] Tests (objetivo: ~150 tests nuevos)
-- [ ] Documentación de usuario
+- [x] Implementar arquitectura modular (analyzers) siguiendo patrón Verifiable
+- [x] 12 analyzers: CBO, FanOut, CircularImports, LCOM, WMC, DIT, NOP, GodObject, LongMethod, LongParameterList, FeatureEnvy, DataClumps
+- [x] CLI `designreviewer` funcional (Rich + JSON, exit code 1 si CRITICAL)
+- [x] Tests (~160 tests nuevos)
+- [x] Documentación de usuario
 
 ---
 
-## v0.3.0 — ArchitectAnalyst
+## v0.3.0 — ArchitectAnalyst ✅ (Marzo 2026)
 
 Análisis de tendencias arquitectónicas al fin de sprint (~10-30 min).
 
-- [ ] Implementar arquitectura modular (metrics) siguiendo patrón Verifiable
-- [ ] `LayerViolationMetric` — detección de violaciones de capas
-- [ ] `DependencyCycleMetric` — ciclos de dependencias con pydeps
-- [ ] `MaintainabilityMetric` — índice de mantenibilidad histórico (radon)
-- [ ] Persistencia histórica en SQLite
-- [ ] Dashboards interactivos con Plotly
-- [ ] CLI `architectanalyst` funcional
-- [ ] Tests (objetivo: ~150 tests nuevos)
-- [ ] Documentación de usuario
+- [x] Implementar arquitectura modular (metrics) siguiendo patrón Verifiable
+- [x] 7 métricas: Ca, Ce, I, A, D (Martin) + DependencyCycles + LayerViolations
+- [x] Persistencia histórica en SQLite (SnapshotStore)
+- [x] Comparación de tendencias entre sprints (TrendCalculator: ↑↓=)
+- [x] CLI `architectanalyst` funcional (Rich + JSON, exit code 0 — informativo)
+- [x] Tests (~200 tests nuevos)
+- [x] Documentación de usuario
+
+---
+
+## v0.4.0 — Integración IA opt-in (pendiente)
+
+- [ ] CodeGuard: explicaciones IA para warnings (opt-in, `[tool.codeguard.ai] enabled = true`)
+- [ ] DesignReviewer: sugerencias de refactorización IA (opt-in)
+- [ ] ArchitectAnalyst: análisis estratégico IA con histórico de sprints (opt-in)
+- [ ] Publicación en PyPI (`pip install quality-agents`)
+- [ ] GitHub Actions CI/CD
 
 ---
 
 ## v1.0.0 — Trilogía Completa
 
 - [ ] API estable y documentada para los 3 agentes
-- [ ] Publicación en PyPI (`pip install quality-agents`)
-- [ ] GitHub Actions CI/CD completo
 - [ ] Integración de los 3 agentes en un pipeline unificado
+- [ ] Guías para uso académico / estudiantes
 
 ---
 
