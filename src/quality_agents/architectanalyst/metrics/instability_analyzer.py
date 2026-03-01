@@ -102,9 +102,9 @@ class InstabilityAnalyzer(ProjectMetric):
 
         return results
 
+    def __init__(self) -> None:
+        self._config: Any = None
+
     def should_run(self, config: Any) -> bool:
         self._config = config
         return True
-
-    def __init__(self) -> None:
-        self._config: Any = None

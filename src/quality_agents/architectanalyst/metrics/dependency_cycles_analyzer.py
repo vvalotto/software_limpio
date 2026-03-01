@@ -14,9 +14,12 @@ Fecha: 2026-03-01
 
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Set
 
-from quality_agents.architectanalyst.metrics.dependency_graph import DependencyGraphBuilder
+from quality_agents.architectanalyst.metrics.dependency_graph import (
+    DependencyGraph,
+    DependencyGraphBuilder,
+)
 from quality_agents.architectanalyst.models import ArchitectureResult, ArchitectureSeverity
 from quality_agents.architectanalyst.orchestrator import ProjectMetric
 
@@ -102,7 +105,7 @@ class DependencyCyclesAnalyzer(ProjectMetric):
     # Algoritmo de Tarjan para SCCs
     # -------------------------------------------------------------------------
 
-    def _find_cycles_tarjan(self, graph: "DependencyGraphBuilder") -> List[List[str]]:  # type: ignore[name-defined]
+    def _find_cycles_tarjan(self, graph: DependencyGraph) -> List[List[str]]:
         """
         Encuentra SCCs con ≥ 2 nodos usando el algoritmo de Tarjan.
 
