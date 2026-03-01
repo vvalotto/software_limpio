@@ -136,7 +136,7 @@ Seis principios universales de diseño (paradigma-agnósticos):
 |--------|---------|----------|--------|--------|
 | **CodeGuard** | Pre-commit | < 5s | Advierte (no bloquea) | ✅ **v0.1.0** |
 | **DesignReviewer** | Review/PR | 2-5 min | Bloquea si crítico | ✅ **v0.2.0** |
-| **ArchitectAnalyst** | Fin de sprint | 10-30 min | Analiza tendencias | 🚧 Próximamente |
+| **ArchitectAnalyst** | Fin de sprint | 10-30 min | Analiza tendencias | ✅ **v0.3.0** |
 
 ### CodeGuard (Agente de Código)
 
@@ -185,6 +185,38 @@ designreviewer src/ --format json
 
 📖 **[Guía de Usuario DesignReviewer](docs/guias/designreviewer.md)**
 
+---
+
+### ArchitectAnalyst (Agente de Arquitectura)
+
+Analiza la **salud arquitectónica del sistema completo** al finalizar un sprint. Calcula las métricas de Robert C. Martin, detecta ciclos de dependencias y violaciones de capas. Persiste snapshots en SQLite para mostrar tendencias entre sprints.
+
+```bash
+# Análisis de fin de sprint
+architectanalyst src/ --sprint-id sprint-12
+
+# Salida JSON para dashboards
+architectanalyst src/ --sprint-id sprint-12 --format json > arquitectura.json
+```
+
+**Métricas implementadas:**
+- **Martin:** Ca, Ce (acoplamiento), I (inestabilidad), A (abstracción), D (distancia al Main Sequence)
+- **Estructurales:** Ciclos de dependencias (Tarjan), Violaciones de capas (configurable)
+
+**Tendencias históricas:**
+- Cada análisis se persiste en SQLite (`.quality_control/architecture.db`)
+- A partir del segundo análisis, muestra ↑↓= por métrica
+
+**Features:**
+- ✅ 7 métricas cross-module (AST puro, sin dependencias nuevas)
+- ✅ Tabla Rich con columna de tendencia (↑↓=), sección CRÍTICAS separada
+- ✅ Exit code **siempre 0** — nunca bloquea, es informativo
+- ✅ `should_block: false` en JSON
+- ✅ Configuración vía `[tool.architectanalyst]` en pyproject.toml
+- ✅ Arquitectura en capas configurable (`[tool.architectanalyst.layers]`)
+
+📖 **[Guía de Usuario ArchitectAnalyst](docs/guias/architectanalyst.md)**
+
 ## Herramientas Base
 
 - `radon` - Complejidad y mantenibilidad
@@ -202,7 +234,7 @@ designreviewer src/ --format json
 | **Teoría y Fundamentos** | ✅ Completo | 100% |
 | **CodeGuard (Agente de Código)** | ✅ v0.1.0 | 100% |
 | **DesignReviewer (Agente de Diseño)** | ✅ v0.2.0 | 100% |
-| **ArchitectAnalyst (Agente de Arquitectura)** | 🚧 Próximamente | 0% |
+| **ArchitectAnalyst (Agente de Arquitectura)** | ✅ v0.3.0 | 100% |
 
 ### CodeGuard - Roadmap
 
@@ -215,13 +247,13 @@ designreviewer src/ --format json
 - [x] **Fase 6:** Documentación completa
 - [ ] **Fase 3:** IA opcional con Claude (suspendida temporalmente)
 
-**Tests:** 517/517 pasando (100%)
+**Tests:** 788/788 pasando (100%)
 
 ### Próximos Pasos
 
 1. ~~Release v0.1.0~~ ✅ Publicada
 2. ~~Implementar DesignReviewer (v0.2.0)~~ ✅ Publicada
-3. Implementar ArchitectAnalyst (v0.3.0)
+3. ~~Implementar ArchitectAnalyst (v0.3.0)~~ ✅ Publicada
 
 ## Autor
 
