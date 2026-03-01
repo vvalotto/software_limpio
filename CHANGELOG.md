@@ -7,6 +7,67 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
+## [0.3.0] - 2026-03-01
+
+### 🎉 ArchitectAnalyst — Análisis Arquitectónico de Fin de Sprint
+
+Tercera release de **Software Limpio**: el agente **ArchitectAnalyst** completamente funcional. Analiza la salud arquitectónica del sistema completo al finalizar un sprint. A diferencia de los otros agentes, **nunca bloquea** — es informativo y estratégico.
+
+### ✨ Added — Funcionalidades Nuevas
+
+#### ArchitectAnalyst — Agente de Arquitectura (Fin de Sprint)
+
+**Infraestructura Modular:**
+- Arquitectura de métricas project-wide con auto-discovery (`MetricOrchestrator`)
+- Tipos propios: `ArchitectureSeverity` (INFO/WARNING/CRITICAL), `MetricTrend` (IMPROVING/STABLE/DEGRADING), `ArchitectureResult`
+- `ProjectMetric` — clase base para métricas cross-module (vs. `Verifiable` que trabaja archivo por archivo)
+- `ArchitectAnalystConfig` con umbrales configurables vía `[tool.architectanalyst]`
+
+**5 Métricas de Martin + 2 Estructurales:**
+
+*Métricas de Robert C. Martin:*
+- `CouplingAnalyzer` — Ca (Afferent Coupling) y Ce (Efferent Coupling) por módulo (INFO)
+- `InstabilityAnalyzer` — I = Ce / (Ca + Ce) por módulo (WARNING si I > 0.8)
+- `AbstractnessAnalyzer` — A = clases abstractas / total clases (INFO)
+- `DistanceAnalyzer` — D = |A + I - 1| (WARNING si D > 0.3, CRITICAL si D > 0.5)
+
+*Análisis Estructural:*
+- `DependencyCyclesAnalyzer` — ciclos en el grafo de imports, algoritmo de Tarjan (CRITICAL)
+- `LayerViolationsAnalyzer` — imports que violan la arquitectura en capas declarada en config (CRITICAL)
+
+**Tendencias Históricas:**
+- `SnapshotStore` — persiste snapshots en SQLite (`.quality_control/architecture.db`)
+- `TrendCalculator` — calcula ↑↓= comparando snapshot actual vs. anterior
+- Cada `ArchitectureResult` incluye `MetricTrend` con su símbolo de tendencia
+
+**CLI Completo:**
+- Comando `architectanalyst` con opciones `--format`, `--config`, `--sprint-id`
+- Exit code **siempre 0** (nunca bloquea — agente informativo)
+- Output Rich: tabla con métricas de Martin + columna Trend (↑↓=), sección CRÍTICAS separada
+- Output JSON estructurado con `summary.should_block = false` y `trend_available`
+
+### 🧪 Tests
+
+- **271 tests nuevos — 788 tests totales pasando (100%)**
+  - 211 tests unitarios de ArchitectAnalyst (infraestructura, métricas, tendencias, CLI)
+  - 24 tests E2E con código sintético real (ciclos, capas, Martin metrics)
+  - 3 tests de dogfooding sobre el propio proyecto
+
+### 📚 Documentation
+
+- `docs/guias/architectanalyst.md` — Guía de usuario completa (Main Sequence, tendencias, configuración de capas)
+- `README.md` — Sección ArchitectAnalyst actualizada
+- Diagramas del Main Sequence y tablas de métricas
+
+### 🏗️ Infrastructure
+
+- `pyproject.toml` actualizado a version `0.3.0`
+- Entrada CLI `architectanalyst` en entry points
+- `[tool.architectanalyst]` en pyproject.toml con umbrales por defecto
+- Base de datos SQLite en `.quality_control/architecture.db`
+
+---
+
 ## [0.2.0] - 2026-02-21
 
 ### 🎉 DesignReviewer — Análisis de Calidad de Diseño
