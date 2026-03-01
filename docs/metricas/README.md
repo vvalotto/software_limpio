@@ -4,12 +4,12 @@ Catálogo de métricas de calidad de software organizadas por contexto de aplica
 
 ## Estructura
 
-| Archivo | Contexto | Métricas Core |
-|---------|----------|---------------|
-| `catalogo_general.md` | Visión completa | 35 de 155 seleccionadas |
-| `codigo.md` | Función/Método | 15 esenciales |
-| `diseno.md` | Clase/Módulo | 20 esenciales |
-| `arquitectura.md` | Paquete/Sistema | 20 esenciales |
+| Archivo | Contexto | Descripción |
+|---------|----------|-------------|
+| `Metricas_Clasificadas.md` | Visión completa | Catálogo completo clasificado por nivel, contexto y utilidad |
+| `metricas_codigo.md` | Función/Método | Catálogo detallado — métricas de código |
+| `metricas_diseno.md` | Clase/Módulo | Catálogo detallado — métricas de diseño |
+| `metricas_arquitectura.md` | Paquete/Sistema | Catálogo detallado — métricas de arquitectura |
 
 ## Criterios de Clasificación
 
