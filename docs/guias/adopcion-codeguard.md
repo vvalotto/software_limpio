@@ -21,7 +21,7 @@ todas las opciones, ver la [Guía de Usuario](codeguard.md).
 ### Desde la release oficial (recomendado)
 
 ```bash
-pip install git+https://github.com/vvalotto/software_limpio.git@v0.1.0
+pip install git+https://github.com/vvalotto/software_limpio.git@v0.3.0
 ```
 
 ### En modo desarrollo (para contribuir)
@@ -111,7 +111,7 @@ Crear `.pre-commit-config.yaml` en la raíz del proyecto:
 ```yaml
 repos:
   - repo: https://github.com/vvalotto/software_limpio
-    rev: v0.1.0
+    rev: v0.3.0
     hooks:
       - id: codeguard
         args: ['--analysis-type', 'pre-commit']
@@ -148,7 +148,7 @@ El objetivo es que cada commit ya cumpla con los estándares.
 mkdir mi-proyecto && cd mi-proyecto
 git init
 python -m venv .venv && source .venv/bin/activate
-pip install git+https://github.com/vvalotto/software_limpio.git@v0.1.0
+pip install git+https://github.com/vvalotto/software_limpio.git@v0.3.0
 ```
 
 ### Paso 2: Configuración estricta desde el inicio
@@ -185,7 +185,7 @@ Crear `.pre-commit-config.yaml`:
 ```yaml
 repos:
   - repo: https://github.com/vvalotto/software_limpio
-    rev: v0.1.0
+    rev: v0.3.0
     hooks:
       # Análisis rápido en cada commit
       - id: codeguard

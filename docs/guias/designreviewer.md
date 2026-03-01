@@ -451,4 +451,4 @@ Si un analyzer lanza una excepción inesperada, el orquestador lo registra como 
 
 - [Guía de CodeGuard](codeguard.md) — análisis pre-commit
 - [Especificación de Agentes](../agentes/especificacion_agentes_calidad.md) — diseño del sistema
-- [Métricas de Diseño](../metricas/diseno.md) — catálogo completo de métricas
+- [Métricas de Diseño](../metricas/metricas_diseno.md) — catálogo completo de métricas

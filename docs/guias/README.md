@@ -9,8 +9,8 @@ Guías prácticas para usar los agentes de control de calidad.
 | Agente | Guía | Estado |
 |--------|------|--------|
 | CodeGuard | [codeguard.md](codeguard.md) | ✅ Disponible |
-| DesignReviewer | designreviewer.md | 🚧 Próximamente |
-| ArchitectAnalyst | architectanalyst.md | 🚧 Próximamente |
+| DesignReviewer | [designreviewer.md](designreviewer.md) | ✅ Disponible |
+| ArchitectAnalyst | [architectanalyst.md](architectanalyst.md) | ✅ Disponible |
 
 ---
 
@@ -37,11 +37,11 @@ pip install -e ".[dev]"
 # CodeGuard - Análisis rápido pre-commit
 codeguard .
 
-# DesignReviewer - Análisis de diseño (próximamente)
-designreviewer
+# DesignReviewer - Análisis de diseño (bloquea si hay CRITICAL)
+designreviewer src/
 
-# ArchitectAnalyst - Análisis de arquitectura (próximamente)
-architectanalyst
+# ArchitectAnalyst - Análisis de arquitectura (solo informa)
+architectanalyst src/
 ```
 
 ---
