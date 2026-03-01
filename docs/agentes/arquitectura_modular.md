@@ -1,9 +1,9 @@
 # Decisión Arquitectónica: Sistema de Verificaciones/Análisis Modulares con Orquestación Contextual
 
 **Fecha:** 2026-02-02
-**Estado:** Propuesta
+**Estado:** Implementada
 **Afecta a:** CodeGuard, DesignReviewer, ArchitectAnalyst
-**Relacionado con:** Decisiones arquitectónicas de Enero 2026 (`ajuste_documentacion.md`)
+**Implementada en:** v0.1.0 (CodeGuard), v0.2.0 (DesignReviewer), v0.3.0 (ArchitectAnalyst)
 
 ---
 
@@ -736,34 +736,32 @@ shared/
 
 ## 10. Plan de Implementación
 
-### Fase 0: Preparación (Antes de Código)
+### Fase 0: Preparación
 - [x] Crear este documento de decisión arquitectónica
-- [ ] Revisar impacto en documentación existente
-- [ ] Actualizar `especificacion_agentes_calidad.md`
-- [ ] Actualizar `guia_implementacion_agentes.md`
-- [ ] Rediseñar `PLAN_IMPLEMENTACION.md` de CodeGuard
+- [x] Revisar impacto en documentación existente
+- [x] Rediseñar plan de implementación de CodeGuard
 
 ### Fase 1: Fundamentos (Base Compartida)
-- [ ] Crear `shared/verifiable.py` con clase base
-- [ ] Crear `ExecutionContext` dataclass
-- [ ] Tests unitarios de la clase base
+- [x] Crear `shared/verifiable.py` con clase base
+- [x] Crear `ExecutionContext` dataclass
+- [x] Tests unitarios de la clase base
 
 ### Fase 2: CodeGuard Refactorizado
-- [ ] Crear `codeguard/orchestrator.py`
-- [ ] Migrar `check_pep8()` a `checks/pep8_check.py`
-- [ ] Implementar resto de checks como clases
-- [ ] Tests de orquestación
-- [ ] Integrar en `CodeGuard.run()`
+- [x] Crear `codeguard/orchestrator.py`
+- [x] Migrar checks a `checks/pep8_check.py`, `security_check.py`, etc.
+- [x] Implementar 6 checks como clases modulares
+- [x] Tests de orquestación
+- [x] Integrar en `CodeGuard.run()`
 
 ### Fase 3: DesignReviewer y ArchitectAnalyst
-- [ ] Aplicar patrón a DesignReviewer
-- [ ] Aplicar patrón a ArchitectAnalyst
-- [ ] Tests completos
+- [x] Aplicar patrón a DesignReviewer (`analyzers/`)
+- [x] Aplicar patrón a ArchitectAnalyst (`metrics/`)
+- [x] Tests completos (788 tests totales)
 
 ### Fase 4: Optimización
 - [ ] Implementar cache de registry
 - [ ] Optimización de tiempo
-- [ ] Integración IA en orquestador
+- [ ] Integración IA en orquestador (pendiente v0.4.0)
 
 ---
 
@@ -805,7 +803,7 @@ La arquitectura será exitosa si:
 
 ## 13. Decisión
 
-**APROBADO PARA IMPLEMENTACIÓN** (Pendiente de revisión)
+**IMPLEMENTADA** ✅
 
 Esta arquitectura:
 - ✅ Se alinea con los 6 principios fundamentales del proyecto
@@ -815,15 +813,14 @@ Esta arquitectura:
 - ✅ Escala sin degradar la arquitectura
 - ✅ Mantiene el presupuesto de tiempo (< 5s en pre-commit)
 
-**Próximos pasos:**
-1. Revisar y aprobar este documento
-2. Actualizar documentación existente
-3. Rediseñar plan de implementación
-4. Comenzar implementación incremental
+**Implementada en tres releases:**
+- v0.1.0 — CodeGuard: 6 checks modulares, `CheckOrchestrator`, auto-discovery
+- v0.2.0 — DesignReviewer: 12 analyzers modulares, `AnalyzerOrchestrator`
+- v0.3.0 — ArchitectAnalyst: 5 metrics modulares, `MetricOrchestrator`
 
 ---
 
 **Fecha de creación:** 2026-02-02
 **Autor:** Claude Sonnet 4.5 + Víctor Valotto
-**Estado:** Propuesta (Pendiente de aprobación)
+**Estado:** Implementada ✅
 **Versión:** 1.0
