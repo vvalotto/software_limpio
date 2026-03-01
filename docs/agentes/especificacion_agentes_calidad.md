@@ -1,7 +1,7 @@
 # ESPECIFICACIÓN DE AGENTES DE CONTROL DE CALIDAD
 **Sistema de Control de Calidad en Tres Niveles**
 
-Versión 1.1 - Enero 2026
+Versión 1.3 - Marzo 2026
 
 ---
 
@@ -38,7 +38,7 @@ Pre-commit (segundos)     Review (minutos)        Sprint-end (horas)
      │                          │                         │
   ADVERTIR                   BLOQUEAR                  ANALIZAR
      │                          │                         │
-  CLI Output              HTML Report              Dashboard + Trends
+  CLI Output + JSON     CLI Output + JSON      CLI Output + JSON + Trends
 ```
 
 ### Arquitectura Interna Modular (Febrero 2026)
@@ -105,15 +105,15 @@ Orquestador selecciona:
 Total: 3.0s de 5.0s disponibles
 ```
 
-**Referencia:** Ver `docs/agentes/decision_arquitectura_checks_modulares.md` para detalles completos.
+**Referencia:** Ver `docs/agentes/arquitectura_modular.md` para detalles completos.
 
 ### Estrategia de Bloqueo
 
 | Agente | Bloquea | Advierte | Uso de IA | Tiempo |
 |--------|---------|----------|-----------|--------|
 | CodeGuard | NO | SÍ | Opcional (explicaciones) | < 5s |
-| DesignReviewer | SÍ (crítico) | SÍ | Siempre (refactoring) | 2-5 min |
-| ArchitectAnalyst | NO | SÍ | Siempre (predictivo) | 10-30 min |
+| DesignReviewer | SÍ (crítico) | SÍ | Opcional (pendiente v0.4.0) | 2-5 min |
+| ArchitectAnalyst | NO | SÍ | Opcional (pendiente v0.4.0) | 10-30 min |
 
 ---
 
@@ -746,7 +746,7 @@ __all__ = [..., "MiCheck"]
 
 ### 2.1 Propósito
 
-Análisis profundo de calidad de diseño a nivel clase/módulo en momentos de review planificado. **SÍ bloquea** si hay violaciones críticas. Utiliza IA para sugerir refactorizaciones.
+Análisis profundo de calidad de diseño a nivel clase/módulo en momentos de review planificado. **SÍ bloquea** si hay violaciones críticas. La integración con IA es opcional y está pendiente para v0.4.0.
 
 ### 2.2 Momento de Activación
 
@@ -757,190 +757,128 @@ Análisis profundo de calidad de diseño a nivel clase/módulo en momentos de re
 
 ### 2.3 Métricas Monitoreadas
 
-| # | Métrica | Umbral | Severidad | Acción |
-|---|---------|--------|-----------|--------|
-| 1 | Average Class Size | ≤ 200 LOC | **BLOCK** | Bloquear + sugerir split |
-| 2 | WMC | ≤ 20 | **BLOCK** | Bloquear + IA sugiere extractos |
-| 3 | CC por clase | ≤ 30 | **BLOCK** | Bloquear + refactorizar |
-| 4 | LCOM | ≤ 1 | WARN | Advertir + IA sugiere cohesión |
-| 5 | CBO | ≤ 5 | **BLOCK** | Bloquear + IA sugiere desacople |
-| 6 | Fan-Out | ≤ 7 | WARN | Advertir dependencies |
-| 7 | DIT | ≤ 5 | **BLOCK** | Bloquear herencia profunda |
-| 8 | NOP | ≤ 1 | **BLOCK** | Bloquear herencia múltiple |
-| 9 | MI | > 20 | WARN | Advertir si < 20 |
-| 10 | Tech Debt Ratio | < 5% | WARN | Advertir tendencia |
-| 11 | Code Smells | 0 críticos | **BLOCK** | Bloquear + listar |
-| 12 | Duplicated Lines | < 3% | **BLOCK** | Bloquear si > 5% |
-| 13 | Duplicated Blocks | 0 | WARN | Advertir + mostrar |
-| 14 | Line Coverage | > 80% | **BLOCK** | Bloquear si < 70% |
-| 15 | Branch Coverage | > 75% | WARN | Advertir si < 70% |
-| 16 | Bugs (SonarQube) | 0 | **BLOCK** | Bloquear + priorizar |
-| 17 | Circular Imports | 0 | **BLOCK** | Bloquear diseño |
-| 18 | README actualizado | Sí | WARN | Advertir si falta |
+| # | Métrica | Umbral | Severidad | Analyzer |
+|---|---------|--------|-----------|----------|
+| 1 | CBO (Coupling Between Objects) | ≤ 5 | **CRITICAL** | `CBOAnalyzer` |
+| 2 | Fan-Out | ≤ 7 | WARNING | `FanOutAnalyzer` |
+| 3 | Circular Imports | 0 | **CRITICAL** | `CircularImportsAnalyzer` |
+| 4 | LCOM (Lack of Cohesion) | ≤ 1 | WARNING | `LCOMAnalyzer` |
+| 5 | WMC (Weighted Methods per Class) | ≤ 20 | **CRITICAL** | `WMCAnalyzer` |
+| 6 | DIT (Depth of Inheritance Tree) | ≤ 5 | **CRITICAL** | `DITAnalyzer` |
+| 7 | NOP (Number of Parents) | ≤ 1 | **CRITICAL** | `NOPAnalyzer` |
+| 8 | God Object | N clases > umbral | **CRITICAL** | `GodObjectAnalyzer` |
+| 9 | Long Method | métodos > umbral | WARNING | `LongMethodAnalyzer` |
+| 10 | Long Parameter List | parámetros > umbral | WARNING | `LongParameterListAnalyzer` |
+| 11 | Feature Envy | métodos afectados | WARNING | `FeatureEnvyAnalyzer` |
+| 12 | Data Clumps | grupos detectados | WARNING | `DataClumpsAnalyzer` |
 
-### 2.4 Herramientas Necesarias
+### 2.4 Herramientas Utilizadas
 
 ```bash
-# Análisis estático
+# Análisis estático (ya incluidas en quality-agents)
 radon               # CC, MI, Halstead
-pylint              # Múltiples métricas OO
-pydeps              # Dependencias y grafos
-coverage.py         # Cobertura de tests
-jscpd               # Detección de duplicación
-
-# Plataforma integrada
-sonarqube           # Dashboard completo (opcional pero recomendado)
-
-# IA
-anthropic-api       # Claude para sugerencias de refactoring
+pylint              # Métricas OO (WMC, DIT, NOP, Fan-Out)
+ast                 # Análisis AST propio (LCOM, CBO, code smells)
 ```
 
 ### 2.5 Formato de Salida
 
-**HTML Report + CLI Summary:**
+**CLI (Rich) + JSON:**
 
 ```
-🔬 DesignReviewer - Deep Analysis
+designreviewer src/
+
+🔬 DesignReviewer - Análisis Profundo
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-📦 Module: src/services/payment_processor.py
-
-🚫 BLOCKING ISSUES (3)
+🚫 BLOCKING ISSUES (2)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-1. Class Size: 287 LOC (threshold: 200)
-   📍 Class: PaymentProcessor (lines 45-332)
-   💡 AI Suggestion:
-      - Extract validation logic → PaymentValidator class
-      - Extract formatting → PaymentFormatter class
-      - Keep core processing in PaymentProcessor
-   📄 See detailed refactoring plan in HTML report
+┌─────────────────────────────────────────────────────────────┐
+│ CRITICAL  CBO: 8 (umbral: 5)                                │
+│ Archivo: src/services/payment_processor.py                  │
+│ Clase PaymentProcessor acoplada a 8 clases                  │
+└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│ CRITICAL  CircularImports detectados                        │
+│ Ciclo: services.payment → models.user → services.payment    │
+└─────────────────────────────────────────────────────────────┘
 
-2. CBO: 8 coupled classes (threshold: 5)
-   📍 Class: PaymentProcessor
-   🔗 Coupled to: Database, Logger, Validator, Formatter, 
-                  EmailService, SMSService, PushNotifier, Analytics
-   💡 AI Suggestion:
-      - Introduce NotificationService facade
-      - Use dependency injection for observability
-   
-3. Duplicated Code: 5.2% (threshold: 3%)
-   📍 Duplicated blocks: 3
-   🔍 Locations:
-      - payment_processor.py:145-167 ↔️ refund_processor.py:89-111
-      - payment_processor.py:201-215 ↔️ subscription_handler.py:67-81
-   💡 AI Suggestion:
-      - Extract common validation to shared module
-      - Create TransactionValidator base class
-
-⚠️  WARNINGS (2)
+⚠️  Advertencias
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-1. LCOM: 1.3 (threshold: 1.0)
-   📍 Methods not sharing attributes detected
-   💡 Consider splitting into cohesive classes
+┌─────────────────────────────────────────────────────────────┐
+│ Checker   │ Módulo                          │ Valor │ Umbral│
+├───────────┼─────────────────────────────────┼───────┼───────┤
+│ LCOM      │ src/models/user.py              │  1.3  │  1.0  │
+│ LongMethod│ src/utils/validator.py:45       │ 65 LOC│  50   │
+└─────────────────────────────────────────────────────────────┘
 
-2. MI: 18.5 (threshold: 20)
-   📍 Maintainability slightly below target
+❌ REVISIÓN BLOQUEADA — Corregir issues CRITICAL antes del merge
+   Exit code: 1
+```
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📊 Full report: design_review_20251228_143052.html
-🤖 AI Analysis: design_suggestions_20251228_143052.md
-
-❌ REVIEW BLOCKED - Fix blocking issues before merge
+**Salida JSON** (`designreviewer --format json`):
+```json
+{
+  "should_block": true,
+  "violations": 2,
+  "warnings": 2,
+  "results": [
+    {
+      "analyzer": "CBOAnalyzer",
+      "severity": "critical",
+      "module": "src/services/payment_processor.py",
+      "message": "CBO: 8 clases acopladas (umbral: 5)"
+    }
+  ]
+}
 ```
 
 ### 2.6 Comportamiento
 
-1. **Bloquea si hay issues críticos** - el merge no puede proceder
-2. **Genera reporte HTML completo** con visualizaciones:
-   - Gráfico de dependencias
-   - Mapa de calor de complejidad
-   - Evolución de métricas (si hay histórico)
-3. **IA genera sugerencias detalladas**:
-   - Plan de refactorización paso a paso
-   - Ejemplos de código antes/después
-   - Estimación de esfuerzo
-4. **Modo interactivo opcional**:
-   - El desarrollador puede pedir excepciones justificadas
-   - Se registra la justificación para auditoría
+1. **Bloquea si hay issues CRITICAL** — el merge no puede proceder (exit code 1)
+2. **Solo advierte si hay WARNING** — no bloquea (exit code 0)
+3. **Salida formateada** con Rich en consola: sección BLOCKING separada de Advertencias
+4. **Salida JSON** disponible con `--format json` para integración CI/CD (campo `should_block`)
+5. **IA**: no implementada en v0.3.0 — pendiente para v0.4.0 como funcionalidad opt-in
 
 ### 2.7 Configuración
 
-**Archivo: `.designreviewer.yml`**
+**Archivo: `pyproject.toml`** (sección `[tool.designreviewer]`)
 
-```yaml
-enabled: true
-run_on_pr_label: "design-review"
-auto_run_weekly: true
+```toml
+[tool.designreviewer]
+# Umbrales de acoplamiento
+max_cbo = 5             # CBO > 5 → CRITICAL
+max_fan_out = 7         # Fan-Out > 7 → WARNING
 
-blocking_thresholds:
-  class_size: 200
-  wmc: 20
-  cc_per_class: 30
-  cbo: 5
-  dit: 5
-  nop: 1
-  duplicated_lines: 5.0
-  coverage: 70.0
-  bugs: 0
-  circular_imports: 0
-  code_smells_critical: 0
+# Umbrales de cohesión y herencia
+max_lcom = 1.0          # LCOM > 1.0 → WARNING
+max_wmc = 20            # WMC > 20 → CRITICAL
+max_dit = 5             # DIT > 5 → CRITICAL
+max_nop = 1             # NOP > 1 → CRITICAL
 
-warning_thresholds:
-  lcom: 1.0
-  mi: 20
-  fan_out: 7
-  tech_debt_ratio: 5.0
-  branch_coverage: 75.0
+# Code Smells
+max_method_lines = 50   # Líneas por método → WARNING
+max_parameters = 5      # Parámetros por función → WARNING
 
-ai_suggestions:
-  enabled: true
-  model: "claude-sonnet-4"
-  include_examples: true
-  include_effort_estimate: true
+# Exclusiones
+exclude = ["tests/", "migrations/", "__pycache__/"]
 
-reports:
-  html: true
-  html_path: "reports/design_reviews/"
-  include_graphs: true
-  include_history: true
-
-exceptions:
-  allow_justified: true
-  require_approval: true  # Requiere aprobación de lead
+# IA (pendiente v0.4.0)
+[tool.designreviewer.ai]
+enabled = false
 ```
 
-### 2.8 Integración con IA
+### 2.8 Integración con IA (pendiente v0.4.0)
 
-**Prompt Template para Claude:**
+La integración con IA es opt-in y está planificada para v0.4.0. Cuando esté implementada, Claude analizará las métricas problemáticas y sugerirá planes de refactorización específicos.
 
-```python
-REFACTORING_PROMPT = """
-Analiza el siguiente código y las métricas de calidad detectadas:
+La configuración será:
 
-**Código:**
-```python
-{code}
-```
-
-**Métricas problemáticas:**
-- {metric_1}: {value_1} (umbral: {threshold_1})
-- {metric_2}: {value_2} (umbral: {threshold_2})
-
-**Contexto del proyecto:**
-- Lenguaje: Python 3.11
-- Paradigma: {paradigm}
-- Restricciones: {constraints}
-
-**Solicitud:**
-1. Identifica los problemas de diseño específicos
-2. Propón un plan de refactorización con pasos concretos
-3. Muestra ejemplo de código refactorizado
-4. Estima esfuerzo (horas) y riesgo (bajo/medio/alto)
-5. Sugiere tests adicionales necesarios
-
-**Formato de respuesta:**
-Markdown estructurado con secciones claras.
-"""
+```toml
+[tool.designreviewer.ai]
+enabled = true            # opt-in explícito
+model = "claude-sonnet-4-6"
 ```
 
 ### 2.9 Arquitectura Interna Modular
@@ -998,7 +936,7 @@ Cada analyzer puede usar IA para:
 - **Sugerir** refactorización específica
 - **Mostrar** código de ejemplo mejorado
 
-**Referencia:** Ver `src/quality_agents/designreviewer/` (implementación futura).
+**Referencia:** Ver `src/quality_agents/designreviewer/` para la implementación completa.
 
 ---
 
@@ -1006,7 +944,7 @@ Cada analyzer puede usar IA para:
 
 ### 3.1 Propósito
 
-Análisis estratégico de la arquitectura del sistema al finalizar sprints o hitos importantes. **NO bloquea** pero genera reportes de tendencias y recomendaciones estratégicas con IA.
+Análisis estratégico de la arquitectura del sistema al finalizar sprints o hitos importantes. **NO bloquea** — genera reportes de tendencias y recomendaciones. La integración con IA es opcional y está pendiente para v0.4.0.
 
 ### 3.2 Momento de Activación
 
@@ -1017,358 +955,135 @@ Análisis estratégico de la arquitectura del sistema al finalizar sprints o hit
 
 ### 3.3 Métricas Monitoreadas
 
-| # | Métrica | Umbral | Categoría | Trend |
-|---|---------|--------|-----------|-------|
-| 1 | Ca (Afferent Coupling) | Contexto | Martin | ↗️↘️ |
-| 2 | Ce (Efferent Coupling) | Contexto | Martin | ↗️↘️ |
-| 3 | I (Instability) | Contexto | Martin | ↗️↘️ |
-| 4 | A (Abstractness) | Contexto | Martin | ↗️↘️ |
-| 5 | D (Distance) | ≈ 0 | Martin | ↗️↘️ |
-| 6 | D' (Normalized Distance) | ≈ 0 | Martin | ↗️↘️ |
-| 7 | Total Dependencies | ≤ 30 | Deps | ↗️↘️ |
-| 8 | Direct Dependencies | ≤ 15 | Deps | ↗️↘️ |
-| 9 | Outdated Dependencies | 0 | Deps | ↗️↘️ |
-| 10 | Dependency Cycles | 0 | Deps | ❌ |
-| 11 | Layer Violations | 0 | Clean Arch | ❌ |
-| 12 | Inward Dependencies | 100% | Clean Arch | ✅ |
-| 13 | Outward Dependencies | 0 | Clean Arch | ❌ |
-| 14 | Domain Purity | 100% | Clean Arch | ✅ |
-| 15 | Cyclic Dependencies (DSM) | 0 | DSM | ❌ |
-| 16 | Layering Violations (DSM) | 0 | DSM | ❌ |
-| 17 | Vulnerabilities | 0 | Security | ❌ |
-| 18 | Security Rating | A | Security | ↗️↘️ |
-| 19 | Dependency CVEs | 0 | Security | ❌ |
-| 20 | Total Line Coverage | > 80% | Testing | ↗️↘️ |
-| 21 | Tests Passed | 100% | Testing | ✅ |
-| 22 | Average MI | > 20 | Quality | ↗️↘️ |
-| 23 | Tech Debt Ratio | < 5% | Quality | ↗️↘️ |
-| 24 | Average CC | ≤ 5 | Quality | ↗️↘️ |
-| 25 | Total Duplicated Lines | < 3% | Quality | ↗️↘️ |
+| # | Métrica | Umbral | Categoría | Trend | Analyzer |
+|---|---------|--------|-----------|-------|----------|
+| 1 | Ca (Afferent Coupling) | — informativo | Martin | ↑↓= | `CouplingAnalyzer` |
+| 2 | Ce (Efferent Coupling) | — informativo | Martin | ↑↓= | `CouplingAnalyzer` |
+| 3 | I (Instability) | > 0.8 → WARNING | Martin | ↑↓= | `InstabilityAnalyzer` |
+| 4 | A (Abstractness) | — informativo | Martin | ↑↓= | `AbstractnessAnalyzer` |
+| 5 | D (Distance from Main Seq.) | > 0.3 → WARNING, > 0.5 → CRITICAL | Martin | ↑↓= | `DistanceAnalyzer` |
+| 6 | Dependency Cycles | 0 → CRITICAL | Deps | ↑↓= | `DependencyCyclesAnalyzer` |
+| 7 | Layer Violations | 0 → CRITICAL | Arch | ↑↓= | `LayerViolationsAnalyzer` |
 
-**Leyenda:**
-- ↗️↘️ = Monitorear tendencia (subiendo/bajando)
-- ❌ = Debe ser cero (crítico)
-- ✅ = Debe ser 100% (crítico)
+**Leyenda trends:** ↑ Degradando · ↓ Mejorando · = Estable · — Sin histórico
 
-### 3.4 Herramientas Necesarias
+### 3.4 Herramientas Utilizadas
 
 ```bash
-# Análisis de dependencias
-pydeps              # Grafos completos
-import-linter       # Validación de reglas
-pipdeptree          # Árbol de dependencias
-safety              # CVEs
-pip-audit           # Vulnerabilidades
+# Análisis estático (incluidas en quality-agents)
+ast                 # Análisis de imports y clases (propio)
+sqlite3             # Persistencia de snapshots (stdlib)
 
-# Análisis arquitectónico
-radon               # Métricas agregadas
-sonarqube           # Dashboard (recomendado)
-wily                # Histórico de métricas
-
-# IA
+# Pendiente v0.4.0 (opt-in)
 anthropic-api       # Claude para análisis estratégico
 ```
 
 ### 3.5 Formato de Salida
 
-**Dashboard Web Interactivo + Markdown Report:**
+**CLI (Rich) + JSON:**
 
 ```
-🏛️ ArchitectAnalyst - Strategic Review
+architectanalyst src/ --sprint-id sprint-12
+
+🏛️  ArchitectAnalyst — Análisis Estratégico
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-📅 Sprint: S2025-W51 (Dec 16-27)
-📊 Comparison: vs. Sprint S2025-W49
+📅 Sprint: sprint-12
+📊 Comparando con snapshot anterior
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🎯 CRITICAL ISSUES
+🎯 Issues CRITICAL (1)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-❌ Layer Violations: 2 (was 0)
-   📍 services.payment → models.database (direct import)
-   📍 domain.entities → infrastructure.email
-   💡 AI Analysis:
-      "Violation 1 breaks Clean Architecture. The service layer
-       should not import from models directly. Create a repository
-       interface in domain and implement in infrastructure."
-   📋 Suggested Actions:
-      1. Create PaymentRepository interface in domain/
-      2. Implement in infrastructure/repositories/
-      3. Inject via dependency injection
-   ⏱️  Estimated effort: 4 hours
-   🎯 Priority: HIGH
-
-❌ Dependency CVEs: 1 (was 0)
-   📦 requests==2.28.0 → CVE-2023-32681 (CVSS 7.5)
-   💡 Fix: Upgrade to requests>=2.31.0
-   ⏱️  Effort: 15 minutes
+┌─────────────────────────────────────────────────────────────┐
+│ CRITICAL ↑  LayerViolations: 2 violaciones detectadas       │
+│ services.payment → models.database (import directo)         │
+│ domain.entities → infrastructure.email                      │
+└─────────────────────────────────────────────────────────────┘
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📈 TRENDING METRICS
+📈 Métricas de Martin (por módulo)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+┌─────────────────────┬──────┬──────┬──────┬──────┬───────┬──────┐
+│ Módulo              │  Ca  │  Ce  │   I  │   A  │   D   │Trend │
+├─────────────────────┼──────┼──────┼──────┼──────┼───────┼──────┤
+│ domain/entities.py  │  8   │  0   │ 0.00 │ 1.00 │ 0.00  │  =   │
+│ services/payment.py │  2   │  5   │ 0.71 │ 0.20 │ 0.09  │  ↑   │
+│ infrastructure/db.py│  4   │  3   │ 0.43 │ 0.00 │ 0.57  │ WARN │
+└─────────────────────┴──────┴──────┴──────┴──────┴───────┴──────┘
 
-📊 Technical Debt Ratio
-   Current: 6.2% ⬆️ +1.5% (threshold: 5%)
-   Trend:   ─────────────╱
-   [Chart showing 6-sprint trend]
-   
-   💡 AI Analysis:
-      "Debt is accumulating in the payment module (35% of total).
-       Root cause: Rushed features in last 2 sprints without
-       refactoring time. Recommend dedicating 20% of next sprint
-       to cleanup."
-
-📊 Average CC
-   Current: 5.8 ⬆️ +0.6 (threshold: 5)
-   Worst modules:
-   1. payment_processor.py: avg CC 8.2
-   2. data_validator.py: avg CC 7.5
-   3. report_generator.py: avg CC 6.9
-   
-   💡 Recommendation: Schedule refactoring spike
-
-📊 Dependencies
-   Total: 28 ⬆️ +3 (threshold: 30)
-   Direct: 14 ⬆️ +2 (threshold: 15)
-   ⚠️  Warning: Approaching limits
-   
-   New dependencies added:
-   - pandas (needed)
-   - requests-mock (test only, ok)
-   - rich (console output, consider if essential)
+⚠️  infrastructure/db.py: D=0.57 (Zone of Pain) — umbral crítico: 0.5
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🎨 ARCHITECTURAL PATTERNS ANALYSIS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 Exit code: 0 (no bloquea — análisis informativo)
+```
 
-✅ Clean Architecture Compliance: 92% (was 95%)
-   - Domain purity: 100% ✅
-   - Inward dependencies: 100% ✅
-   - Outward dependencies: 2 ❌ (layer violations)
-
-📊 Martin Metrics (Distance from Main Sequence)
-   Package Analysis:
-   
-   domain/         D=0.05 ✅ (Excellent)
-   services/       D=0.12 ✅ (Good)
-   infrastructure/ D=0.28 ⚠️  (Review needed)
-   api/            D=0.15 ✅ (Good)
-   
-   [Scatter plot of A vs I with packages plotted]
-   
-   💡 AI Analysis:
-      "infrastructure package is in Zone of Pain (high concrete,
-       high stability). This makes changes expensive. Consider:
-       1. Extract interfaces to separate package
-       2. Increase abstraction through adapters
-       3. Review if all code here belongs in infrastructure"
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🔮 PREDICTIVE INSIGHTS (AI-POWERED)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📉 Risk Assessment: MODERATE
-
-1. Technical Debt Trajectory
-   "At current growth rate (1.5%/sprint), debt will reach 10%
-    in 3 sprints. Recommend debt reduction sprint before S2025-W55."
-
-2. Dependency Bloat
-   "Adding 2-3 direct dependencies per sprint is unsustainable.
-    Total dependencies will exceed 30 in 1 sprint. Consider:
-    - Dependency audit before adding new ones
-    - Evaluate if existing libraries can cover new needs"
-
-3. Complexity Hotspots
-   "payment_processor.py is becoming a God Object:
-    - 287 LOC (growing 15%/sprint)
-    - CBO of 8 (was 5 two sprints ago)
-    - Avg CC of 8.2 (was 5.5)
-    
-    Projected to become unmaintainable in 2-3 sprints if not
-    addressed. High-priority refactoring needed."
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✅ POSITIVE TRENDS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-✨ Test Coverage: 84% ⬆️ +3% (Excellent improvement!)
-✨ Duplicated Code: 2.1% ⬇️ -0.8% (Great work!)
-✨ Security Rating: A (maintained)
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📋 RECOMMENDED ACTIONS FOR NEXT SPRINT
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Priority 1 (Critical):
-□ Fix layer violations (2 issues)
-□ Upgrade requests to fix CVE
-□ Review infrastructure package architecture
-
-Priority 2 (Important):
-□ Refactor payment_processor.py (split into 3 classes)
-□ Debt reduction: allocate 20% sprint capacity
-□ Dependency audit before adding new ones
-
-Priority 3 (Maintenance):
-□ Continue improving test coverage target: 90%
-□ Document architectural decisions (ADRs)
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📊 Full dashboard: architect_review_20251228.html
-📈 Metrics history: metrics_trend_6sprints.html
-🤖 AI Deep Dive: architecture_analysis_20251228.md
+**Salida JSON** (`architectanalyst --format json`):
+```json
+{
+  "sprint_id": "sprint-12",
+  "snapshot_id": 5,
+  "violations": 1,
+  "warnings": 2,
+  "results": [
+    {
+      "analyzer": "LayerViolationsAnalyzer",
+      "severity": "critical",
+      "metric": "LayerViolations",
+      "value": 2,
+      "trend": "degrading",
+      "message": "2 violaciones de capas detectadas"
+    }
+  ]
+}
 ```
 
 ### 3.6 Comportamiento
 
-1. **NO bloquea desarrollo** - es informativo y estratégico
-2. **Dashboard web interactivo** con:
-   - Gráficos de tendencias (últimos 6 sprints)
-   - Visualización de arquitectura (grafos de dependencias)
-   - Main Sequence plot (Martin metrics)
-   - Hotspots de complejidad (heatmap)
-3. **IA analiza patrones y predice**:
-   - Proyección de métricas (2-3 sprints adelante)
-   - Identificación de problemas emergentes
-   - Recomendaciones estratégicas priorizadas
-   - Estimación de esfuerzo de corrección
-4. **Genera informe ejecutivo** para stakeholders:
-   - Versión técnica detallada (Markdown)
-   - Versión ejecutiva (PDF de 2 páginas)
-   - Presentación de 5 slides (PPTX)
+1. **NO bloquea desarrollo** — siempre exit code 0, es informativo y estratégico
+2. **Guarda snapshot** en SQLite (`.quality_control/architecture.db`) al finalizar cada análisis
+3. **Calcula tendencias** comparando con el snapshot anterior (↑ degradando / ↓ mejorando / = estable)
+4. **Salida Rich** en consola con tabla de métricas por módulo y tendencias
+5. **Salida JSON** disponible con `--format json` para integración CI/CD
+6. **IA**: no implementada en v0.3.0 — pendiente para v0.4.0 como funcionalidad opt-in
 
 ### 3.7 Configuración
 
-**Archivo: `.architectanalyst.yml`**
+**Archivo: `pyproject.toml`** (sección `[tool.architectanalyst]`)
 
-```yaml
-enabled: true
-run_on_sprint_end: true
-run_on_milestone: true
-manual_trigger: true
+```toml
+[tool.architectanalyst]
+# Umbrales métricas de Martin
+max_instability = 0.8          # I > 0.8 → WARNING
+max_distance_warning = 0.3     # D > 0.3 → WARNING
+max_distance_critical = 0.5    # D > 0.5 → CRITICAL
 
-schedule:
-  frequency: "biweekly"  # weekly | biweekly | monthly
-  day: "friday"
-  time: "18:00"
+# Persistencia
+db_path = ".quality_control/architecture.db"
 
-analysis_scope:
-  full_system: true
-  include_tests: true
-  include_docs: true
+# Exclusiones
+exclude = ["__pycache__", ".venv", "migrations", "tests/", "dist/", "build/"]
 
-thresholds:
-  # Martin Metrics
-  distance_main_sequence: 0.2
-  zone_of_pain_warning: 0.3
-  
-  # Dependencies
-  total_dependencies: 30
-  direct_dependencies: 15
-  outdated_warning: 3
-  
-  # Clean Architecture
-  layer_violations: 0
-  domain_purity: 100
-  
-  # Security
-  vulnerabilities: 0
-  security_rating: "A"
-  
-  # Quality
-  avg_mi: 20
-  tech_debt_ratio: 5.0
-  avg_cc: 5
-  duplicated_lines: 3.0
-  coverage: 80.0
+# Arquitectura en capas (para LayerViolationsAnalyzer)
+[tool.architectanalyst.layers]
+domain = []
+application = ["domain"]
+infrastructure = ["application", "domain"]
 
-trends:
-  history_sprints: 6
-  show_projections: true
-  projection_sprints: 3
-  alert_negative_trends: true
-
-ai_analysis:
-  enabled: true
-  model: "claude-sonnet-4"
-  deep_dive: true
-  predictive_insights: true
-  include_recommendations: true
-  prioritize_actions: true
-  estimate_effort: true
-
-reports:
-  dashboard_html: true
-  markdown_report: true
-  executive_pdf: true
-  presentation_pptx: true
-  output_dir: "reports/architecture/"
-  
-notifications:
-  email: true
-  slack: true
-  recipients:
-    - tech_lead@example.com
-    - architect@example.com
+# IA (pendiente v0.4.0)
+[tool.architectanalyst.ai]
+enabled = false
 ```
 
-### 3.8 Integración con IA
+### 3.8 Integración con IA (pendiente v0.4.0)
 
-**Prompt Template para Análisis Estratégico:**
+La integración con IA es opt-in y está planificada para v0.4.0. Cuando esté implementada, Claude recibirá las métricas del sprint actual más el histórico de snapshots y generará análisis estratégico con tendencias y recomendaciones.
 
-```python
-STRATEGIC_ANALYSIS_PROMPT = """
-Eres un arquitecto de software senior analizando métricas de arquitectura.
+La configuración será:
 
-**Contexto del Sistema:**
-- Proyecto: {project_name}
-- Stack: Python 3.11, {framework}
-- Arquitectura declarada: Clean Architecture
-- Equipo: {team_size} developers
-- Sprint actual: {sprint_id}
-
-**Métricas del Sprint Actual:**
-{current_metrics_json}
-
-**Histórico (últimos 6 sprints):**
-{historical_metrics_json}
-
-**Análisis Requerido:**
-
-1. **Evaluación de Salud Arquitectónica (0-100)**
-   - Puntaje general
-   - Desglose por dimensiones: estructura, dependencias, calidad, seguridad
-
-2. **Identificación de Problemas**
-   - Críticos (bloqueantes)
-   - Importantes (corregir pronto)
-   - Menores (backlog)
-
-3. **Análisis de Tendencias**
-   - ¿Qué métricas están empeorando?
-   - ¿Cuál es la velocidad de deterioro?
-   - ¿Qué causas probables?
-
-4. **Predicción (2-3 sprints)**
-   - ¿Qué métricas llegarán a umbrales críticos?
-   - ¿Qué componentes se volverán unmaintainable?
-
-5. **Recomendaciones Priorizadas**
-   - Top 3 acciones inmediatas
-   - Esfuerzo estimado (horas)
-   - Impacto esperado
-   - Riesgo de no hacerlo
-
-6. **Plan Estratégico**
-   - Qué hacer en próximo sprint
-   - Qué planificar para siguientes 2-3 sprints
-   - Cuándo hacer sprint de refactoring
-
-**Formato:**
-Markdown estructurado, secciones claras, sin explicaciones obvias.
-Enfócate en insights accionables.
-"""
+```toml
+[tool.architectanalyst.ai]
+enabled = true            # opt-in explícito
+model = "claude-sonnet-4-6"
 ```
 
 ### 3.9 Arquitectura Interna Modular
@@ -1404,20 +1119,16 @@ Decide qué métricas ejecutar según el tipo de análisis:
 
 #### Persistencia con Snapshots
 
-ArchitectAnalyst usa **SQLite** para almacenar snapshots de métricas:
+ArchitectAnalyst usa **SQLite** para almacenar snapshots de métricas (vía `SnapshotStore`):
 
 ```python
-class MetricsSnapshot:
-    id: int
-    timestamp: datetime
-    sprint_id: str
-    project_name: str
-    metrics_json: str  # Todas las métricas del sprint
+# Tablas en .quality_control/architecture.db
+# snapshots(id, timestamp, sprint_id, project_path)
+# results(id, snapshot_id, analyzer_name, metric_name,
+#         module_path, value, threshold, severity, message)
 
-    # Permite análisis de tendencias:
-    # - ¿Qué métricas empeoraron vs sprint anterior?
-    # - ¿Cuál es la velocidad de deterioro?
-    # - ¿Hay patrones estacionales?
+# TrendCalculator compara el snapshot actual con el anterior
+# y asigna MetricTrend.IMPROVING | STABLE | DEGRADING a cada resultado
 ```
 
 #### Decisión Contextual
@@ -1438,16 +1149,7 @@ context = ExecutionContext(
 # ✗ LayerViolations → Omitir (no solicitado)
 ```
 
-#### Dashboard Interactivo
-
-A diferencia de CodeGuard (CLI) y DesignReviewer (HTML), ArchitectAnalyst genera **dashboard web interactivo** con Plotly:
-
-- **Gráficos de tendencias** (métricas vs tiempo)
-- **Comparación sprint-actual vs histórico**
-- **Detección de anomalías** (picos/caídas)
-- **Predicción de degradación** (IA)
-
-**Referencia:** Ver `src/quality_agents/architectanalyst/` (implementación futura).
+**Referencia:** Ver `src/quality_agents/architectanalyst/` para la implementación completa.
 
 ---
 
@@ -1459,46 +1161,32 @@ A diferencia de CodeGuard (CLI) y DesignReviewer (HTML), ArchitectAnalyst genera
 Core:
   language: Python 3.11+
   package_manager: pip + venv
-  
-Analysis Tools:
+
+Analysis Tools (implementados):
   static_analysis:
-    - flake8
-    - pylint
-    - bandit
-    - mypy
+    - flake8     # CodeGuard
+    - pylint     # CodeGuard + DesignReviewer
+    - bandit     # CodeGuard
+    - mypy       # CodeGuard
   metrics:
-    - radon
-    - pydeps
-    - coverage.py
-    - jscpd
-  dependencies:
-    - pipdeptree
-    - safety
-    - pip-audit
-    
-Quality Platforms (optional but recommended):
-  - sonarqube: "Community Edition or Cloud"
-  - wily: "For historical metrics"
-  
-AI:
+    - radon      # Complejidad ciclomática, MI
+    - ast        # Análisis propio: LCOM, CBO, code smells, Martin Metrics
+  persistence:
+    - sqlite3    # ArchitectAnalyst — snapshots históricos (stdlib)
+
+CLI / Output:
+  cli: click
+  console: rich
+  config: tomllib (3.11+) / tomli (3.10-)
+
+AI (pendiente v0.4.0 — opt-in):
   provider: Anthropic
-  model: claude-sonnet-4
+  model: claude-sonnet-4-6
   api: anthropic-sdk
-  
-Reports:
-  html: jinja2
-  pdf: weasyprint
-  pptx: python-pptx
-  charts: plotly / matplotlib
-  
+
 CI/CD:
   git_hooks: pre-commit framework
-  github_actions: For PR checks
-  gitlab_ci: Alternative
-  
-Notifications:
-  email: smtplib
-  slack: slack-sdk
+  github_actions: pendiente
 ```
 
 ### 4.2 Arquitectura del Sistema
@@ -1522,16 +1210,16 @@ Notifications:
         │                   │                   │
         ▼                   ▼                   ▼
 ┌───────────────┐   ┌───────────────┐   ┌──────────────────┐
-│   Analyzers   │   │   AI Engine   │   │   Reporters      │
-│   (Tools)     │   │   (Claude)    │   │   (HTML/PDF)     │
+│   Analyzers   │   │  Formatters   │   │  SnapshotStore   │
+│  (Verifiable) │   │  (Rich+JSON)  │   │   (SQLite)       │
 └───────────────┘   └───────────────┘   └──────────────────┘
         │                   │                    │
         └───────────────────┼────────────────────┘
                             │
                             ▼
                     ┌───────────────┐
-                    │   Database    │
-                    │   (History)   │
+                    │  Orchestrator │
+                    │ + TrendCalc   │
                     └───────────────┘
 ```
 
@@ -1540,93 +1228,65 @@ Notifications:
 ```
 project_root/
 ├── .quality_control/
-│   ├── codeguard/
-│   │   ├── config.yml
-│   │   ├── history.log
-│   │   └── rules/
-│   ├── designreviewer/
-│   │   ├── config.yml
-│   │   ├── reports/
-│   │   └── ai_cache/
-│   └── architectanalyst/
-│       ├── config.yml
-│       ├── reports/
-│       ├── dashboards/
-│       └── history.db
+│   └── architecture.db         # ArchitectAnalyst — snapshots SQLite
 │
 ├── .git/
 │   └── hooks/
-│       ├── pre-commit          # CodeGuard
-│       └── pre-push            # Optional light check
+│       └── pre-commit          # CodeGuard
 │
-├── reports/
-│   ├── code/                   # CodeGuard logs
-│   ├── design/                 # DesignReviewer HTML
-│   └── architecture/           # ArchitectAnalyst dashboards
+├── pyproject.toml              # Configuración de los 3 agentes
+│   # [tool.codeguard]
+│   # [tool.designreviewer]
+│   # [tool.architectanalyst]
 │
-└── quality_agents/             # Agent implementations
-    ├── __init__.py
-    ├── codeguard.py
-    ├── designreviewer.py
-    ├── architectanalyst.py
-    ├── analyzers/
-    │   ├── metrics.py
-    │   ├── dependencies.py
-    │   └── security.py
-    ├── ai/
-    │   ├── claude_client.py
-    │   └── prompts.py
-    └── reporters/
-        ├── html_generator.py
-        ├── pdf_generator.py
-        └── dashboard.py
+└── src/quality_agents/         # Implementación del paquete
+    ├── shared/
+    │   ├── verifiable.py       # Clase base Verifiable + ExecutionContext
+    │   ├── config.py           # QualityConfig
+    │   └── reporting.py        # Generación de reportes
+    ├── codeguard/
+    │   ├── agent.py            # CLI + main()
+    │   ├── orchestrator.py     # Selección contextual de checks
+    │   └── checks/             # PEP8, Pylint, Security, Complexity, Type, Import
+    ├── designreviewer/
+    │   ├── agent.py            # CLI + main()
+    │   ├── orchestrator.py     # Selección contextual de analyzers
+    │   └── analyzers/          # CBO, FanOut, Circular, LCOM, WMC, DIT, NOP, code smells
+    └── architectanalyst/
+        ├── agent.py            # CLI + main()
+        ├── orchestrator.py     # Ejecución de métricas
+        ├── snapshots.py        # SnapshotStore (SQLite)
+        ├── trends.py           # TrendCalculator
+        ├── formatter.py        # Rich + JSON output
+        └── metrics/            # CouplingAnalyzer, Instability, Abstractness, Distance,
+                                # DependencyCycles, LayerViolations
 ```
 
-### 4.4 Base de Datos de Histórico
+### 4.4 Base de Datos de Histórico (ArchitectAnalyst)
 
-**SQLite Schema:**
+**SQLite Schema** (`.quality_control/architecture.db`):
 
 ```sql
--- Metrics history
-CREATE TABLE metric_snapshots (
-    id INTEGER PRIMARY KEY,
-    agent_type TEXT NOT NULL,  -- 'code' | 'design' | 'architecture'
-    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-    sprint_id TEXT,
-    commit_hash TEXT,
-    metrics_json TEXT NOT NULL  -- JSON blob with all metrics
+-- Un registro por ejecución de architectanalyst
+CREATE TABLE snapshots (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    timestamp    TEXT    NOT NULL,
+    sprint_id    TEXT,
+    project_path TEXT    NOT NULL DEFAULT ''
 );
 
--- Analysis results
-CREATE TABLE analysis_results (
-    id INTEGER PRIMARY KEY,
-    snapshot_id INTEGER REFERENCES metric_snapshots(id),
-    analysis_type TEXT,  -- 'automated' | 'ai'
-    result_json TEXT NOT NULL,
-    recommendations_json TEXT
-);
-
--- Exceptions and waivers
-CREATE TABLE quality_exceptions (
-    id INTEGER PRIMARY KEY,
-    metric_name TEXT NOT NULL,
-    violation_description TEXT,
-    justification TEXT NOT NULL,
-    approved_by TEXT NOT NULL,
-    approved_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    expires_at DATETIME,
-    status TEXT DEFAULT 'active'  -- 'active' | 'expired' | 'resolved'
-);
-
--- Trends and predictions
-CREATE TABLE trend_analysis (
-    id INTEGER PRIMARY KEY,
-    metric_name TEXT NOT NULL,
-    current_value REAL,
-    trend_direction TEXT,  -- 'improving' | 'stable' | 'degrading'
-    prediction_3sprints REAL,
-    confidence REAL,
-    analyzed_at DATETIME DEFAULT CURRENT_TIMESTAMP
+-- Un registro por cada ArchitectureResult del análisis
+CREATE TABLE results (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    snapshot_id   INTEGER NOT NULL,
+    analyzer_name TEXT    NOT NULL,
+    metric_name   TEXT    NOT NULL,
+    module_path   TEXT    NOT NULL,
+    value         REAL    NOT NULL,
+    threshold     REAL,
+    severity      TEXT    NOT NULL,  -- 'info' | 'warning' | 'critical'
+    message       TEXT    NOT NULL,
+    FOREIGN KEY (snapshot_id) REFERENCES snapshots(id)
 );
 ```
 
@@ -1634,107 +1294,60 @@ CREATE TABLE trend_analysis (
 
 ## ROADMAP DE IMPLEMENTACIÓN
 
-### Fase 1: MVP - CodeGuard (2-3 semanas)
+### Fase 1: MVP - CodeGuard ✅ (v0.1.0 — Febrero 2026)
 
 **Objetivo:** Agente básico funcionando en pre-commit
 
-**Semana 1:**
-- [ ] Setup de proyecto y estructura
-- [ ] Integración de herramientas básicas (flake8, pylint, bandit)
-- [ ] CLI básico para ejecución manual
-- [ ] Configuración .codeguard.yml
+- [x] Setup de proyecto y estructura modular (Verifiable + Orchestrator)
+- [x] 6 checks: PEP8, Pylint, Security (bandit), Complexity (radon), Type (mypy), Import
+- [x] CLI con Rich + JSON output
+- [x] Configuración via `pyproject.toml` ([tool.codeguard])
+- [x] Hook de pre-commit (siempre exit code 0 — solo advierte)
+- [x] Tests unitarios e integración (~160 tests)
 
-**Semana 2:**
-- [ ] Hook de pre-commit
-- [ ] Formato de salida coloreado
-- [ ] Sistema de logging
-- [ ] Tests unitarios del agente
-
-**Semana 3:**
-- [ ] Refinamiento de umbrales
-- [ ] Documentación de uso
-- [ ] Pruebas con proyectos reales
-- [ ] Ajustes basados en feedback
-
-**Entregable:** CodeGuard v1.0 funcionando en tus proyectos
+**Entregable:** `quality-agents v0.1.0` publicado en GitHub Releases
 
 ---
 
-### Fase 2: DesignReviewer (3-4 semanas)
+### Fase 2: DesignReviewer ✅ (v0.2.0 — Febrero 2026)
 
-**Objetivo:** Análisis profundo con IA
+**Objetivo:** Análisis profundo de diseño a nivel clase/módulo
 
-**Semana 1:**
-- [ ] Integración de herramientas de diseño (radon, pydeps)
-- [ ] Sistema de métricas extendido
-- [ ] Lógica de umbrales y bloqueos
+- [x] 12 analyzers: CBO, FanOut, CircularImports, LCOM, WMC, DIT, NOP, GodObject, LongMethod, LongParameterList, FeatureEnvy, DataClumps
+- [x] CLI con Rich + JSON output, exit code 1 si hay CRITICAL
+- [x] Configuración via `pyproject.toml` ([tool.designreviewer])
+- [x] Tests unitarios e integración (~160 tests)
 
-**Semana 2:**
-- [ ] Integración con Claude API
-- [ ] Prompts para refactorización
-- [ ] Generación de sugerencias
-
-**Semana 3:**
-- [ ] Generador de reportes HTML
-- [ ] Visualizaciones (grafos, charts)
-- [ ] Sistema de excepciones justificadas
-
-**Semana 4:**
-- [ ] Integración con GitHub Actions/GitLab CI
-- [ ] Tests e2e
-- [ ] Documentación completa
-- [ ] Piloto con estudiantes
-
-**Entregable:** DesignReviewer v1.0 con IA
+**Entregable:** `quality-agents v0.2.0` publicado en GitHub Releases
 
 ---
 
-### Fase 3: ArchitectAnalyst (4-5 semanas)
+### Fase 3: ArchitectAnalyst ✅ (v0.3.0 — Marzo 2026)
 
-**Objetivo:** Dashboard estratégico y análisis predictivo
+**Objetivo:** Análisis estratégico de arquitectura con tendencias históricas
 
-**Semana 1-2:**
-- [ ] Sistema de snapshots y base de datos
-- [ ] Calculadores de métricas de Martin
-- [ ] Análisis de dependencias completo
-- [ ] DSM y Clean Architecture checks
+- [x] 7 métricas de Martin: Ca, Ce, I, A, D + DependencyCycles + LayerViolations
+- [x] SnapshotStore (SQLite) para persistencia histórica entre sprints
+- [x] TrendCalculator para comparación sprint-actual vs anterior (↑↓=)
+- [x] CLI con Rich + JSON output, siempre exit code 0 (informativo)
+- [x] Configuración via `pyproject.toml` ([tool.architectanalyst])
+- [x] Tests unitarios e integración + E2E (~200 tests)
 
-**Semana 3:**
-- [ ] Dashboard web interactivo (HTML + JS)
-- [ ] Gráficos de tendencias históricos
-- [ ] Main Sequence plot
-- [ ] Heatmaps de complejidad
-
-**Semana 4:**
-- [ ] Análisis predictivo con IA
-- [ ] Generación de reportes ejecutivos (PDF, PPTX)
-- [ ] Sistema de notificaciones
-- [ ] Integración con schedule/cron
-
-**Semana 5:**
-- [ ] Tests completos
-- [ ] Documentación
-- [ ] Deployment guides
-- [ ] Presentación y demo
-
-**Entregable:** ArchitectAnalyst v1.0 completo
+**Entregable:** `quality-agents v0.3.0` publicado en GitHub Releases
 
 ---
 
-### Fase 4: Integración y Refinamiento (2-3 semanas)
+### Fase 4: Integración IA opt-in (v0.4.0 — pendiente)
 
-**Objetivo:** Sistema completo integrado y pulido
+**Objetivo:** Agregar análisis IA opcional a los 3 agentes
 
-- [ ] Unificación de configuración
-- [ ] Dashboard central que conecta los 3 agentes
-- [ ] API REST para consultas externas
-- [ ] Integración con otras herramientas (Jira, Notion)
-- [ ] Documentación completa del sistema
-- [ ] Guías para estudiantes
-- [ ] Video tutoriales
-- [ ] Paper académico (opcional)
+- [ ] CodeGuard: explicaciones IA para warnings (opt-in)
+- [ ] DesignReviewer: sugerencias de refactorización IA (opt-in)
+- [ ] ArchitectAnalyst: análisis estratégico IA con histórico (opt-in)
+- [ ] Publicación en PyPI (`pip install quality-agents`)
+- [ ] GitHub Actions CI/CD
 
-**Entregable:** Quality Control System v1.0
+**Entregable:** `quality-agents v0.4.0`
 
 ---
 
@@ -1789,7 +1402,7 @@ CREATE TABLE trend_analysis (
 
 ---
 
-**Versión:** 1.0  
-**Fecha:** 28 de Diciembre, 2025  
-**Autor:** Sistema de Control de Calidad - ISSE  
+**Versión:** 1.3
+**Fecha:** Marzo 2026
+**Autor:** Sistema de Control de Calidad - ISSE
 **Licencia:** MIT (para uso académico y personal)

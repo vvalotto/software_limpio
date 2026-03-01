@@ -529,7 +529,7 @@ cat > .pre-commit-config.yaml << 'EOF'
 repos:
   # CodeGuard - Análisis rápido para commits
   - repo: https://github.com/vvalotto/software_limpio
-    rev: v0.1.0  # Usar la última versión
+    rev: v0.3.0  # Usar la última versión
     hooks:
       - id: codeguard
         name: CodeGuard Quality Check
@@ -572,7 +572,7 @@ CodeGuard proporciona 3 hooks diferentes:
 ```yaml
 repos:
   - repo: https://github.com/vvalotto/software_limpio
-    rev: v0.1.0
+    rev: v0.3.0
     hooks:
       - id: codeguard
 ```
@@ -581,7 +581,7 @@ repos:
 ```yaml
 repos:
   - repo: https://github.com/vvalotto/software_limpio
-    rev: v0.1.0
+    rev: v0.3.0
     hooks:
       - id: codeguard         # Pre-commit rápido
       - id: codeguard-pr      # Pre-push completo
@@ -592,7 +592,7 @@ repos:
 ```yaml
 repos:
   - repo: https://github.com/vvalotto/software_limpio
-    rev: v0.1.0
+    rev: v0.3.0
     hooks:
       - id: codeguard-full
         stages: [manual]
@@ -758,7 +758,7 @@ git commit --no-verify -m "Mensaje"
 
 ```bash
 # En .pre-commit-config.yaml, cambiar:
-# rev: v0.1.0  → rev: v0.2.0
+# rev: v0.2.0  → rev: v0.3.0
 
 # Luego ejecutar:
 pre-commit autoupdate
@@ -935,8 +935,7 @@ No se requiere modificar `agent.py` u `orchestrator.py`.
 
 ### Documentación Técnica
 
-- [Decisión Arquitectónica](../agentes/decision_arquitectura_checks_modulares.md)
-- [Guía de Implementación](../agentes/guia_implementacion_agentes.md)
+- [Arquitectura Modular](../agentes/arquitectura_modular.md)
 - [Especificación Completa](../agentes/especificacion_agentes_calidad.md)
 
 ---
@@ -945,8 +944,8 @@ No se requiere modificar `agent.py` u `orchestrator.py`.
 
 Una vez que domines CodeGuard, explorá los otros agentes:
 
-- **DesignReviewer** - Análisis profundo de diseño para PRs (próximamente)
-- **ArchitectAnalyst** - Tendencias de arquitectura a largo plazo (próximamente)
+- **DesignReviewer** - Análisis profundo de diseño para PRs → [guia](designreviewer.md)
+- **ArchitectAnalyst** - Tendencias de arquitectura a largo plazo → [guia](architectanalyst.md)
 
 ---
 

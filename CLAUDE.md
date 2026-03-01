@@ -17,7 +17,7 @@ Este archivo provee orientación a Claude Code (claude.ai/code) cuando trabaja c
 # Instalar en modo desarrollo
 pip install -e ".[dev]"
 
-# Ejecutar todos los tests (300 tests, ~15s)
+# Ejecutar todos los tests (~766 tests, ~30s)
 pytest
 
 # Ejecutar por categoría
@@ -49,8 +49,12 @@ codeguard .                              # Analiza el directorio actual (pre-com
 codeguard src/ --format json             # Salida en JSON
 codeguard --config configs/codeguard.yml # Configuración personalizada
 
-designreviewer   # (implementación pendiente)
-architectanalyst # (implementación pendiente)
+designreviewer src/                      # Análisis de diseño (bloquea si hay CRITICAL)
+designreviewer src/ --format json        # Salida en JSON
+
+architectanalyst src/                    # Análisis de arquitectura (solo informa, no bloquea)
+architectanalyst src/ --sprint-id sprint-12  # Con ID de sprint para tracking
+architectanalyst src/ --format json      # Salida en JSON
 ```
 
 ## Arquitectura
@@ -64,7 +68,7 @@ Pre-commit (<5s)    →    PR Review (2-5min)    →    Fin de Sprint (10-30min)
  (solo advierte)       (bloquea si crítico)        (análisis de tendencias)
 ```
 
-**CodeGuard es el único agente completo** (MVP). DesignReviewer y ArchitectAnalyst solo tienen estructura esqueleto.
+Los **tres agentes están implementados** (v0.3.0): CodeGuard (v0.1.0), DesignReviewer (v0.2.0), ArchitectAnalyst (v0.3.0). La integración IA es opt-in y está pendiente para v0.4.0.
 
 ### Estructura de Agentes
 
@@ -108,17 +112,10 @@ Cada check retorna `CheckResult(check_name, severity: Severity, message, file_pa
 
 ### Carga de Configuración
 
-**CodeGuard** usa `pyproject.toml` con fallback a YAML:
-- Principal: sección `[tool.codeguard]` en `pyproject.toml`
-- Fallback: `.codeguard.yml`
-- Orden de búsqueda: ruta explícita → pyproject.toml → `.codeguard.yml` → defaults
-
-**Otros agentes** usan YAML desde `configs/<agente>.yml` vía `QualityConfig.from_yaml()`.
-
-Umbrales clave configurables (definidos en `QualityConfig.thresholds`):
-- Complejidad Ciclomática ≤ 10, Líneas por función ≤ 20, Longitud de línea ≤ 100
-- Acoplamiento (CBO) ≤ 5, Cohesión (LCOM) ≤ 1, Índice de mantenibilidad > 20
-- Arquitectura: violaciones de capas = 0, ciclos de dependencias = 0
+Los tres agentes usan `[tool.<agente>]` en `pyproject.toml`:
+- `[tool.codeguard]` — con fallback a `.codeguard.yml`
+- `[tool.designreviewer]`
+- `[tool.architectanalyst]` — incluye sección `[tool.architectanalyst.layers]` opcional
 
 ### Configuración de Herramientas
 
@@ -126,10 +123,6 @@ Todas las herramientas estandarizadas en `pyproject.toml`:
 - **Black/isort:** line-length 100, perfil compatible con Black
 - **Ruff:** reglas E, F, W, I, N, B, C4 (E501 ignorado)
 - **mypy:** modo estricto, `disallow_untyped_defs = true`
-
-### Parseo de TOML
-
-Python 3.11+: `tomllib` incorporado. Python < 3.11: `tomli` (instalado condicionalmente via `pyproject.toml`).
 
 ## Fixtures de Tests
 
@@ -140,21 +133,21 @@ En `tests/conftest.py`:
 
 ## Archivos de Referencia Clave
 
-- `.dev/SESION.md` — **Leer al inicio de sesión** para contexto actual y seguimiento de tareas
-- `docs/agentes/decision_arquitectura_checks_modulares.md` — Decisión de arquitectura modular (autoritativo)
-- `docs/agentes/especificacion_agentes_calidad.md` — Especificación completa de agentes (v1.1)
-- `docs/agentes/guia_implementacion_agentes.md` — Guía de implementación
+- `docs/agentes/especificacion_agentes_calidad.md` — Especificación completa de agentes (v1.3, autoritativo)
+- `docs/agentes/arquitectura_modular.md` — Decisión de arquitectura modular
 - `docs/teoria/GUIA_REDACCION.md` — Estilo de redacción para docs de teoría
 - `docs/guias/codeguard.md` — Guía de usuario de CodeGuard
+- `docs/guias/designreviewer.md` — Guía de usuario de DesignReviewer
+- `docs/guias/architectanalyst.md` — Guía de usuario de ArchitectAnalyst
+- `gestion/backlog.md` — Features pendientes por versión
 
 ## Decisiones Técnicas
 
-- **IA:** Claude API (`claude-sonnet-4-20250514`)
+- **IA:** Claude API (`claude-sonnet-4-20250514`) — opt-in, pendiente v0.4.0
 - **CLI:** Click
 - **Salida en consola:** Rich
-- **Reportes:** Templates Jinja2
-- **Dashboards:** Plotly (no Dash, no Streamlit)
-- **Métricas históricas (ArchitectAnalyst):** SQLite
+- **Reportes JSON:** Jinja2 (en DesignReviewer reporters.py)
+- **Métricas históricas (ArchitectAnalyst):** SQLite en `.quality_control/architecture.db`
 
 ## Gestión de Sesión
 
