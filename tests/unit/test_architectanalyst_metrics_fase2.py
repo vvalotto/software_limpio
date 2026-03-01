@@ -13,7 +13,6 @@ Fecha: 2026-03-01
 """
 
 from pathlib import Path
-from unittest.mock import MagicMock
 
 import pytest
 
@@ -27,7 +26,6 @@ from quality_agents.architectanalyst.metrics.dependency_graph import (
 from quality_agents.architectanalyst.metrics.distance_analyzer import DistanceAnalyzer
 from quality_agents.architectanalyst.metrics.instability_analyzer import InstabilityAnalyzer
 from quality_agents.architectanalyst.models import ArchitectureSeverity
-
 
 # =============================================================================
 # Fixtures: proyecto sintético en tmp_path
@@ -289,7 +287,7 @@ class TestInstabilityAnalyzer:
         # Con umbral 0.0, todos los módulos con I > 0 deberían ser WARNING
         assert all(r.severity == ArchitectureSeverity.WARNING for r in results)
 
-    def test_metric_name_es_I(
+    def test_metric_name_es_I(  # noqa: N802
         self, proyecto_simple: Path, files_simple: list
     ) -> None:
         analyzer = InstabilityAnalyzer()
@@ -407,7 +405,7 @@ class TestAbstractnessAnalyzer:
         assert result is not None
         assert result.value == pytest.approx(0.0)
 
-    def test_metric_name_es_A(
+    def test_metric_name_es_A(  # noqa: N802
         self, proyecto_simple: Path, files_simple: list
     ) -> None:
         analyzer = AbstractnessAnalyzer()
@@ -471,7 +469,7 @@ class TestDistanceAnalyzer:
         )
         assert abstracto_result is None
 
-    def test_metric_name_es_D(self, proyecto_simple: Path, files_simple: list) -> None:
+    def test_metric_name_es_D(self, proyecto_simple: Path, files_simple: list) -> None:  # noqa: N802
         analyzer = DistanceAnalyzer()
         config = ArchitectAnalystConfig(max_distance_warning=0.0, max_distance_critical=0.0)
         analyzer.should_run(config)

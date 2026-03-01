@@ -166,7 +166,8 @@ class SnapshotStore:
     def get_snapshot_count(self) -> int:
         """Retorna el número total de snapshots almacenados."""
         with sqlite3.connect(self.db_path) as conn:
-            return conn.execute("SELECT COUNT(*) FROM snapshots").fetchone()[0]
+            row = conn.execute("SELECT COUNT(*) FROM snapshots").fetchone()
+            return int(row[0])
 
     # -------------------------------------------------------------------------
     # Helpers privados

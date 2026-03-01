@@ -22,7 +22,6 @@ from quality_agents.architectanalyst.models import (
 from quality_agents.architectanalyst.snapshots import SnapshotStore
 from quality_agents.architectanalyst.trends import TrendCalculator
 
-
 # =============================================================================
 # Fixtures
 # =============================================================================

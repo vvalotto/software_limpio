@@ -11,8 +11,6 @@ Fecha: 2026-03-01
 
 from pathlib import Path
 
-import pytest
-
 from quality_agents.architectanalyst.config import ArchitectAnalystConfig, LayersConfig
 from quality_agents.architectanalyst.metrics.dependency_cycles_analyzer import (
     DependencyCyclesAnalyzer,
@@ -21,7 +19,6 @@ from quality_agents.architectanalyst.metrics.layer_violations_analyzer import (
     LayerViolationsAnalyzer,
 )
 from quality_agents.architectanalyst.models import ArchitectureSeverity
-
 
 # =============================================================================
 # Helpers para construir proyectos sintéticos

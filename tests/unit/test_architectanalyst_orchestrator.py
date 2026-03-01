@@ -15,7 +15,6 @@ from quality_agents.architectanalyst.config import ArchitectAnalystConfig
 from quality_agents.architectanalyst.models import ArchitectureResult, ArchitectureSeverity
 from quality_agents.architectanalyst.orchestrator import MetricOrchestrator, ProjectMetric
 
-
 # ========== Métricas mock para tests ==========
 
 

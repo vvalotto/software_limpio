@@ -70,15 +70,15 @@ class TestArchitectureResultCampos:
 
     def _resultado_info(self, **kwargs) -> ArchitectureResult:
         """Fixture: resultado informativo sin umbral (Ca)."""
-        defaults = dict(
-            analyzer_name="CouplingAnalyzer",
-            metric_name="Ca",
-            module_path=Path("src/domain/service.py"),
-            value=3.0,
-            threshold=None,
-            severity=ArchitectureSeverity.INFO,
-            message="3 módulos dependen de este",
-        )
+        defaults = {  # noqa: C408
+            "analyzer_name": "CouplingAnalyzer",
+            "metric_name": "Ca",
+            "module_path": Path("src/domain/service.py"),
+            "value": 3.0,
+            "threshold": None,
+            "severity": ArchitectureSeverity.INFO,
+            "message": "3 módulos dependen de este",
+        }
         defaults.update(kwargs)
         return ArchitectureResult(**defaults)
 
