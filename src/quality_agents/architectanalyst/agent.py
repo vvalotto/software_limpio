@@ -14,6 +14,8 @@ from typing import List, Optional
 from quality_agents.architectanalyst.config import ArchitectAnalystConfig, load_config
 from quality_agents.architectanalyst.models import ArchitectureResult, ArchitectureSeverity
 from quality_agents.architectanalyst.orchestrator import MetricOrchestrator
+from quality_agents.architectanalyst.snapshots import SnapshotStore
+from quality_agents.architectanalyst.trends import TrendCalculator
 
 # Re-exportar para compatibilidad con imports externos
 __all__ = ["ArchitectAnalyst", "ArchitectureResult", "ArchitectureSeverity"]
@@ -63,6 +65,11 @@ class ArchitectAnalyst:
         )
         self._orchestrator: MetricOrchestrator = MetricOrchestrator(self._config)
 
+        project_root = path if path.is_dir() else path.parent
+        db_path = project_root / self._config.db_path
+        self._store: SnapshotStore = SnapshotStore(db_path)
+        self._trend_calculator: TrendCalculator = TrendCalculator()
+
     def run(self, files: Optional[List[Path]] = None) -> List[ArchitectureResult]:
         """
         Ejecuta análisis arquitectónico sobre el proyecto.
@@ -84,6 +91,18 @@ class ArchitectAnalyst:
 
         if self._orchestrator is not None:
             self.results = self._orchestrator.run(python_files)
+
+        # Enriquecer con tendencias si hay snapshot anterior
+        previous = self._store.get_latest_results()
+        if previous:
+            self.results = self._trend_calculator.enrich(self.results, previous)
+
+        # Persistir snapshot actual
+        self._store.save(
+            self.results,
+            sprint_id=self.sprint_id,
+            project_path=str(self.path),
+        )
 
         return self.results
 
