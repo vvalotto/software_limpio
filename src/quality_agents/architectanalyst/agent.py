@@ -127,3 +127,66 @@ class ArchitectAnalyst:
     def has_critical(self) -> bool:
         """Retorna True si hay alguna violación CRITICAL."""
         return any(r.is_critical() for r in self.results)
+
+
+# --- CLI --- (imports aquí para evitar importación circular con formatter.py)
+
+import time  # noqa: E402
+
+import click  # noqa: E402
+
+from quality_agents.architectanalyst.formatter import format_json, format_results  # noqa: E402
+
+
+@click.command()
+@click.argument("path", type=click.Path(exists=True), default=".")
+@click.option(
+    "--config", "-c",
+    type=click.Path(exists=True),
+    help="Archivo de configuración (pyproject.toml)",
+)
+@click.option(
+    "--format", "-f",
+    "output_format",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Formato de salida (default: text)",
+)
+@click.option(
+    "--sprint-id", "-s",
+    default=None,
+    help="Identificador del sprint (ej: sprint-12, 2026-Q1)",
+)
+def main(path: str, config: Optional[str], output_format: str, sprint_id: Optional[str]) -> None:
+    """
+    ArchitectAnalyst - Análisis arquitectónico de fin de sprint.
+
+    Analiza el proyecto en PATH (directorio). Calcula métricas de Martin (Ca, Ce, I, A, D),
+    detecta ciclos de dependencias y violaciones de capas. Persiste snapshot para
+    comparar tendencias entre sprints.
+
+    Nunca bloquea — exit code siempre 0.
+    """
+    target = Path(path)
+    config_path = Path(config) if config else None
+
+    analyst = ArchitectAnalyst(path=target, config_path=config_path, sprint_id=sprint_id)
+
+    start = time.time()
+    results = analyst.run()
+    elapsed = time.time() - start
+
+    files = analyst.collect_files(target)
+    total_files = len([f for f in files if f.suffix == ".py"])
+    metrics_executed = len(analyst._orchestrator.metrics)
+
+    if output_format == "json":
+        click.echo(format_json(results, elapsed, total_files, metrics_executed, sprint_id))
+    else:
+        format_results(results, elapsed, total_files, metrics_executed, sprint_id)
+
+    # Exit code siempre 0 — ArchitectAnalyst es informativo, nunca bloquea
+
+
+if __name__ == "__main__":
+    main()
