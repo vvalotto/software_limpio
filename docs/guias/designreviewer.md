@@ -72,7 +72,7 @@ designreviewer src/ --format json > report.json
 ### Con configuración personalizada
 
 ```bash
-designreviewer src/ --config configs/designreviewer.yml
+designreviewer src/ --config examples/configs/designreviewer.yml
 ```
 
 ### Sin sugerencias de IA

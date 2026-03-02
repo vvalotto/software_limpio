@@ -47,7 +47,7 @@ Después de `pip install -e ".[dev]"`:
 ```bash
 codeguard .                              # Analiza el directorio actual (pre-commit, solo advierte)
 codeguard src/ --format json             # Salida en JSON
-codeguard --config configs/codeguard.yml # Configuración personalizada
+codeguard --config examples/configs/codeguard.yml # Configuración personalizada
 
 designreviewer src/                      # Análisis de diseño (bloquea si hay CRITICAL)
 designreviewer src/ --format json        # Salida en JSON

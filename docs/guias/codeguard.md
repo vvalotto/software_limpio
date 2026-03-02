@@ -70,7 +70,7 @@ codeguard src/module1.py src/module2.py
 ### Usar Configuración Personalizada
 
 ```bash
-codeguard --config configs/codeguard.yml .
+codeguard --config examples/configs/codeguard.yml .
 ```
 
 ### Salida en Formato JSON
@@ -166,7 +166,7 @@ CodeGuard busca su configuración en este orden (se usa el primero que encuentre
 1. `--config PATH` (especificado en línea de comandos)
 2. `pyproject.toml` → `[tool.codeguard]` (directorio actual y padres)
 3. `.codeguard.yml` (directorio actual)
-4. `configs/codeguard.yml` (configuración por defecto del paquete)
+4. defaults internos del paquete
 
 Si no encuentra ninguno, usa valores por defecto seguros.
 
@@ -954,7 +954,7 @@ Una vez que domines CodeGuard, explorá los otros agentes:
 - [Especificación Técnica de CodeGuard](../agentes/especificacion_agentes_calidad.md#agente-de-código---codeguard)
 - [Catálogo de Métricas de Código](../metricas/metricas_codigo.md)
 - [Principios de Código Limpio](../teoria/trilogia_limpia/codigo_limpio.md)
-- [Configuración de Ejemplo](../../configs/codeguard.yml)
+- [Configuración de Ejemplo](../../examples/configs/codeguard.yml)
 
 ---
 

@@ -144,8 +144,8 @@ software_limpio/
 │   ├── metricas/            # Catálogo de métricas
 │   └── teoria/              # Fundamentos de diseño
 ├── tests/                   # Unit, integration, e2e
-├── gestion/                 # Backlog y releases
-└── configs/                 # Configuraciones de ejemplo
+├── examples/                # Ejemplos y configuraciones de referencia
+└── gestion/                 # Backlog y releases
 ```
 
 ---

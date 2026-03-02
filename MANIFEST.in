@@ -10,8 +10,6 @@ include packaging/QUICKSTART.md
 include packaging/DISTRIBUTION.md
 include packaging/RESUMEN.md
 
-# Configuraciones de ejemplo
-include configs/codeguard.yml
 include .pre-commit-hooks.yaml
 
 # Documentación

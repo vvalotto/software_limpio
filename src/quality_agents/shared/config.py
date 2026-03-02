@@ -82,7 +82,6 @@ def load_config(config_path: Optional[Path] = None) -> QualityConfig:
     standard_paths = [
         Path(".quality.yml"),
         Path(".quality.yaml"),
-        Path("configs/quality.yml"),
         Path("quality.yml"),
     ]
 

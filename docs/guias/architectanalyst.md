@@ -81,7 +81,7 @@ architectanalyst src/ --format json --sprint-id sprint-12 > arquitectura-sprint-
 
 ```bash
 architectanalyst src/ --config pyproject.toml
-architectanalyst src/ --config configs/architectanalyst.toml
+architectanalyst src/ --config examples/configs/architectanalyst.yml
 ```
 
 ### Exit code
