@@ -6,6 +6,7 @@ on:
     paths:
       - "docs/**"
       - "!docs/curso/**"
+  workflow_dispatch:
 
 jobs:
   sync-wiki:
