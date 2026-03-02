@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 """
-Sincroniza docs/ (sin docs/curso/) al wiki de GitHub.
+Sincroniza docs/ (sin docs/curso/) al wiki de GitHub con estructura plana.
+
+GitHub Wiki no sirve archivos en subdirectorios como páginas wiki, por lo que
+todos los archivos se copian al nivel raíz con un nombre que evita conflictos.
+
+Mapeo de nombres:
+    docs/guias/codeguard.md              → codeguard.md
+    docs/guias/README.md                 → guias.md
+    docs/teoria/fundamentos/README.md    → fundamentos.md
+    docs/teoria/fundamentos/01_mod.md    → 01_mod.md
 
 Uso:
     GITHUB_REPO=owner/repo python sync_wiki.py
-
-Transformaciones de links:
-    - [text](path/file.md)         →  [text](path/file)          (dentro de docs/)
-    - [text](path/file.md#anchor)  →  [text](path/file#anchor)   (dentro de docs/)
-    - [text](../../examples/x.yml) →  [text](GitHub URL)         (fuera de docs/)
-    - [text](https://...)          →  sin cambios                 (absolutos)
 """
 
 import os
@@ -36,55 +39,101 @@ GITHUB_BASE_URL = f"https://github.com/{GITHUB_REPO}"
 
 
 # ---------------------------------------------------------------------------
+# Mapeo de nombres: path en docs/ → nombre de página wiki (sin extensión)
+# ---------------------------------------------------------------------------
+
+def wiki_page_name(src: Path) -> str:
+    """
+    Genera el nombre de página wiki (sin .md) para un archivo de docs/.
+
+    README.md → nombre del directorio padre (o 'Home' si está en la raíz)
+    Cualquier otro → stem del archivo
+    """
+    rel = src.relative_to(DOCS_DIR)
+    if src.stem == "README":
+        parent = rel.parent
+        return parent.name if str(parent) != "." else "Home"
+    return src.stem
+
+
+def build_page_map() -> dict[Path, str]:
+    """
+    Construye el mapa {path_en_docs → nombre_wiki} para todos los archivos
+    a sincronizar. Detecta colisiones de nombres y falla explícitamente.
+    """
+    page_map: dict[Path, str] = {}
+    names_seen: dict[str, Path] = {}
+
+    for src in sorted(DOCS_DIR.rglob("*.md")):
+        rel = src.relative_to(DOCS_DIR)
+        if rel.parts[0] in EXCLUDE_DIRS:
+            continue
+        name = wiki_page_name(src)
+        if name in names_seen:
+            raise ValueError(
+                f"Colisión de nombres wiki: '{name}'\n"
+                f"  {names_seen[name]}\n"
+                f"  {src}"
+            )
+        page_map[src] = name
+        names_seen[name] = src
+
+    return page_map
+
+
+# ---------------------------------------------------------------------------
 # Transformación de links
 # ---------------------------------------------------------------------------
 
-def transform_links(content: str, src_file: Path) -> str:
-    """
-    Transforma links Markdown para que funcionen en la wiki de GitHub.
+def make_link_transformer(page_map: dict[Path, str]):
+    """Retorna una función que transforma links Markdown para la wiki plana."""
 
-    Links a .md dentro de docs/  → wiki links (sin extensión .md)
-    Links a archivos fuera docs/ → links al repositorio en GitHub
-    Links absolutos / anchors    → sin cambios
-    """
+    # Mapa inverso: path absoluto → nombre wiki
+    path_to_name = {src.resolve(): name for src, name in page_map.items()}
 
-    def replace(match: re.Match) -> str:
-        text = match.group(1)
-        raw_url = match.group(2)
+    def transform_links(content: str, src_file: Path) -> str:
+        """
+        Transforma links Markdown:
+          - [text](otro_doc.md)        → [text](nombre_wiki)
+          - [text](otro_doc.md#anchor) → [text](nombre_wiki#anchor)
+          - [text](../../examples/x)   → [text](URL GitHub)
+          - [text](https://...)        → sin cambios
+        """
 
-        # Separar URL de anchor (#section)
-        if "#" in raw_url:
-            url_part, anchor = raw_url.split("#", 1)
-            anchor_suffix = f"#{anchor}"
-        else:
-            url_part, anchor_suffix = raw_url, ""
+        def replace(match: re.Match) -> str:
+            text = match.group(1)
+            raw_url = match.group(2)
 
-        # Links absolutos o anchors puros → sin cambios
-        if url_part.startswith(("http://", "https://")) or not url_part:
-            return match.group(0)
+            # Separar anchor del URL
+            if "#" in raw_url:
+                url_part, anchor = raw_url.split("#", 1)
+                anchor_suffix = f"#{anchor}"
+            else:
+                url_part, anchor_suffix = raw_url, ""
 
-        # Resolver la ruta absoluta del destino
-        target = (src_file.parent / url_part).resolve()
+            # Links absolutos o anchors puros → sin cambios
+            if url_part.startswith(("http://", "https://")) or not url_part:
+                return match.group(0)
 
-        if url_part.endswith(".md"):
+            # Resolver la ruta absoluta del destino
+            target = (src_file.parent / url_part).resolve()
+
+            # Destino dentro de docs/ → nombre de página wiki
+            if target in path_to_name:
+                return f"[{text}]({path_to_name[target]}{anchor_suffix})"
+
+            # Destino fuera de docs/ → link al repo en GitHub
             try:
-                # Destino dentro de docs/ → link wiki (sin .md)
-                rel_to_docs = target.relative_to(DOCS_DIR)
-                wiki_path = str(rel_to_docs.with_suffix(""))
-                return f"[{text}]({wiki_path}{anchor_suffix})"
+                rel_to_repo = target.relative_to(REPO_ROOT)
+                github_url = f"{GITHUB_BASE_URL}/blob/main/{rel_to_repo}"
+                return f"[{text}]({github_url}{anchor_suffix})"
             except ValueError:
-                pass
+                return match.group(0)
 
-        # Destino fuera de docs/ → link al repo en GitHub
-        try:
-            rel_to_repo = target.relative_to(REPO_ROOT)
-            github_url = f"{GITHUB_BASE_URL}/blob/main/{rel_to_repo}"
-            return f"[{text}]({github_url}{anchor_suffix})"
-        except ValueError:
-            return match.group(0)
+        # Solo links inline [text](url), no imágenes ![text](url)
+        return re.sub(r"(?<!!)\[([^\]]+)\]\(([^)]+)\)", replace, content)
 
-    # Solo links inline [text](url), no imágenes ![text](url)
-    return re.sub(r"(?<!!)\[([^\]]+)\]\(([^)]+)\)", replace, content)
+    return transform_links
 
 
 # ---------------------------------------------------------------------------
@@ -92,28 +141,21 @@ def transform_links(content: str, src_file: Path) -> str:
 # ---------------------------------------------------------------------------
 
 def clear_wiki() -> None:
-    """Elimina el contenido del wiki preservando .git y _Sidebar.md existente."""
-    preserve = {".git", "_Sidebar.md"}
+    """Elimina el contenido del wiki preservando .git."""
     for item in WIKI_DIR.iterdir():
-        if item.name in preserve:
+        if item.name == ".git":
             continue
         shutil.rmtree(item) if item.is_dir() else item.unlink()
 
 
-def sync_docs() -> int:
-    """Copia y transforma archivos docs/ → wiki/. Retorna cantidad de archivos."""
-    count = 0
-    for src in sorted(DOCS_DIR.rglob("*.md")):
-        rel = src.relative_to(DOCS_DIR)
-        if rel.parts[0] in EXCLUDE_DIRS:
-            continue
-        dst = WIKI_DIR / rel
-        dst.parent.mkdir(parents=True, exist_ok=True)
+def sync_docs(page_map: dict[Path, str], transform_links) -> None:
+    """Copia y transforma archivos docs/ → wiki/ con estructura plana."""
+    for src, name in page_map.items():
+        dst = WIKI_DIR / f"{name}.md"
         content = src.read_text(encoding="utf-8")
         content = transform_links(content, src)
         dst.write_text(content, encoding="utf-8")
-        count += 1
-    return count
+    print(f"  {len(page_map)} archivos procesados")
 
 
 def generate_home() -> None:
@@ -126,16 +168,16 @@ Tres agentes, tres niveles, un pipeline continuo.
 
 | Agente | Nivel | Cuándo usar |
 |---|---|---|
-| [CodeGuard](guias/codeguard) | Código | Pre-commit (< 5s) |
-| [DesignReviewer](guias/designreviewer) | Diseño | Pull Request (2-5 min) |
-| [ArchitectAnalyst](guias/architectanalyst) | Arquitectura | Fin de sprint (10-30 min) |
+| [CodeGuard](codeguard) | Código | Pre-commit (< 5s) |
+| [DesignReviewer](designreviewer) | Diseño | Pull Request (2-5 min) |
+| [ArchitectAnalyst](architectanalyst) | Arquitectura | Fin de sprint (10-30 min) |
 
 ## Secciones
 
-- [Guías de Usuario](guias/README) — Instalación, uso y configuración de los tres agentes
-- [Especificación Técnica](agentes/README) — Arquitectura interna y decisiones de diseño
-- [Teoría](teoria/README) — Fundamentos, principios y marco conceptual
-- [Métricas](metricas/README) — Catálogo completo con umbrales y herramientas
+- [Guías de Usuario](guias) — Instalación, uso y configuración de los tres agentes
+- [Especificación Técnica](agentes) — Arquitectura interna y decisiones de diseño
+- [Teoría](teoria) — Fundamentos, principios y marco conceptual
+- [Métricas](metricas) — Catálogo completo con umbrales y herramientas
 
 ---
 
@@ -145,7 +187,7 @@ Tres agentes, tres niveles, un pipeline continuo.
     (WIKI_DIR / "Home.md").write_text(content, encoding="utf-8")
 
 
-def generate_sidebar() -> None:
+def generate_sidebar(page_map: dict[Path, str]) -> None:
     """Genera _Sidebar.md con la navegación completa del wiki."""
     sections = [
         ("Guías", "guias"),
@@ -163,22 +205,25 @@ def generate_sidebar() -> None:
 
         lines.append(f"**{section_name}**\n")
 
-        for md_file in sorted(section_path.rglob("*.md")):
-            rel = md_file.relative_to(DOCS_DIR)
+        for src in sorted(section_path.rglob("*.md")):
+            if src not in page_map:
+                continue
+            rel = src.relative_to(DOCS_DIR)
             depth = len(rel.parts) - 1
             indent = "  " * depth
+            name = page_map[src]
 
-            stem = md_file.stem
+            # Etiqueta legible
+            stem = src.stem
             if stem == "README":
                 if depth == 0:
-                    name = section_name
+                    label = section_name
                 else:
-                    name = md_file.parent.name.replace("_", " ").replace("-", " ").title()
+                    label = src.parent.name.replace("_", " ").replace("-", " ").title()
             else:
-                name = stem.replace("_", " ").replace("-", " ").title()
+                label = stem.replace("_", " ").replace("-", " ").title()
 
-            wiki_path = str(rel.with_suffix(""))
-            lines.append(f"{indent}- [{name}]({wiki_path})\n")
+            lines.append(f"{indent}- [{label}]({name})\n")
 
         lines.append("\n")
 
@@ -197,18 +242,23 @@ def main() -> None:
         )
         raise SystemExit(1)
 
+    print("Construyendo mapa de páginas...")
+    page_map = build_page_map()
+    print(f"  {len(page_map)} archivos encontrados")
+
+    transform_links = make_link_transformer(page_map)
+
     print("Limpiando wiki...")
     clear_wiki()
 
-    print("Sincronizando docs/ → wiki/...")
-    count = sync_docs()
-    print(f"  {count} archivos procesados")
+    print("Sincronizando docs/ → wiki/ (estructura plana)...")
+    sync_docs(page_map, transform_links)
 
     print("Generando Home.md...")
     generate_home()
 
     print("Generando _Sidebar.md...")
-    generate_sidebar()
+    generate_sidebar(page_map)
 
     print("✓ Sincronización completa")
 
