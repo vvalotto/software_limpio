@@ -1,6 +1,12 @@
 # Documentos locales
 Documentos de Trabajo local/
 
+# Runtime artifacts
+.quality_control/
+
+# Claude Code (configuración local)
+.claude/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
