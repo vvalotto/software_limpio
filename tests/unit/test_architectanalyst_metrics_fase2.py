@@ -412,6 +412,43 @@ class TestAbstractnessAnalyzer:
         results = analyzer.analyze(proyecto_simple, files_simple)
         assert all(r.metric_name == "A" for r in results)
 
+    def test_metaclass_abcmeta_detectada_como_abstracta(self, tmp_path: Path) -> None:
+        """Clase con metaclass=ABCMeta debe contar como abstracta (fix #35)."""
+        pkg = tmp_path / "src" / "mipkg"
+        pkg.mkdir(parents=True)
+        (pkg / "__init__.py").write_text("", encoding="utf-8")
+        (pkg / "iface.py").write_text(
+            "from abc import ABCMeta, abstractmethod\n"
+            "class AbsInterface(metaclass=ABCMeta):\n"
+            "    @abstractmethod\n"
+            "    def metodo(self): pass\n",
+            encoding="utf-8",
+        )
+        files = list(tmp_path.rglob("*.py"))
+        analyzer = AbstractnessAnalyzer()
+        results = analyzer.analyze(tmp_path, files)
+        result = next((r for r in results if "iface" in str(r.module_path)), None)
+        assert result is not None
+        assert result.value == pytest.approx(1.0)
+
+    def test_metaclass_abcmeta_mixto(self, tmp_path: Path) -> None:
+        """1 clase con metaclass=ABCMeta + 1 concreta → A=0.5."""
+        pkg = tmp_path / "src" / "mipkg"
+        pkg.mkdir(parents=True)
+        (pkg / "__init__.py").write_text("", encoding="utf-8")
+        (pkg / "modulo.py").write_text(
+            "from abc import ABCMeta\n"
+            "class AbsBase(metaclass=ABCMeta): pass\n"
+            "class ConcreteImpl: pass\n",
+            encoding="utf-8",
+        )
+        files = list(tmp_path.rglob("*.py"))
+        analyzer = AbstractnessAnalyzer()
+        results = analyzer.analyze(tmp_path, files)
+        result = next((r for r in results if "modulo" in str(r.module_path)), None)
+        assert result is not None
+        assert result.value == pytest.approx(0.5)
+
 
 # =============================================================================
 # DistanceAnalyzer — Ticket 2.5
