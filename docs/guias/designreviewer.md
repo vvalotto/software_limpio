@@ -54,6 +54,18 @@ designreviewer --help
 
 ```bash
 designreviewer src/
+# o sin argumentos (analiza el directorio actual):
+designreviewer
+```
+
+### Analizar múltiples paquetes
+
+```bash
+# Analizar dos paquetes de primer nivel
+designreviewer entidades servicios
+
+# Con configuración personalizada
+designreviewer entidades servicios --config pyproject.toml
 ```
 
 ### Analizar un archivo específico
@@ -429,12 +441,44 @@ Es una estimación de horas de refactoring calculada por cada analyzer según la
 
 ### ¿Analiza solo los archivos modificados en el PR?
 
-En su configuración actual, analiza todos los archivos Python del PATH especificado. Para analizar solo el delta de un PR, pasá explícitamente los archivos modificados:
+Por defecto analiza todos los archivos Python del PATH especificado. Para analizar solo el delta de un PR, pasá los archivos modificados explícitamente:
 
 ```bash
 # Obtener archivos modificados en el PR
 FILES=$(git diff --name-only origin/main...HEAD -- '*.py')
 designreviewer $FILES
+```
+
+### ¿Cómo excluir directorios (`.venv`, tests)?
+
+Mediante `exclude_patterns` en `pyproject.toml`:
+
+```toml
+[tool.designreviewer]
+exclude_patterns = [".venv", "__pycache__", "test_"]
+```
+
+Los patrones se aplican sobre la **ruta relativa** al directorio analizado. Un patrón `"test_"` excluirá cualquier archivo cuyo path relativo contenga esa cadena.
+
+### ¿El output muestra resultados agrupados por paquete?
+
+Sí. Los resultados se agrupan por directorio padre del archivo, con un encabezado por paquete:
+
+```
+📦  servicios  (2 issues)
+  🚫 BLOCKING ISSUES (1)  ...
+  Advertencias de Diseño (1)  ...
+
+📦  entidades  (1 issue)
+  Advertencias de Diseño (1)  ...
+```
+
+En el output JSON también se incluye la sección `by_package`:
+```json
+"by_package": {
+  "entidades": [...],
+  "servicios": [...]
+}
 ```
 
 ### ¿Funciona con herencia de clases de otras librerías?

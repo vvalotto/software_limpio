@@ -9,6 +9,56 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### 🐛 Bug Fixes — CodeGuard y DesignReviewer
+
+#### Fix #36 / #39: `exclude_patterns` no se aplicaba en `collect_files`
+
+`collect_files()` de CodeGuard y DesignReviewer ignoraba la configuración `exclude_patterns` porque evaluaba los patrones sobre el path **absoluto** del archivo. En sistemas donde el path del proyecto contiene una carpeta cuyo nombre coincide con un patrón (ej. un usuario llamado `venv`, o un path que incluye `test`), los archivos se excluían incorrectamente.
+
+**Fix:** aplicar `exclude_patterns` sobre la **ruta relativa** al directorio raíz analizado (`f.relative_to(path)`), igual que ya hacía ArchitectAnalyst tras el fix #32.
+
+### ✨ Improvements — CodeGuard y DesignReviewer
+
+#### Fix #38 / #41: CLI acepta múltiples paths como argumentos
+
+`codeguard` y `designreviewer` solo aceptaban un único `PATH`. En proyectos donde el código productivo está distribuido en varios paquetes de primer nivel, era necesario analizar directorio a directorio o desde la raíz (incluyendo `.venv/` y dependencias).
+
+**Fix:** el CLI de ambos agentes ahora acepta uno o más paths (`nargs=-1`). El parent común se calcula automáticamente con `_common_parent()` y se usa como raíz del proyecto para la configuración.
+
+```bash
+# Antes (solo un path)
+codeguard src/
+designreviewer src/
+
+# Ahora (múltiples paquetes explícitos)
+codeguard entidades servicios configurador
+designreviewer entidades servicios configurador
+```
+
+#### Fix #37 / #40: output agrupa resultados por paquete
+
+Los formatters (text y JSON) listaban todos los resultados juntos, mezclando problemas de distintos módulos o paquetes del proyecto. En proyectos con varios paquetes, era difícil priorizar qué módulo atacar primero.
+
+**Fix:** los formatters de CodeGuard y DesignReviewer ahora agrupan los resultados por **paquete** (directorio padre del archivo). En el output text se muestra un encabezado `📦 nombre_paquete (N issues)` antes de cada grupo; en el JSON se agrega la sección `by_package` con resultados indexados por nombre de directorio.
+
+```
+📦  servicios  (3 issues)
+ ──────────────────────────────────────────────
+  Errores (1)     ...
+  Advertencias (2) ...
+
+📦  entidades  (1 issue)
+ ──────────────────────────────────────────────
+  Advertencias (1) ...
+```
+
+```json
+"by_package": {
+  "entidades": [...],
+  "servicios": [...]
+}
+```
+
 ### 🐛 Bug Fixes — ArchitectAnalyst
 
 #### Fix #32: `exclude_patterns` no se aplicaba en `collect_files`

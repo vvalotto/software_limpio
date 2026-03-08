@@ -51,6 +51,8 @@ codeguard --version
 
 ```bash
 codeguard .
+# o simplemente sin argumentos:
+codeguard
 ```
 
 ### Analizar Directorio Específico
@@ -58,6 +60,16 @@ codeguard .
 ```bash
 codeguard src/
 codeguard src/quality_agents/
+```
+
+### Analizar Múltiples Paquetes
+
+```bash
+# Dos paquetes de primer nivel (se calcula el parent común automáticamente)
+codeguard entidades servicios
+
+# Varios paquetes con configuración
+codeguard entidades servicios configurador --config pyproject.toml
 ```
 
 ### Analizar Archivos Específicos
@@ -70,13 +82,13 @@ codeguard src/module1.py src/module2.py
 ### Usar Configuración Personalizada
 
 ```bash
-codeguard --config examples/configs/codeguard.yml .
+codeguard --config examples/configs/codeguard.yml src/
 ```
 
 ### Salida en Formato JSON
 
 ```bash
-codeguard --format json . > report.json
+codeguard --format json src/ > report.json
 ```
 
 ---
@@ -347,19 +359,17 @@ CodeGuard usa una **arquitectura modular** con 6 checks independientes que se ej
 ### Línea de Comandos Completa
 
 ```bash
-codeguard [OPTIONS] PATH
+codeguard [OPTIONS] [PATHS]...
 
 Opciones:
   -c, --config PATH                    Archivo de configuración
   -f, --format [text|json]             Formato de salida (default: text)
   --analysis-type [pre-commit|pr-review|full]  Tipo de análisis (default: pre-commit)
   --time-budget FLOAT                  Presupuesto de tiempo en segundos
-  -v, --verbose                        Salida detallada
-  -q, --quiet                          Solo mostrar errores
-  --no-color                           Deshabilitar colores
-  --version                            Mostrar versión
   --help                               Mostrar ayuda
 ```
+
+`PATHS` acepta uno o más archivos o directorios. Sin argumentos analiza el directorio actual.
 
 ### Tipos de Análisis (--analysis-type)
 
@@ -797,13 +807,41 @@ check_complexity: false  # Deshabilitar complejidad
 
 ### ¿Cómo excluir archivos o directorios?
 
-En tu `.codeguard.yml`:
+En tu `pyproject.toml`:
+```toml
+[tool.codeguard]
+exclude_patterns = [".venv", "__pycache__", "migrations", "test_"]
+```
+
+O en `.codeguard.yml`:
 ```yaml
 exclude_patterns:
-  - "tests/*"
-  - "migrations/*"
-  - "legacy_module.py"
-  - "*.bak"
+  - ".venv"
+  - "migrations"
+  - "test_"
+```
+
+Los patrones se aplican sobre la **ruta relativa** al directorio analizado, no sobre el path absoluto. Un patrón como `"migrations"` excluye cualquier archivo cuyo path relativo contenga esa cadena (p. ej. `app/migrations/0001_initial.py`).
+
+### ¿El output muestra resultados agrupados por paquete?
+
+Sí. Desde la versión que incluye el fix #37, los resultados se muestran agrupados por directorio padre del archivo:
+
+```
+📦  servicios  (3 issues)
+  Errores (1) ...
+  Advertencias (2) ...
+
+📦  entidades  (1 issue)
+  Advertencias (1) ...
+```
+
+En el output JSON también se incluye la sección `by_package`:
+```json
+"by_package": {
+  "entidades": [...],
+  "servicios": [...]
+}
 ```
 
 ### ¿CodeGuard autocorrige problemas?
