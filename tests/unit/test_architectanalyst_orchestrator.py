@@ -536,3 +536,61 @@ class TestArchitectAnalyst:
         files = analyst.collect_files(txt_file)
 
         assert files == []
+
+    def test_collect_files_excluye_venv(self, tmp_path):
+        """collect_files() debe excluir archivos dentro de .venv/."""
+        (tmp_path / "modulo.py").write_text("x = 1")
+        venv_dir = tmp_path / ".venv" / "lib"
+        venv_dir.mkdir(parents=True)
+        (venv_dir / "dependencia.py").write_text("y = 2")
+
+        analyst = ArchitectAnalyst(path=tmp_path)
+        files = analyst.collect_files(tmp_path)
+
+        assert len(files) == 1
+        assert files[0].name == "modulo.py"
+
+    def test_collect_files_excluye_pycache(self, tmp_path):
+        """collect_files() debe excluir archivos dentro de __pycache__/."""
+        (tmp_path / "modulo.py").write_text("x = 1")
+        cache_dir = tmp_path / "__pycache__"
+        cache_dir.mkdir()
+        (cache_dir / "modulo.cpython-311.pyc").write_text("")
+        # pyc no es .py, pero si hubiera un .py en __pycache__ también debe excluirse
+        (cache_dir / "generated.py").write_text("z = 3")
+
+        analyst = ArchitectAnalyst(path=tmp_path)
+        files = analyst.collect_files(tmp_path)
+
+        assert len(files) == 1
+        assert files[0].name == "modulo.py"
+
+    def test_collect_files_excluye_test_files(self, tmp_path):
+        """collect_files() debe excluir archivos que matcheen 'test_' en su path."""
+        (tmp_path / "servicio.py").write_text("x = 1")
+        tests_dir = tmp_path / "tests"
+        tests_dir.mkdir()
+        (tests_dir / "test_servicio.py").write_text("def test_foo(): pass")
+
+        analyst = ArchitectAnalyst(path=tmp_path)
+        files = analyst.collect_files(tmp_path)
+
+        assert len(files) == 1
+        assert files[0].name == "servicio.py"
+
+    def test_collect_files_sin_exclude_patterns(self, tmp_path):
+        """collect_files() sin exclude_patterns retorna todos los .py."""
+        from quality_agents.architectanalyst.config import ArchitectAnalystConfig
+
+        (tmp_path / "a.py").write_text("x = 1")
+        venv_dir = tmp_path / ".venv"
+        venv_dir.mkdir()
+        (venv_dir / "b.py").write_text("y = 2")
+
+        config = ArchitectAnalystConfig(exclude_patterns=[])
+        analyst = ArchitectAnalyst(path=tmp_path)
+        analyst._config = config
+
+        files = analyst.collect_files(tmp_path)
+
+        assert len(files) == 2
