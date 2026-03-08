@@ -463,13 +463,15 @@ class TestDistanceAnalyzer:
 
     def test_severity_warning_y_critical(self, tmp_path: Path) -> None:
         """
-        Módulo en Zone of Pain (A=0, I=0) → D=1.0 → CRITICAL con umbrales default.
+        Paquete en Zone of Pain (A=0, I=0 inter-paquete) → D=1.0 → CRITICAL.
+
+        Las métricas se calculan a nivel de paquete (directorio), no módulo.
+        mipkg tiene solo clases concretas (A=0) y no importa paquetes externos (I=0)
+        → D = |0 + 0 - 1| = 1.0 → CRITICAL.
         """
         pkg = tmp_path / "src" / "mipkg"
         pkg.mkdir(parents=True)
         (pkg / "__init__.py").write_text("", encoding="utf-8")
-        # dep.py: es muy usado (Ca alto) y no importa nada (Ce=0) → I=0.0
-        # Y no tiene clases abstractas → A=0.0 → D = |0 + 0 - 1| = 1.0
         (pkg / "dep.py").write_text("class ConcreteImpl: pass\n", encoding="utf-8")
         (pkg / "user1.py").write_text("from mipkg.dep import ConcreteImpl\n", encoding="utf-8")
         (pkg / "user2.py").write_text("from mipkg.dep import ConcreteImpl\n", encoding="utf-8")
@@ -478,9 +480,10 @@ class TestDistanceAnalyzer:
         config = ArchitectAnalystConfig()
         analyzer.should_run(config)
         results = analyzer.analyze(tmp_path, files)
-        dep_result = next((r for r in results if "dep" in str(r.module_path)), None)
-        assert dep_result is not None
-        assert dep_result.severity == ArchitectureSeverity.CRITICAL
+        # El resultado se reporta a nivel de paquete, no de módulo individual
+        pkg_result = next((r for r in results if "mipkg" in str(r.module_path)), None)
+        assert pkg_result is not None
+        assert pkg_result.severity == ArchitectureSeverity.CRITICAL
 
     def test_modulo_sobre_main_sequence_no_reporta(self, tmp_path: Path) -> None:
         """Módulo con A=1.0 e I=0.0 → D=0.0 → no debe reportarse."""
@@ -558,6 +561,64 @@ class TestDistanceAnalyzer:
         analyzer = DistanceAnalyzer()
         zone = analyzer._identify_zone(instability=0.5, abstractness=0.0)
         assert "Main Sequence" in zone
+
+    def test_agregacion_por_paquete_dos_paquetes(self, tmp_path: Path) -> None:
+        """
+        Dos paquetes con dependencia entre ellos:
+          - abstracciones/: 1 clase abstracta (A=1.0), Ca=1 (impl la importa), Ce=0 → I=0 → D=0
+          - implementaciones/: 1 clase concreta (A=0.0), Ca=0, Ce=1 (importa abstracciones) → I=1 → D=0
+        Ambos sobre la Main Sequence → no deben reportarse con umbrales default.
+        """
+        (tmp_path / "abstracciones").mkdir()
+        (tmp_path / "abstracciones" / "__init__.py").write_text("", encoding="utf-8")
+        (tmp_path / "abstracciones" / "iface.py").write_text(
+            "from abc import ABC, abstractmethod\n"
+            "class IRepo(ABC):\n"
+            "    @abstractmethod\n"
+            "    def save(self): pass\n",
+            encoding="utf-8",
+        )
+        (tmp_path / "implementaciones").mkdir()
+        (tmp_path / "implementaciones" / "__init__.py").write_text("", encoding="utf-8")
+        (tmp_path / "implementaciones" / "repo.py").write_text(
+            "from abstracciones.iface import IRepo\n"
+            "class RepoImpl(IRepo):\n"
+            "    def save(self): pass\n",
+            encoding="utf-8",
+        )
+        files = list(tmp_path.rglob("*.py"))
+        analyzer = DistanceAnalyzer()
+        config = ArchitectAnalystConfig()
+        analyzer.should_run(config)
+        results = analyzer.analyze(tmp_path, files)
+        # Ambos paquetes sobre la Main Sequence → sin violaciones
+        assert results == []
+
+    def test_un_paquete_zone_of_pain_otro_ok(self, tmp_path: Path) -> None:
+        """
+        servicios/: solo clases concretas, nadie externo las usa, no importa nada externo.
+        → A=0, Ca=0, Ce=0 → I=0 → D=1.0 → CRITICAL
+        interfaces/: todas abstractas, servicios las importa.
+        → A=1.0, Ca=1, Ce=0 → I=0 → D=0 → sin reporte
+        """
+        (tmp_path / "interfaces").mkdir()
+        (tmp_path / "interfaces" / "__init__.py").write_text("", encoding="utf-8")
+        (tmp_path / "interfaces" / "iface.py").write_text(
+            "from abc import ABC\nclass IFoo(ABC): pass\n", encoding="utf-8"
+        )
+        (tmp_path / "servicios").mkdir()
+        (tmp_path / "servicios" / "__init__.py").write_text("", encoding="utf-8")
+        (tmp_path / "servicios" / "svc.py").write_text(
+            "from interfaces.iface import IFoo\nclass Foo(IFoo): pass\n", encoding="utf-8"
+        )
+        files = list(tmp_path.rglob("*.py"))
+        analyzer = DistanceAnalyzer()
+        config = ArchitectAnalystConfig()
+        analyzer.should_run(config)
+        results = analyzer.analyze(tmp_path, files)
+        # servicios: A=0, I=1 (Ce=1, Ca=0) → D=0 → no reporta
+        # interfaces: A=1, I=0 (Ca=1, Ce=0) → D=0 → no reporta
+        assert results == []
 
 
 # =============================================================================
