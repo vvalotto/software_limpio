@@ -7,6 +7,48 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
+## [Unreleased]
+
+### 🐛 Bug Fixes — ArchitectAnalyst
+
+#### Fix #32: `exclude_patterns` no se aplicaba en `collect_files`
+
+`collect_files()` ignoraba completamente la configuración `exclude_patterns`, analizando virtualenvs, `__pycache__` y directorios de tests. En proyectos con `.venv/` dentro del directorio raíz, esto generaba miles de violaciones falsas provenientes de las dependencias instaladas.
+
+**Fix:** filtrar los archivos encontrados usando `exclude_patterns` sobre la **ruta relativa** al directorio raíz (no la ruta absoluta, para evitar falsos positivos en nombres de paths del sistema).
+
+#### Fix #35: clases con `metaclass=ABCMeta` no se detectaban como abstractas
+
+`_is_abstract()` solo revisaba `class_node.bases`, ignorando `class_node.keywords` donde vive el argumento `metaclass=ABCMeta`. Clases definidas con este patrón (Python 3.5+ para compatibilidad con sistemas sin soporte de `ABC` como base directa) reportaban A=0.00, causando D=1.00 CRITICAL en cascade.
+
+**Fix:** revisar también `class_node.keywords` para detectar `metaclass=ABCMeta`. Aplicado en `AbstractnessAnalyzer` y `DistanceAnalyzer`.
+
+### ✨ Improvements — ArchitectAnalyst
+
+#### Fix #33: métricas de Martin (D) calculadas a nivel de paquete
+
+`DistanceAnalyzer` calculaba D por archivo `.py` individual. Cualquier clase concreta tenía A=0, I=0 → D=1.00 → CRITICAL, generando decenas de falsos positivos en proyectos con Clean Architecture.
+
+**Fix:** D se calcula ahora a nivel de **paquete** (directorio de primer nivel), agregando clases y contando dependencias inter-paquete. Alineado con la definición original de Robert C. Martin.
+
+Impacto: proyectos con Clean Architecture pasan de ~33 falsos CRITICAL a métricas accionables.
+
+#### Fix #34: CLI acepta múltiples paquetes como argumentos
+
+`architectanalyst` solo aceptaba un único `PATH`. En proyectos donde los módulos fuente conviven con `.venv/` y herramientas de desarrollo, era imposible analizar solo el código productivo sin workarounds.
+
+**Fix:** el CLI ahora acepta uno o más paths como argumentos. El parent común se usa como raíz del proyecto.
+
+```bash
+# Antes (solo un path)
+architectanalyst src/
+
+# Ahora (múltiples paquetes explícitos)
+architectanalyst entidades servicios_dominio gestores_entidades configurador
+```
+
+---
+
 ## [0.3.0] - 2026-03-01
 
 ### 🎉 ArchitectAnalyst — Análisis Arquitectónico de Fin de Sprint
