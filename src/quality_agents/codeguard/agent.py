@@ -183,13 +183,24 @@ class CodeGuard:
 
 # --- CLI --- (imports aquí para evitar importación circular con formatter.py)
 
+import os  # noqa: E402
+
 import click  # noqa: E402
 
 from quality_agents.codeguard.formatter import format_json, format_results  # noqa: E402
 
 
+def _common_parent(paths: List[Path]) -> Path:
+    """Calcula el directorio padre común de una lista de paths."""
+    if len(paths) == 1:
+        return paths[0] if paths[0].is_dir() else paths[0].parent
+    resolved = [p.resolve() for p in paths]
+    common = Path(os.path.commonpath([str(p) for p in resolved]))
+    return common if common.is_dir() else common.parent
+
+
 @click.command()
-@click.argument("path", type=click.Path(exists=True), default=".")
+@click.argument("paths", nargs=-1, type=click.Path(exists=True))
 @click.option(
     "--config", "-c",
     type=click.Path(exists=True),
@@ -214,7 +225,7 @@ from quality_agents.codeguard.formatter import format_json, format_results  # no
     help="Presupuesto de tiempo en segundos (None = sin límite)"
 )
 def main(
-    path: str,
+    paths: tuple,
     config: Optional[str],
     format: str,
     analysis_type: str,
@@ -223,25 +234,34 @@ def main(
     """
     CodeGuard - Verificación de calidad de código con orquestación inteligente.
 
-    Analiza archivos Python en PATH (archivo o directorio).
+    Analiza archivos Python en los PATHS indicados (archivos o directorios).
+    Acepta uno o más paths. Sin argumentos analiza el directorio actual.
+
+    Ejemplos:
+      codeguard src/
+      codeguard entidades servicios configurador
 
     Tipos de análisis:
     - pre-commit: Checks rápidos y críticos (<5s)
     - pr-review: Todos los checks habilitados
     - full: Análisis completo sin restricciones
     """
-    target = Path(path)
+    targets = [Path(p) for p in paths] if paths else [Path(".")]
     config_path = Path(config) if config else None
 
-    guard = CodeGuard(config_path=config_path, project_root=target if target.is_dir() else target.parent)
-    files = guard.collect_files(target)
+    project_root = _common_parent(targets)
+    guard = CodeGuard(config_path=config_path, project_root=project_root)
+
+    all_files: List[Path] = []
+    for target in targets:
+        all_files.extend(guard.collect_files(target))
 
     # Solo mostrar información si formato es texto
-    # (en JSON solo queremos el JSON puro para facilitar parsing)
     if format == "text":
         click.echo("CodeGuard v0.2.0 (Arquitectura Modular)")
-        click.echo(f"Analizando: {target.absolute()}")
-        click.echo(f"Archivos Python encontrados: {len(files)}")
+        targets_str = ", ".join(str(t.absolute()) for t in targets)
+        click.echo(f"Analizando: {targets_str}")
+        click.echo(f"Archivos Python encontrados: {len(all_files)}")
         click.echo(f"Tipo de análisis: {analysis_type}")
 
         if time_budget:
@@ -255,24 +275,21 @@ def main(
 
     # Ejecutar checks con orquestador (medir tiempo)
     start_time = time.time()
-    results = guard.run(files, analysis_type=analysis_type, time_budget=time_budget)
+    results = guard.run(all_files, analysis_type=analysis_type, time_budget=time_budget)
     elapsed = time.time() - start_time
 
-    # Mostrar resultados con formatters nuevos
     if format == "text":
-        # Usar Rich formatter
         format_results(
             results,
             elapsed=elapsed,
-            total_files=len(files),
+            total_files=len(all_files),
             checks_executed=len(guard.orchestrator.checks),
         )
     else:
-        # Usar JSON formatter
         json_output = format_json(
             results,
             elapsed=elapsed,
-            total_files=len(files),
+            total_files=len(all_files),
             checks_executed=len(guard.orchestrator.checks),
         )
         click.echo(json_output)
