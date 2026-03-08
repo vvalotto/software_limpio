@@ -106,6 +106,30 @@ class TestArchitectAnalystCLI:
         result = runner.invoke(main, ["/ruta/que/no/existe/"])
         assert result.exit_code != 0
 
+    def test_multiples_paths_aceptados(self, runner, tmp_path):
+        """Dos directorios como argumentos separados deben aceptarse sin error."""
+        pkg_a = tmp_path / "paquete_a"
+        pkg_b = tmp_path / "paquete_b"
+        pkg_a.mkdir()
+        pkg_b.mkdir()
+        (pkg_a / "modulo.py").write_text("class A: pass\n")
+        (pkg_b / "modulo.py").write_text("class B: pass\n")
+        with patch(
+            "quality_agents.architectanalyst.agent.ArchitectAnalyst.run", return_value=[]
+        ):
+            result = runner.invoke(main, [str(pkg_a), str(pkg_b)])
+        assert result.exit_code == 0
+
+    def test_sin_argumentos_usa_directorio_actual(self, runner, tmp_path, monkeypatch):
+        """Sin argumentos, analiza el directorio actual."""
+        monkeypatch.chdir(tmp_path)
+        (tmp_path / "modulo.py").write_text("x = 1")
+        with patch(
+            "quality_agents.architectanalyst.agent.ArchitectAnalyst.run", return_value=[]
+        ):
+            result = runner.invoke(main, [])
+        assert result.exit_code == 0
+
 
 # --- Tests de exit code — SIEMPRE 0 ---
 
