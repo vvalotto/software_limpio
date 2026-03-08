@@ -467,3 +467,52 @@ class TestFormatJson:
         # Debe serializar None como null en JSON
         assert data["results"][0]["file"] is None
         assert data["results"][0]["line"] is None
+
+    def test_format_json_incluye_by_package(self):
+        """JSON debe incluir sección by_package (fix #37)."""
+        results = [
+            CheckResult("PEP8", Severity.ERROR, "Line too long", "src/modulo.py", 10),
+            CheckResult("Pylint", Severity.WARNING, "Low score", "lib/utils.py"),
+        ]
+        data = json.loads(format_json(results))
+        assert "by_package" in data
+        assert "src" in data["by_package"]
+        assert "lib" in data["by_package"]
+        assert len(data["by_package"]["src"]) == 1
+        assert len(data["by_package"]["lib"]) == 1
+
+    def test_format_json_by_package_mismo_directorio(self):
+        """Archivos del mismo directorio deben agruparse juntos (fix #37)."""
+        results = [
+            CheckResult("PEP8", Severity.ERROR, "msg1", "src/a.py"),
+            CheckResult("Pylint", Severity.WARNING, "msg2", "src/b.py"),
+        ]
+        data = json.loads(format_json(results))
+        assert "by_package" in data
+        assert len(data["by_package"]["src"]) == 2
+
+
+class TestFormatResultsByPackage:
+    """Tests de agrupación por paquete en salida text (fix #37)."""
+
+    def test_muestra_header_de_paquete(self, capsys):
+        """La salida text debe mostrar encabezado con nombre del paquete."""
+        from quality_agents.codeguard.formatter import format_results as fmt
+        results = [
+            CheckResult("PEP8", Severity.ERROR, "msg", "mipaquete/modulo.py", 1),
+        ]
+        fmt(results, elapsed=0.1, total_files=1, checks_executed=3)
+        out = capsys.readouterr().out
+        assert "mipaquete" in out
+
+    def test_agrupa_dos_paquetes(self, capsys):
+        """Archivos de distintos paquetes deben mostrar dos encabezados."""
+        from quality_agents.codeguard.formatter import format_results as fmt
+        results = [
+            CheckResult("PEP8", Severity.ERROR, "msg", "paquete_a/x.py", 1),
+            CheckResult("Pylint", Severity.WARNING, "msg", "paquete_b/y.py"),
+        ]
+        fmt(results, elapsed=0.1, total_files=2, checks_executed=3)
+        out = capsys.readouterr().out
+        assert "paquete_a" in out
+        assert "paquete_b" in out

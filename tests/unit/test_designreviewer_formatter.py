@@ -192,3 +192,96 @@ class TestFormatJson:
         assert isinstance(output, str)
         assert len(output) > 0
         json.loads(output)  # no debe lanzar excepción
+
+    def test_json_incluye_by_package(self):
+        """JSON debe incluir sección by_package (fix #40)."""
+        results = [
+            ReviewResult(
+                analyzer_name="CBO",
+                severity=ReviewSeverity.CRITICAL,
+                current_value=10,
+                threshold=5,
+                message="msg",
+                file_path=Path("servicios/user_service.py"),
+            ),
+            ReviewResult(
+                analyzer_name="LCOM",
+                severity=ReviewSeverity.WARNING,
+                current_value=3,
+                threshold=1,
+                message="msg",
+                file_path=Path("entidades/pedido.py"),
+            ),
+        ]
+        data = json.loads(format_json(results, elapsed=1.0, total_files=2, analyzers_executed=8))
+        assert "by_package" in data
+        assert "servicios" in data["by_package"]
+        assert "entidades" in data["by_package"]
+
+    def test_json_by_package_agrupa_mismo_directorio(self):
+        """Archivos del mismo directorio deben agruparse (fix #40)."""
+        results = [
+            ReviewResult(
+                analyzer_name="CBO",
+                severity=ReviewSeverity.WARNING,
+                current_value=8,
+                threshold=5,
+                message="msg",
+                file_path=Path("servicios/a.py"),
+            ),
+            ReviewResult(
+                analyzer_name="LCOM",
+                severity=ReviewSeverity.WARNING,
+                current_value=3,
+                threshold=1,
+                message="msg",
+                file_path=Path("servicios/b.py"),
+            ),
+        ]
+        data = json.loads(format_json(results, elapsed=1.0, total_files=2, analyzers_executed=8))
+        assert len(data["by_package"]["servicios"]) == 2
+
+
+class TestFormatResultsByPackage:
+    """Tests de agrupación por paquete en salida text (fix #40)."""
+
+    def test_muestra_header_de_paquete(self, capsys):
+        """La salida text debe mostrar encabezado con nombre del paquete."""
+        results = [
+            ReviewResult(
+                analyzer_name="CBO",
+                severity=ReviewSeverity.WARNING,
+                current_value=8,
+                threshold=5,
+                message="msg",
+                file_path=Path("mipaquete/servicio.py"),
+            ),
+        ]
+        format_results(results, elapsed=0.1, total_files=1, analyzers_executed=8)
+        out = capsys.readouterr().out
+        assert "mipaquete" in out
+
+    def test_agrupa_dos_paquetes(self, capsys):
+        """Archivos de distintos paquetes deben mostrar dos encabezados."""
+        results = [
+            ReviewResult(
+                analyzer_name="CBO",
+                severity=ReviewSeverity.WARNING,
+                current_value=8,
+                threshold=5,
+                message="msg",
+                file_path=Path("entidades/pedido.py"),
+            ),
+            ReviewResult(
+                analyzer_name="LCOM",
+                severity=ReviewSeverity.CRITICAL,
+                current_value=3,
+                threshold=1,
+                message="msg",
+                file_path=Path("servicios/user.py"),
+            ),
+        ]
+        format_results(results, elapsed=0.1, total_files=2, analyzers_executed=8)
+        out = capsys.readouterr().out
+        assert "entidades" in out
+        assert "servicios" in out
