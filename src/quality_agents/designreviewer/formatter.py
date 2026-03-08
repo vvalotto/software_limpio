@@ -10,6 +10,7 @@ Fecha: 2026-02-21
 """
 
 import json
+from collections import defaultdict
 from datetime import datetime
 from typing import Any, Dict, List
 
@@ -53,17 +54,40 @@ def format_results(
     warnings = [r for r in results if r.severity == ReviewSeverity.WARNING]
     infos = [r for r in results if r.severity == ReviewSeverity.INFO]
 
-    if criticals:
-        _print_blocking_issues(console, criticals)
+    # Mostrar resultados agrupados por paquete
+    by_package = _group_by_package(results)
+    for pkg_name in sorted(by_package.keys()):
+        pkg_results = by_package[pkg_name]
+        console.print(Rule(f"📦  {pkg_name}  ({len(pkg_results)} issues)", style="cyan"))
+        console.print()
 
-    if warnings:
-        _print_results_table(console, warnings, "Advertencias de Diseño", "yellow")
+        pkg_criticals = [r for r in pkg_results if r.severity == ReviewSeverity.CRITICAL]
+        pkg_warnings = [r for r in pkg_results if r.severity == ReviewSeverity.WARNING]
+        pkg_infos = [r for r in pkg_results if r.severity == ReviewSeverity.INFO]
 
-    if infos:
-        _print_results_table(console, infos, "Informativos", "blue")
+        if pkg_criticals:
+            _print_blocking_issues(console, pkg_criticals)
+        if pkg_warnings:
+            _print_results_table(console, pkg_warnings, "Advertencias de Diseño", "yellow")
+        if pkg_infos:
+            _print_results_table(console, pkg_infos, "Informativos", "blue")
 
     _print_summary(console, criticals, warnings, infos)
     _print_effort_summary(console, results)
+
+
+def _package_name(r: "ReviewResult") -> str:
+    """Extrae el nombre del paquete (directorio padre) del file_path."""
+    parent = r.file_path.parent
+    return parent.name or "."
+
+
+def _group_by_package(results: List[ReviewResult]) -> Dict[str, List[ReviewResult]]:
+    """Agrupa resultados por paquete (directorio padre del archivo)."""
+    groups: Dict[str, List[ReviewResult]] = defaultdict(list)
+    for r in results:
+        groups[_package_name(r)].append(r)
+    return dict(groups)
 
 
 def _print_header(console: Console) -> None:
@@ -247,6 +271,8 @@ def format_json(
     total_effort = sum(r.estimated_effort for r in results)
     critical_effort = sum(r.estimated_effort for r in criticals)
 
+    by_pkg = _group_by_package(results)
+
     output: Dict[str, Any] = {
         "summary": {
             "total_files": total_files,
@@ -268,6 +294,10 @@ def format_json(
             "critical": [_result_to_dict(r) for r in criticals],
             "warning": [_result_to_dict(r) for r in warnings],
             "info": [_result_to_dict(r) for r in infos],
+        },
+        "by_package": {
+            pkg: [_result_to_dict(r) for r in pkg_results]
+            for pkg, pkg_results in sorted(by_pkg.items())
         },
     }
 

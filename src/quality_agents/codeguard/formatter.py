@@ -7,11 +7,14 @@ Ticket: 4.2 - Agregar modo JSON
 """
 
 import json
+from collections import defaultdict
 from datetime import datetime
-from typing import Any, Dict, List
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 from rich.console import Console
 from rich.panel import Panel
+from rich.rule import Rule
 from rich.table import Table
 from rich.text import Text
 
@@ -50,23 +53,47 @@ def format_results(
         _print_success(console)
         return
 
-    # Agrupar por severidad
+    # Agrupar por severidad (para resumen)
     errors = [r for r in results if r.severity == Severity.ERROR]
     warnings = [r for r in results if r.severity == Severity.WARNING]
     infos = [r for r in results if r.severity == Severity.INFO]
 
-    # Mostrar resultados por severidad
-    if errors:
-        _print_results_table(console, errors, "Errores", "red")
+    # Mostrar resultados agrupados por paquete
+    by_package = _group_by_package(results)
+    for pkg_name in sorted(by_package.keys()):
+        pkg_results = by_package[pkg_name]
+        console.print(Rule(f"📦  {pkg_name}  ({len(pkg_results)} issues)", style="cyan"))
+        console.print()
 
-    if warnings:
-        _print_results_table(console, warnings, "Advertencias", "yellow")
+        pkg_errors = [r for r in pkg_results if r.severity == Severity.ERROR]
+        pkg_warnings = [r for r in pkg_results if r.severity == Severity.WARNING]
+        pkg_infos = [r for r in pkg_results if r.severity == Severity.INFO]
 
-    if infos:
-        _print_results_table(console, infos, "Informativos", "blue")
+        if pkg_errors:
+            _print_results_table(console, pkg_errors, "Errores", "red")
+        if pkg_warnings:
+            _print_results_table(console, pkg_warnings, "Advertencias", "yellow")
+        if pkg_infos:
+            _print_results_table(console, pkg_infos, "Informativos", "blue")
 
     # Summary final
     _print_summary(console, errors, warnings, infos)
+
+
+def _package_name(file_path: Optional[str]) -> str:
+    """Extrae el nombre del paquete (directorio padre) del file_path."""
+    if not file_path:
+        return "(sin archivo)"
+    parent = Path(file_path).parent
+    return parent.name or "."
+
+
+def _group_by_package(results: List[CheckResult]) -> Dict[str, List[CheckResult]]:
+    """Agrupa resultados por paquete (directorio padre del archivo)."""
+    groups: Dict[str, List[CheckResult]] = defaultdict(list)
+    for r in results:
+        groups[_package_name(r.file_path)].append(r)
+    return dict(groups)
 
 
 def _print_header(console: Console) -> None:
@@ -288,36 +315,27 @@ def format_json(
         ],
     }
 
-    # Si hay resultados, agregar agrupación por severidad (opcional pero útil)
+    def _r_to_dict(r: CheckResult) -> Dict[str, Any]:
+        return {
+            "check": r.check_name,
+            "severity": r.severity.value,
+            "message": r.message,
+            "file": r.file_path,
+            "line": r.line_number,
+        }
+
+    # Si hay resultados, agregar agrupación por severidad y por paquete
     if results:
         output["by_severity"] = {
-            "errors": [
-                {
-                    "check": r.check_name,
-                    "message": r.message,
-                    "file": r.file_path,
-                    "line": r.line_number,
-                }
-                for r in errors
-            ],
-            "warnings": [
-                {
-                    "check": r.check_name,
-                    "message": r.message,
-                    "file": r.file_path,
-                    "line": r.line_number,
-                }
-                for r in warnings
-            ],
-            "infos": [
-                {
-                    "check": r.check_name,
-                    "message": r.message,
-                    "file": r.file_path,
-                    "line": r.line_number,
-                }
-                for r in infos
-            ],
+            "errors": [_r_to_dict(r) for r in errors],
+            "warnings": [_r_to_dict(r) for r in warnings],
+            "infos": [_r_to_dict(r) for r in infos],
+        }
+
+        by_pkg = _group_by_package(results)
+        output["by_package"] = {
+            pkg: [_r_to_dict(r) for r in pkg_results]
+            for pkg, pkg_results in sorted(by_pkg.items())
         }
 
     return json.dumps(output, indent=2, ensure_ascii=False)
