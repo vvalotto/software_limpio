@@ -108,16 +108,22 @@ class ArchitectAnalyst:
 
     def collect_files(self, path: Path) -> List[Path]:
         """
-        Recolecta archivos Python a analizar.
+        Recolecta archivos Python a analizar, respetando exclude_patterns de la config.
 
         Args:
             path: Directorio o archivo a analizar.
 
         Returns:
-            Lista de archivos Python encontrados.
+            Lista de archivos Python encontrados, excluyendo los patrones configurados.
         """
         if path.is_file():
             return [path] if path.suffix == ".py" else []
+        exclude = self._config.exclude_patterns
+        if exclude:
+            return [
+                f for f in path.rglob("*.py")
+                if not any(pattern in str(f.relative_to(path)) for pattern in exclude)
+            ]
         return list(path.rglob("*.py"))
 
     def has_violations(self) -> bool:
@@ -131,6 +137,7 @@ class ArchitectAnalyst:
 
 # --- CLI --- (imports aquí para evitar importación circular con formatter.py)
 
+import os  # noqa: E402
 import time  # noqa: E402
 
 import click  # noqa: E402
@@ -138,8 +145,22 @@ import click  # noqa: E402
 from quality_agents.architectanalyst.formatter import format_json, format_results  # noqa: E402
 
 
+def _common_parent(paths: List[Path]) -> Path:
+    """
+    Calcula el directorio padre común de una lista de paths.
+
+    Usado para determinar la raíz del proyecto cuando se pasan
+    múltiples paquetes como argumentos al CLI.
+    """
+    if len(paths) == 1:
+        return paths[0] if paths[0].is_dir() else paths[0].parent
+    resolved = [p.resolve() for p in paths]
+    common = Path(os.path.commonpath([str(p) for p in resolved]))
+    return common if common.is_dir() else common.parent
+
+
 @click.command()
-@click.argument("path", type=click.Path(exists=True), default=".")
+@click.argument("paths", nargs=-1, type=click.Path(exists=True))
 @click.option(
     "--config", "-c",
     type=click.Path(exists=True),
@@ -157,27 +178,40 @@ from quality_agents.architectanalyst.formatter import format_json, format_result
     default=None,
     help="Identificador del sprint (ej: sprint-12, 2026-Q1)",
 )
-def main(path: str, config: Optional[str], output_format: str, sprint_id: Optional[str]) -> None:
+def main(
+    paths: tuple, config: Optional[str], output_format: str, sprint_id: Optional[str]
+) -> None:
     """
     ArchitectAnalyst - Análisis arquitectónico de fin de sprint.
 
-    Analiza el proyecto en PATH (directorio). Calcula métricas de Martin (Ca, Ce, I, A, D),
-    detecta ciclos de dependencias y violaciones de capas. Persiste snapshot para
+    Analiza los PATHS indicados (directorios o archivos Python). Acepta uno o
+    más paquetes/directorios. Si no se indica ninguno, analiza el directorio actual.
+
+    Ejemplos:
+      architectanalyst .
+      architectanalyst entidades servicios configurador
+
+    Calcula métricas de Martin (Ca, Ce, I, A, D) a nivel de paquete, detecta
+    ciclos de dependencias y violaciones de capas. Persiste snapshot para
     comparar tendencias entre sprints.
 
     Nunca bloquea — exit code siempre 0.
     """
-    target = Path(path)
+    targets = [Path(p) for p in paths] if paths else [Path(".")]
     config_path = Path(config) if config else None
 
-    analyst = ArchitectAnalyst(path=target, config_path=config_path, sprint_id=sprint_id)
+    project_root = _common_parent(targets)
+    analyst = ArchitectAnalyst(path=project_root, config_path=config_path, sprint_id=sprint_id)
+
+    all_files: List[Path] = []
+    for target in targets:
+        all_files.extend(analyst.collect_files(target))
 
     start = time.time()
-    results = analyst.run()
+    results = analyst.run(files=all_files)
     elapsed = time.time() - start
 
-    files = analyst.collect_files(target)
-    total_files = len([f for f in files if f.suffix == ".py"])
+    total_files = len([f for f in all_files if f.suffix == ".py"])
     metrics_executed = len(analyst._orchestrator.metrics)
 
     if output_format == "json":

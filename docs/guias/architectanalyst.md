@@ -61,11 +61,25 @@ architectanalyst --help
 architectanalyst src/
 ```
 
+### Analizar múltiples paquetes explícitamente (recomendado)
+
+En proyectos con Clean Architecture donde los módulos fuente conviven con `.venv/`, `tests/` y herramientas de desarrollo en el mismo directorio raíz, es preferible pasar los paquetes explícitamente en lugar de apuntar al directorio raíz:
+
+```bash
+# Pasar uno o más paquetes/directorios
+architectanalyst entidades servicios_dominio gestores_entidades configurador
+
+# Equivalente a apuntar al src/ si la estructura lo permite
+architectanalyst src/
+```
+
+El parent común de todos los paths se usa automáticamente como raíz del proyecto para cargar configuración y resolver nombres de módulos.
+
 ### Con identificador de sprint (recomendado)
 
 ```bash
 architectanalyst src/ --sprint-id sprint-12
-architectanalyst src/ --sprint-id 2026-Q1
+architectanalyst entidades servicios --sprint-id 2026-Q1
 ```
 
 El `--sprint-id` se almacena junto con el snapshot y aparece en el output. Si no se provee, el snapshot usa el timestamp como identificador.
@@ -144,10 +158,12 @@ Cuántos módulos internos del proyecto **importa** este módulo. Alta Ce = mód
 
 #### D — Distance from Main Sequence (Distancia)
 
-`D = |A + I - 1|` — distancia al equilibrio ideal. Un módulo en la Main Sequence (`A + I ≈ 1`) es sano. Un módulo que se aleja cae en:
+`D = |A + I - 1|` — distancia al equilibrio ideal. Un paquete en la Main Sequence (`A + I ≈ 1`) es sano. Un paquete que se aleja cae en:
 
-- **Zone of Pain** (D alto, A≈0, I≈0): módulo estable y concreto — rígido, difícil de cambiar
-- **Zone of Uselessness** (D alto, A≈1, I≈1): módulo abstracto e inestable — interfaz sin usuarios estables
+- **Zone of Pain** (D alto, A≈0, I≈0): paquete estable y concreto — rígido, difícil de cambiar
+- **Zone of Uselessness** (D alto, A≈1, I≈1): paquete abstracto e inestable — interfaces sin usuarios estables
+
+> **Nota:** D se calcula a nivel de **paquete** (directorio), no de módulo individual. Esto sigue la definición original de Robert C. Martin y evita falsos positivos: cualquier archivo con solo clases concretas daría D=1.00 si se analizara por módulo.
 
 | Umbral | Severidad |
 |--------|-----------|
@@ -397,7 +413,9 @@ ArchitectAnalyst es un agente de observabilidad estratégica. Los problemas que 
 
 **¿Qué es la "Zone of Pain"?**
 
-Un módulo con A≈0 (sin abstracciones) e I≈0 (muy estable, nadie lo modifica) tiene D=1.0 — máxima distancia del Main Sequence. Es concreto y estable: funciona, pero es difícil de modificar sin romper todo. Muchos módulos utilitarios caen aquí y está bien — el indicador advierte para que el equipo sea consciente.
+Un paquete con A≈0 (sin abstracciones) e I≈0 (no depende de otros paquetes) tiene D=1.0 — máxima distancia del Main Sequence. Es concreto y estable: funciona, pero es difícil de modificar sin romper todo. Muchos paquetes de infraestructura caen aquí y está bien — el indicador advierte para que el equipo sea consciente.
+
+> D se calcula a nivel de paquete. Un paquete con clases concretas que *sí depende* de otros paquetes (I > 0) o *sí es usado* (Ca > 0) puede tener D aceptable.
 
 **¿Con qué frecuencia usar ArchitectAnalyst?**
 
@@ -409,7 +427,23 @@ Un ciclo de dependencias es siempre CRITICAL porque viola el ADP. La solución c
 
 **¿Los archivos de test se analizan?**
 
-No — el patrón `test_` está excluido por defecto en `exclude_patterns`. Los tests suelen tener alta instabilidad (I≈1) por diseño, lo que distorsionaría las métricas del código productivo.
+No — el patrón `test_` está excluido por defecto en `exclude_patterns`. Los tests suelen tener alta instabilidad (I≈1) por diseño, lo que distorsionaría las métricas del código productivo. Los patrones se aplican sobre la **ruta relativa** al directorio analizado, así que un path absoluto que contenga `test_` no genera falsos positivos.
+
+**¿Se detectan clases abstractas definidas con `metaclass=ABCMeta`?**
+
+Sí. `AbstractnessAnalyzer` y `DistanceAnalyzer` detectan clases abstractas por tres criterios:
+1. Heredan de `ABC`, `Protocol` o `ABCMeta`
+2. Usan `metaclass=ABCMeta` (patrón Python 3.5+ para compatibilidad con versiones sin `ABC` como base)
+3. Tienen al menos un método decorado con `@abstractmethod`
+
+```python
+# Todos estos patrones se detectan como abstractos:
+class A(ABC): ...
+class B(metaclass=ABCMeta): ...
+class C:
+    @abstractmethod
+    def metodo(self): ...
+```
 
 **¿Cómo funciona la detección de capas?**
 

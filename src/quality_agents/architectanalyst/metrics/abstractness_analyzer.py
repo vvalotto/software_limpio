@@ -166,7 +166,8 @@ class AbstractnessAnalyzer(ProjectMetric):
 
         Una clase es abstracta si:
           1. Hereda directamente de ABC, Protocol o ABCMeta, O
-          2. Tiene al menos un método decorado con @abstractmethod.
+          2. Usa metaclass=ABCMeta (patrón Python 3.5+), O
+          3. Tiene al menos un método decorado con @abstractmethod.
         """
         # Criterio 1: herencia de bases abstractas
         for base in class_node.bases:
@@ -174,7 +175,12 @@ class AbstractnessAnalyzer(ProjectMetric):
             if name in _ABSTRACT_BASES:
                 return True
 
-        # Criterio 2: al menos un @abstractmethod
+        # Criterio 2: metaclass=ABCMeta como keyword argument
+        for kw in class_node.keywords:
+            if kw.arg == "metaclass" and self._extract_name(kw.value) == "ABCMeta":
+                return True
+
+        # Criterio 3: al menos un @abstractmethod
         for node in ast.walk(class_node):
             if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 continue
