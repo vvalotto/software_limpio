@@ -109,16 +109,23 @@ class DesignReviewer:
 
     def collect_files(self, path: Path) -> List[Path]:
         """
-        Recolecta archivos Python a analizar.
+        Recolecta archivos Python a analizar, respetando exclude_patterns de la config.
 
         Args:
             path: Directorio o archivo a analizar.
 
         Returns:
-            Lista de archivos Python encontrados.
+            Lista de archivos Python encontrados, excluyendo los patrones configurados.
         """
         if path.is_file():
             return [path] if path.suffix == ".py" else []
+
+        exclude = self._config.exclude_patterns
+        if exclude:
+            return [
+                f for f in path.rglob("*.py")
+                if not any(pattern in str(f.relative_to(path)) for pattern in exclude)
+            ]
         return list(path.rglob("*.py"))
 
 

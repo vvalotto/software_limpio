@@ -42,6 +42,63 @@ class TestCodeGuard:
         assert results == []
 
 
+class TestCodeGuardCollectFiles:
+    """Tests para collect_files() con exclude_patterns (fix #36)."""
+
+    def test_collect_files_desde_archivo(self, tmp_path):
+        (tmp_path / "modulo.py").write_text("x = 1")
+        guard = CodeGuard(project_root=tmp_path)
+        files = guard.collect_files(tmp_path / "modulo.py")
+        assert len(files) == 1
+
+    def test_collect_files_archivo_no_python(self, tmp_path):
+        txt = tmp_path / "readme.txt"
+        txt.write_text("texto")
+        guard = CodeGuard(project_root=tmp_path)
+        assert guard.collect_files(txt) == []
+
+    def test_collect_files_excluye_venv(self, tmp_path):
+        (tmp_path / "modulo.py").write_text("x = 1")
+        venv = tmp_path / ".venv" / "lib"
+        venv.mkdir(parents=True)
+        (venv / "dep.py").write_text("y = 2")
+        guard = CodeGuard(project_root=tmp_path)
+        files = guard.collect_files(tmp_path)
+        assert len(files) == 1
+        assert files[0].name == "modulo.py"
+
+    def test_collect_files_excluye_pycache(self, tmp_path):
+        (tmp_path / "modulo.py").write_text("x = 1")
+        cache = tmp_path / "__pycache__"
+        cache.mkdir()
+        (cache / "generated.py").write_text("z = 3")
+        guard = CodeGuard(project_root=tmp_path)
+        files = guard.collect_files(tmp_path)
+        assert len(files) == 1
+        assert files[0].name == "modulo.py"
+
+    def test_collect_files_excluye_migrations(self, tmp_path):
+        (tmp_path / "servicio.py").write_text("x = 1")
+        migrations = tmp_path / "migrations"
+        migrations.mkdir()
+        (migrations / "0001_initial.py").write_text("x = 1")
+        guard = CodeGuard(project_root=tmp_path)
+        files = guard.collect_files(tmp_path)
+        assert len(files) == 1
+        assert files[0].name == "servicio.py"
+
+    def test_collect_files_sin_exclude_patterns(self, tmp_path):
+        from quality_agents.codeguard.config import CodeGuardConfig
+        (tmp_path / "a.py").write_text("x = 1")
+        venv = tmp_path / ".venv"
+        venv.mkdir()
+        (venv / "b.py").write_text("y = 2")
+        guard = CodeGuard(project_root=tmp_path)
+        guard.config = CodeGuardConfig(exclude_patterns=[])
+        files = guard.collect_files(tmp_path)
+        assert len(files) == 2
+
+
 class TestCheckResult:
     """Tests para CheckResult."""
 

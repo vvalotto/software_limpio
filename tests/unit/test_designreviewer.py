@@ -111,6 +111,51 @@ class TestDesignReviewer:
 
         assert len(files) == 2
 
+    def test_collect_files_excluye_venv(self, tmp_path):
+        """collect_files() debe excluir archivos dentro de .venv/ (fix #39)."""
+        (tmp_path / "modulo.py").write_text("x = 1")
+        venv = tmp_path / ".venv" / "lib"
+        venv.mkdir(parents=True)
+        (venv / "dep.py").write_text("y = 2")
+        reviewer = DesignReviewer(path=tmp_path)
+        files = reviewer.collect_files(tmp_path)
+        assert len(files) == 1
+        assert files[0].name == "modulo.py"
+
+    def test_collect_files_excluye_pycache(self, tmp_path):
+        """collect_files() debe excluir archivos dentro de __pycache__/."""
+        (tmp_path / "modulo.py").write_text("x = 1")
+        cache = tmp_path / "__pycache__"
+        cache.mkdir()
+        (cache / "generated.py").write_text("z = 3")
+        reviewer = DesignReviewer(path=tmp_path)
+        files = reviewer.collect_files(tmp_path)
+        assert len(files) == 1
+        assert files[0].name == "modulo.py"
+
+    def test_collect_files_excluye_test_files(self, tmp_path):
+        """collect_files() debe excluir archivos con 'test_' en su path relativo."""
+        (tmp_path / "servicio.py").write_text("x = 1")
+        tests = tmp_path / "tests"
+        tests.mkdir()
+        (tests / "test_servicio.py").write_text("def test_foo(): pass")
+        reviewer = DesignReviewer(path=tmp_path)
+        files = reviewer.collect_files(tmp_path)
+        assert len(files) == 1
+        assert files[0].name == "servicio.py"
+
+    def test_collect_files_sin_exclude_patterns(self, tmp_path):
+        """Sin exclude_patterns retorna todos los .py."""
+        from quality_agents.designreviewer.config import DesignReviewerConfig
+        (tmp_path / "a.py").write_text("x = 1")
+        venv = tmp_path / ".venv"
+        venv.mkdir()
+        (venv / "b.py").write_text("y = 2")
+        reviewer = DesignReviewer(path=tmp_path)
+        reviewer._config = DesignReviewerConfig(exclude_patterns=[])
+        files = reviewer.collect_files(tmp_path)
+        assert len(files) == 2
+
 
 class TestReviewResult:
     """Tests para ReviewResult."""
