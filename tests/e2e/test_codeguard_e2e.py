@@ -70,10 +70,12 @@ class TestCodeGuardCLIEndToEnd:
                 [tool.codeguard]
                 min_pylint_score = 8.0
                 max_cyclomatic_complexity = 10
-                check_pep8 = true
-                check_pylint = true
-                check_security = true
                 exclude_patterns = ["test_", "__pycache__"]
+
+                [tool.codeguard.checks]
+                pep8 = true
+                pylint = true
+                security = true
 
                 [tool.codeguard.ai]
                 enabled = false

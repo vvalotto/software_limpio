@@ -81,7 +81,7 @@ class SecurityCheck(Verifiable):
             return False
 
         # Verificar si está habilitado en config
-        if context.config and not context.config.check_security:
+        if context.config and not context.config.checks.security:
             return False
 
         return True

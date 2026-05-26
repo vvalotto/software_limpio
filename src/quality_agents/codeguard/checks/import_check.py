@@ -82,7 +82,7 @@ class ImportCheck(Verifiable):
             return False
 
         # Verificar si está habilitado en config
-        if context.config and not context.config.check_imports:
+        if context.config and not context.config.checks.imports:
             return False
 
         return True

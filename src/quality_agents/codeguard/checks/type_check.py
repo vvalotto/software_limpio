@@ -83,7 +83,7 @@ class TypeCheck(Verifiable):
             return False
 
         # Verificar si está habilitado en config
-        if context.config and not context.config.check_types:
+        if context.config and not context.config.checks.types:
             return False
 
         # Verificar si el archivo tiene type hints

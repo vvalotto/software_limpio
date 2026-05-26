@@ -43,6 +43,29 @@ class AIConfig:
 
 
 @dataclass
+class ChecksConfig:
+    """
+    Toggles para habilitar/deshabilitar checks individuales de CodeGuard.
+
+    Configurable desde pyproject.toml con la sección [tool.codeguard.checks]
+    o desde YAML con la clave ``checks``.
+
+    Example::
+
+        [tool.codeguard.checks]
+        pep8 = false
+        security = true
+    """
+
+    pep8: bool = True
+    pylint: bool = True
+    security: bool = True
+    complexity: bool = True
+    types: bool = True
+    imports: bool = True
+
+
+@dataclass
 class CodeGuardConfig:
     """Configuración de CodeGuard."""
 
@@ -52,14 +75,6 @@ class CodeGuardConfig:
     max_line_length: int = 100
     max_function_lines: int = 20
 
-    # Verificaciones habilitadas
-    check_pep8: bool = True
-    check_pylint: bool = True
-    check_security: bool = True
-    check_complexity: bool = True
-    check_types: bool = True
-    check_imports: bool = True
-
     # Exclusiones
     exclude_patterns: List[str] = field(default_factory=lambda: [
         "*.pyc",
@@ -68,6 +83,9 @@ class CodeGuardConfig:
         "venv",
         "migrations",
     ])
+
+    # Toggles de checks
+    checks: ChecksConfig = field(default_factory=ChecksConfig)
 
     # Configuración de IA
     ai: AIConfig = field(default_factory=AIConfig)
@@ -89,13 +107,15 @@ class CodeGuardConfig:
         if not data:
             return cls()
 
-        # Extraer configuración de IA si existe
+        # Extraer sub-secciones antes de pasar el resto al dataclass
         ai_data = data.pop("ai", {})
+        checks_data = data.pop("checks", {})
         ai_config = AIConfig(**_filter_fields(AIConfig, ai_data)) if ai_data else AIConfig()
+        checks_config = ChecksConfig(**_filter_fields(ChecksConfig, checks_data)) if checks_data else ChecksConfig()
 
-        # Crear instancia con el resto de la configuración
         config = cls(**_filter_fields(cls, data))
         config.ai = ai_config
+        config.checks = checks_config
 
         return config
 
@@ -135,13 +155,15 @@ class CodeGuardConfig:
             # No hay configuración de codeguard, retornar defaults
             return cls()
 
-        # Extraer configuración de IA si existe
+        # Extraer sub-secciones antes de pasar el resto al dataclass
         ai_config_data = tool_config.pop("ai", {})
+        checks_data = tool_config.pop("checks", {})
         ai_config = AIConfig(**_filter_fields(AIConfig, ai_config_data)) if ai_config_data else AIConfig()
+        checks_config = ChecksConfig(**_filter_fields(ChecksConfig, checks_data)) if checks_data else ChecksConfig()
 
-        # Crear instancia con el resto de la configuración
         config = cls(**_filter_fields(cls, tool_config))
         config.ai = ai_config
+        config.checks = checks_config
 
         return config
 
@@ -157,13 +179,15 @@ class CodeGuardConfig:
             "max_cyclomatic_complexity": self.max_cyclomatic_complexity,
             "max_line_length": self.max_line_length,
             "max_function_lines": self.max_function_lines,
-            "check_pep8": self.check_pep8,
-            "check_pylint": self.check_pylint,
-            "check_security": self.check_security,
-            "check_complexity": self.check_complexity,
-            "check_types": self.check_types,
-            "check_imports": self.check_imports,
             "exclude_patterns": self.exclude_patterns,
+            "checks": {
+                "pep8": self.checks.pep8,
+                "pylint": self.checks.pylint,
+                "security": self.checks.security,
+                "complexity": self.checks.complexity,
+                "types": self.checks.types,
+                "imports": self.checks.imports,
+            },
             "ai": {
                 "enabled": self.ai.enabled,
                 "explain_errors": self.ai.explain_errors,

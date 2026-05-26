@@ -83,7 +83,7 @@ class ComplexityCheck(Verifiable):
             return False
 
         # Verificar si está habilitado en config
-        if context.config and not context.config.check_complexity:
+        if context.config and not context.config.checks.complexity:
             return False
 
         return True

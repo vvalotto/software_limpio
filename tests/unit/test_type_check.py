@@ -11,7 +11,7 @@ from unittest.mock import MagicMock, patch
 
 from quality_agents.codeguard.agent import Severity
 from quality_agents.codeguard.checks.type_check import TypeCheck
-from quality_agents.codeguard.config import CodeGuardConfig
+from quality_agents.codeguard.config import ChecksConfig, CodeGuardConfig
 from quality_agents.shared.verifiable import ExecutionContext
 
 
@@ -44,7 +44,7 @@ class TestTypeCheckShouldRun:
         context = ExecutionContext(
             file_path=Path("test.py"),
             is_excluded=False,
-            config=CodeGuardConfig(check_types=True),
+            config=CodeGuardConfig(checks=ChecksConfig(types=True)),
         )
         assert check.should_run(context) is True
 
@@ -54,7 +54,7 @@ class TestTypeCheckShouldRun:
         context = ExecutionContext(
             file_path=Path("test.py"),
             is_excluded=False,
-            config=CodeGuardConfig(check_types=True),
+            config=CodeGuardConfig(checks=ChecksConfig(types=True)),
         )
         assert check.should_run(context) is False
 
@@ -64,7 +64,7 @@ class TestTypeCheckShouldRun:
         context = ExecutionContext(
             file_path=Path("test.py"),
             is_excluded=True,
-            config=CodeGuardConfig(check_types=True),
+            config=CodeGuardConfig(checks=ChecksConfig(types=True)),
         )
         assert check.should_run(context) is False
 
@@ -73,7 +73,7 @@ class TestTypeCheckShouldRun:
         context = ExecutionContext(
             file_path=Path("test.txt"),
             is_excluded=False,
-            config=CodeGuardConfig(check_types=True),
+            config=CodeGuardConfig(checks=ChecksConfig(types=True)),
         )
         assert check.should_run(context) is False
 
@@ -83,7 +83,7 @@ class TestTypeCheckShouldRun:
         context = ExecutionContext(
             file_path=Path("test.py"),
             is_excluded=False,
-            config=CodeGuardConfig(check_types=False),
+            config=CodeGuardConfig(checks=ChecksConfig(types=False)),
         )
         assert check.should_run(context) is False
 
