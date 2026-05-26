@@ -43,6 +43,41 @@ class AIConfig:
 
 
 @dataclass
+class DesignReviewerChecksConfig:
+    """
+    Toggles para habilitar/deshabilitar analyzers individuales de DesignReviewer.
+
+    Configurable desde pyproject.toml con la sección [tool.designreviewer.checks].
+
+    Example::
+
+        [tool.designreviewer.checks]
+        cbo = false
+        lcom = true
+    """
+
+    # Acoplamiento
+    cbo: bool = True
+    fan_out: bool = True
+    circular_imports: bool = True
+
+    # Cohesión y complejidad
+    lcom: bool = True
+    wmc: bool = True
+
+    # Herencia
+    dit: bool = True
+    nop: bool = True
+
+    # Code smells
+    god_object: bool = True
+    long_method: bool = True
+    long_parameter_list: bool = True
+    feature_envy: bool = True
+    data_clumps: bool = True
+
+
+@dataclass
 class DesignReviewerConfig:
     """
     Configuración de DesignReviewer.
@@ -83,6 +118,9 @@ class DesignReviewerConfig:
         "conftest",
     ])
 
+    # Toggles de analyzers
+    checks: DesignReviewerChecksConfig = field(default_factory=DesignReviewerChecksConfig)
+
     # Configuración de IA
     ai: AIConfig = field(default_factory=AIConfig)
 
@@ -120,12 +158,18 @@ class DesignReviewerConfig:
         if not tool_config:
             return cls()
 
-        # Extraer sub-sección de IA
+        # Extraer sub-secciones antes de pasar el resto al dataclass
         ai_data = tool_config.pop("ai", {})
+        checks_data = tool_config.pop("checks", {})
         ai_config = AIConfig(**_filter_fields(AIConfig, ai_data)) if ai_data else AIConfig()
+        checks_config = (
+            DesignReviewerChecksConfig(**_filter_fields(DesignReviewerChecksConfig, checks_data))
+            if checks_data else DesignReviewerChecksConfig()
+        )
 
         config = cls(**_filter_fields(cls, tool_config))
         config.ai = ai_config
+        config.checks = checks_config
         return config
 
 

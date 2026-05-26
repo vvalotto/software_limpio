@@ -79,6 +79,8 @@ class LayerViolationsAnalyzer(ProjectMetric):
         self._config = config
         if config is None:
             return False
+        if hasattr(config, "checks") and not config.checks.layer_violations:
+            return False
         return bool(config.layers.is_configured())
 
     def analyze(self, project_path: Path, files: List[Path]) -> List[ArchitectureResult]:

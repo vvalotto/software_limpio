@@ -62,6 +62,8 @@ class LongParameterListAnalyzer(Verifiable):
 
     def should_run(self, context: ExecutionContext) -> bool:
         self._config = context.config
+        if context.config and hasattr(context.config, "checks") and not getattr(context.config.checks, "long_parameter_list", True):
+            return False
         return not context.is_excluded and context.file_path.suffix == ".py"
 
     def execute(self, file_path: Path) -> List[ReviewResult]:

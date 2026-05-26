@@ -78,7 +78,7 @@ class PylintCheck(Verifiable):
             return False
 
         # Verificar si está habilitado en config
-        if context.config and not context.config.check_pylint:
+        if context.config and not context.config.checks.pylint:
             return False
 
         return True

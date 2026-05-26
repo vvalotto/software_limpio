@@ -81,6 +81,8 @@ class DistanceAnalyzer(ProjectMetric):
 
     def should_run(self, config: Any) -> bool:
         self._config = config
+        if config and hasattr(config, "checks") and not config.checks.distance:
+            return False
         return True
 
     def analyze(self, project_path: Path, files: List[Path]) -> List[ArchitectureResult]:

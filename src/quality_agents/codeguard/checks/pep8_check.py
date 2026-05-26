@@ -74,7 +74,7 @@ class PEP8Check(Verifiable):
             return False
 
         # Verificar si está habilitado en config
-        if context.config and not context.config.check_pep8:
+        if context.config and not context.config.checks.pep8:
             return False
 
         return True

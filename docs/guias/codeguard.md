@@ -111,14 +111,6 @@ max_cyclomatic_complexity = 10
 max_line_length = 100
 max_function_lines = 20
 
-# Verificaciones habilitadas
-check_pep8 = true
-check_pylint = true
-check_security = true
-check_complexity = true
-check_types = true
-check_imports = true
-
 # Exclusiones
 exclude_patterns = [
     "*.pyc",
@@ -128,6 +120,15 @@ exclude_patterns = [
     "migrations",
     "tests/*"
 ]
+
+# Verificaciones habilitadas (todas activas por defecto)
+[tool.codeguard.checks]
+pep8 = true
+pylint = true
+security = true
+complexity = true
+types = true
+imports = true
 
 # Configuración de IA (opcional)
 [tool.codeguard.ai]
@@ -153,14 +154,6 @@ max_cyclomatic_complexity: 10
 max_line_length: 100
 max_function_lines: 20
 
-# Verificaciones habilitadas
-check_pep8: true
-check_pylint: true
-check_security: true
-check_complexity: true
-check_types: true
-check_imports: true
-
 # Exclusiones
 exclude_patterns:
   - "*.pyc"
@@ -169,6 +162,15 @@ exclude_patterns:
   - "venv"
   - "migrations"
   - "tests/*"
+
+# Verificaciones habilitadas (todas activas por defecto)
+checks:
+  pep8: true
+  pylint: true
+  security: true
+  complexity: true
+  types: true
+  imports: true
 ```
 
 ### Búsqueda Automática de Configuración
@@ -799,10 +801,18 @@ codeguard /path/to/proyecto
 
 ### ¿Cómo deshabilito una verificación específica?
 
-En tu `.codeguard.yml`:
+En `pyproject.toml`:
+```toml
+[tool.codeguard.checks]
+pep8 = false        # Deshabilitar PEP8
+complexity = false  # Deshabilitar complejidad
+```
+
+O en `.codeguard.yml`:
 ```yaml
-check_pep8: false        # Deshabilitar PEP8
-check_complexity: false  # Deshabilitar complejidad
+checks:
+  pep8: false
+  complexity: false
 ```
 
 ### ¿Cómo excluir archivos o directorios?
@@ -823,24 +833,24 @@ exclude_patterns:
 
 Los patrones se aplican sobre la **ruta relativa** al directorio analizado, no sobre el path absoluto. Un patrón como `"migrations"` excluye cualquier archivo cuyo path relativo contenga esa cadena (p. ej. `app/migrations/0001_initial.py`).
 
-### ¿El output muestra resultados agrupados por paquete?
+### ¿El output muestra resultados agrupados?
 
-Sí. Desde la versión que incluye el fix #37, los resultados se muestran agrupados por directorio padre del archivo:
+Sí. Los resultados se agrupan por **módulo** (`directorio/archivo.py`), lo que permite identificar exactamente qué archivo del proyecto tiene problemas:
 
 ```
-📦  servicios  (3 issues)
+📄  servicios/user_service.py  (3 issues)
   Errores (1) ...
   Advertencias (2) ...
 
-📦  entidades  (1 issue)
+📄  entidades/pedido.py  (1 issue)
   Advertencias (1) ...
 ```
 
-En el output JSON también se incluye la sección `by_package`:
+En el output JSON se incluye la sección `by_module`:
 ```json
-"by_package": {
-  "entidades": [...],
-  "servicios": [...]
+"by_module": {
+  "servicios/user_service.py": [...],
+  "entidades/pedido.py": [...]
 }
 ```
 

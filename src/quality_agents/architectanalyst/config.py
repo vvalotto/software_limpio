@@ -42,6 +42,28 @@ class AIConfig:
 
 
 @dataclass
+class ArchitectAnalystChecksConfig:
+    """
+    Toggles para habilitar/deshabilitar métricas individuales de ArchitectAnalyst.
+
+    Configurable desde pyproject.toml con la sección [tool.architectanalyst.checks].
+
+    Example::
+
+        [tool.architectanalyst.checks]
+        coupling = true
+        distance = false
+    """
+
+    coupling: bool = True
+    abstractness: bool = True
+    instability: bool = True
+    distance: bool = True
+    dependency_cycles: bool = True
+    layer_violations: bool = True
+
+
+@dataclass
 class LayersConfig:
     """
     Configuración de arquitectura en capas.
@@ -109,6 +131,7 @@ class ArchitectAnalystConfig:
     ])
 
     # --- Subsecciones ---
+    checks: ArchitectAnalystChecksConfig = field(default_factory=ArchitectAnalystChecksConfig)
     ai: AIConfig = field(default_factory=AIConfig)
     layers: LayersConfig = field(default_factory=LayersConfig)
 
@@ -150,13 +173,19 @@ class ArchitectAnalystConfig:
         # Extraer sub-secciones antes de pasar el resto al dataclass
         ai_data = tool_config.pop("ai", {})
         layers_data = tool_config.pop("layers", {})
+        checks_data = tool_config.pop("checks", {})
 
         ai_config = AIConfig(**_filter_fields(AIConfig, ai_data)) if ai_data else AIConfig()
         layers_config = LayersConfig(rules=layers_data) if layers_data else LayersConfig()
+        checks_config = (
+            ArchitectAnalystChecksConfig(**_filter_fields(ArchitectAnalystChecksConfig, checks_data))
+            if checks_data else ArchitectAnalystChecksConfig()
+        )
 
         config = cls(**_filter_fields(cls, tool_config))
         config.ai = ai_config
         config.layers = layers_config
+        config.checks = checks_config
         return config
 
 

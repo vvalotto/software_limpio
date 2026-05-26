@@ -303,11 +303,36 @@ max_method_lines = 20          # Long Method (warning)
 max_method_lines_critical = 40 # Long Method (critical)
 max_parameters = 4             # Long Parameter List (warning)
 max_parameters_critical = 7    # Long Parameter List (critical)
+
+# Analyzers habilitados (todos activos por defecto)
+[tool.designreviewer.checks]
+cbo = true
+fan_out = true
+circular_imports = true
+lcom = true
+wmc = true
+dit = true
+nop = true
+god_object = true
+long_method = true
+long_parameter_list = true
+feature_envy = true
+data_clumps = true
 ```
 
 ### Valores por defecto
 
 Si no configurás `[tool.designreviewer]`, se usan los umbrales mostrados en la tabla de métricas. Son los valores de la literatura de ingeniería de software.
+
+### Deshabilitar analyzers específicos
+
+Útil para proyectos con restricciones particulares de diseño:
+
+```toml
+[tool.designreviewer.checks]
+feature_envy = false    # Deshabilitar Feature Envy
+data_clumps = false     # Deshabilitar Data Clumps
+```
 
 ---
 
@@ -460,24 +485,24 @@ exclude_patterns = [".venv", "__pycache__", "test_"]
 
 Los patrones se aplican sobre la **ruta relativa** al directorio analizado. Un patrón `"test_"` excluirá cualquier archivo cuyo path relativo contenga esa cadena.
 
-### ¿El output muestra resultados agrupados por paquete?
+### ¿El output muestra resultados agrupados?
 
-Sí. Los resultados se agrupan por directorio padre del archivo, con un encabezado por paquete:
+Sí. Los resultados se agrupan por **módulo** (`directorio/archivo.py`):
 
 ```
-📦  servicios  (2 issues)
+📄  servicios/user_service.py  (2 issues)
   🚫 BLOCKING ISSUES (1)  ...
   Advertencias de Diseño (1)  ...
 
-📦  entidades  (1 issue)
+📄  entidades/pedido.py  (1 issue)
   Advertencias de Diseño (1)  ...
 ```
 
-En el output JSON también se incluye la sección `by_package`:
+En el output JSON se incluye la sección `by_module`:
 ```json
-"by_package": {
-  "entidades": [...],
-  "servicios": [...]
+"by_module": {
+  "entidades/pedido.py": [...],
+  "servicios/user_service.py": [...]
 }
 ```
 

@@ -8,6 +8,7 @@ import pytest
 
 from quality_agents.architectanalyst.config import (
     AIConfig,
+    ArchitectAnalystChecksConfig,
     ArchitectAnalystConfig,
     LayersConfig,
     load_config,
@@ -35,6 +36,33 @@ class TestAIConfig:
         ai = AIConfig(max_tokens=2000)
 
         assert ai.max_tokens == 2000
+
+
+class TestArchitectAnalystChecksConfig:
+    """Tests para ArchitectAnalystChecksConfig (#62)."""
+
+    def test_defaults(self):
+        """Todas las métricas deben estar habilitadas por defecto."""
+        checks = ArchitectAnalystChecksConfig()
+        assert checks.coupling is True
+        assert checks.abstractness is True
+        assert checks.instability is True
+        assert checks.distance is True
+        assert checks.dependency_cycles is True
+        assert checks.layer_violations is True
+
+    def test_from_pyproject_toml(self, tmp_path):
+        """Debe leer toggles desde [tool.architectanalyst.checks]."""
+        pyproject = tmp_path / "pyproject.toml"
+        pyproject.write_text("""
+[tool.architectanalyst.checks]
+distance = false
+layer_violations = false
+""")
+        config = ArchitectAnalystConfig.from_pyproject_toml(pyproject)
+        assert config.checks.distance is False
+        assert config.checks.layer_violations is False
+        assert config.checks.coupling is True  # default
 
 
 class TestLayersConfig:

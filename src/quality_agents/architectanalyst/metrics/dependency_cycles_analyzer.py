@@ -58,6 +58,8 @@ class DependencyCyclesAnalyzer(ProjectMetric):
         return 1
 
     def should_run(self, config: Any) -> bool:
+        if config and hasattr(config, "checks") and not config.checks.dependency_cycles:
+            return False
         return True
 
     def analyze(self, project_path: Path, files: List[Path]) -> List[ArchitectureResult]:

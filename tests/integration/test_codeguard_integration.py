@@ -364,9 +364,11 @@ class TestCodeGuardWithConfiguration:
 [tool.codeguard]
 min_pylint_score = 9.0
 max_cyclomatic_complexity = 5
-check_pep8 = true
-check_security = true
 exclude_patterns = ["test_*.py", "__pycache__"]
+
+[tool.codeguard.checks]
+pep8 = true
+security = true
 
 [tool.codeguard.ai]
 enabled = false
@@ -393,11 +395,12 @@ enabled = false
         yaml_config.write_text("""
 min_pylint_score: 8.5
 max_cyclomatic_complexity: 8
-check_pep8: true
-check_security: true
 exclude_patterns:
   - "*.pyc"
   - "__pycache__"
+checks:
+  pep8: true
+  security: true
 """)
 
         # Crear archivo Python
@@ -416,8 +419,8 @@ exclude_patterns:
         # Verificar que cargó la configuración
         assert config.min_pylint_score == 9.0
         assert config.max_cyclomatic_complexity == 5
-        assert config.check_pep8 is True
-        assert config.check_security is True
+        assert config.checks.pep8 is True
+        assert config.checks.security is True
         assert "test_*.py" in config.exclude_patterns
         assert config.ai.enabled is False
 
@@ -432,8 +435,8 @@ exclude_patterns:
         # Verificar que cargó la configuración
         assert config.min_pylint_score == 8.5
         assert config.max_cyclomatic_complexity == 8
-        assert config.check_pep8 is True
-        assert config.check_security is True
+        assert config.checks.pep8 is True
+        assert config.checks.security is True
 
     def test_load_config_defaults_when_no_file(self):
         """Verifica que usa defaults cuando no hay archivo de configuración."""

@@ -107,4 +107,6 @@ class InstabilityAnalyzer(ProjectMetric):
 
     def should_run(self, config: Any) -> bool:
         self._config = config
+        if config and hasattr(config, "checks") and not config.checks.instability:
+            return False
         return True

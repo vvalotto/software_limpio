@@ -12,7 +12,7 @@ from unittest.mock import MagicMock, patch
 
 from quality_agents.codeguard.agent import Severity
 from quality_agents.codeguard.checks.security_check import SecurityCheck
-from quality_agents.codeguard.config import CodeGuardConfig
+from quality_agents.codeguard.config import ChecksConfig, CodeGuardConfig
 from quality_agents.shared.verifiable import ExecutionContext
 
 
@@ -44,7 +44,7 @@ class TestSecurityCheckShouldRun:
         context = ExecutionContext(
             file_path=Path("test.py"),
             is_excluded=False,
-            config=CodeGuardConfig(check_security=True),
+            config=CodeGuardConfig(checks=ChecksConfig(security=True)),
         )
         assert check.should_run(context) is True
 
@@ -53,7 +53,7 @@ class TestSecurityCheckShouldRun:
         context = ExecutionContext(
             file_path=Path("test.py"),
             is_excluded=True,
-            config=CodeGuardConfig(check_security=True),
+            config=CodeGuardConfig(checks=ChecksConfig(security=True)),
         )
         assert check.should_run(context) is False
 
@@ -62,7 +62,7 @@ class TestSecurityCheckShouldRun:
         context = ExecutionContext(
             file_path=Path("test.txt"),
             is_excluded=False,
-            config=CodeGuardConfig(check_security=True),
+            config=CodeGuardConfig(checks=ChecksConfig(security=True)),
         )
         assert check.should_run(context) is False
 
@@ -71,7 +71,7 @@ class TestSecurityCheckShouldRun:
         context = ExecutionContext(
             file_path=Path("test.py"),
             is_excluded=False,
-            config=CodeGuardConfig(check_security=False),
+            config=CodeGuardConfig(checks=ChecksConfig(security=False)),
         )
         assert check.should_run(context) is False
 

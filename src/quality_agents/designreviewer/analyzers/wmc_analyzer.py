@@ -62,6 +62,8 @@ class WMCAnalyzer(Verifiable):
 
     def should_run(self, context: ExecutionContext) -> bool:
         self._config = context.config
+        if context.config and hasattr(context.config, "checks") and not context.config.checks.wmc:
+            return False
         return (
             _RADON_DISPONIBLE
             and not context.is_excluded

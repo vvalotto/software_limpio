@@ -283,6 +283,15 @@ exclude_patterns = [
     "build",
 ]
 
+# Métricas habilitadas (todas activas por defecto)
+[tool.architectanalyst.checks]
+coupling = true
+abstractness = true
+instability = true
+distance = true
+dependency_cycles = true
+layer_violations = true
+
 # IA (opt-in — desactivada por defecto)
 [tool.architectanalyst.ai]
 enabled = false
@@ -293,6 +302,14 @@ max_tokens = 1500
 domain = []
 application = ["domain"]
 infrastructure = ["application", "domain"]
+```
+
+### Deshabilitar métricas específicas
+
+```toml
+[tool.architectanalyst.checks]
+layer_violations = false    # Solo si no se usan reglas de capas
+instability = false         # Deshabilitar análisis de inestabilidad
 ```
 
 ### Umbrales por defecto

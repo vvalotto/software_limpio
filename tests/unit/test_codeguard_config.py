@@ -5,7 +5,47 @@ Tests unitarios para configuración de CodeGuard.
 
 import pytest
 
-from quality_agents.codeguard.config import AIConfig, CodeGuardConfig, load_config
+from quality_agents.codeguard.config import AIConfig, ChecksConfig, CodeGuardConfig, load_config
+
+
+class TestChecksConfig:
+    """Tests para ChecksConfig (#60)."""
+
+    def test_default_values(self):
+        """Todos los checks deben estar habilitados por defecto."""
+        checks = ChecksConfig()
+        assert checks.pep8 is True
+        assert checks.pylint is True
+        assert checks.security is True
+        assert checks.complexity is True
+        assert checks.types is True
+        assert checks.imports is True
+
+    def test_from_pyproject_toml(self, tmp_path):
+        """Debe leer toggles desde [tool.codeguard.checks]."""
+        pyproject = tmp_path / "pyproject.toml"
+        pyproject.write_text("""
+[tool.codeguard.checks]
+pep8 = false
+security = false
+""")
+        config = CodeGuardConfig.from_pyproject_toml(pyproject)
+        assert config.checks.pep8 is False
+        assert config.checks.security is False
+        assert config.checks.pylint is True   # no tocado, debe ser default
+
+    def test_from_yaml(self, tmp_path):
+        """Debe leer toggles desde sección checks en YAML."""
+        yml = tmp_path / "config.yml"
+        yml.write_text("""
+checks:
+  types: false
+  imports: false
+""")
+        config = CodeGuardConfig.from_yaml(yml)
+        assert config.checks.types is False
+        assert config.checks.imports is False
+        assert config.checks.pep8 is True   # no tocado, debe ser default
 
 
 class TestAIConfig:
@@ -48,12 +88,13 @@ class TestCodeGuardConfig:
         assert config.max_function_lines == 20
 
         # Checks
-        assert config.check_pep8 is True
-        assert config.check_pylint is True
-        assert config.check_security is True
-        assert config.check_complexity is True
-        assert config.check_types is True
-        assert config.check_imports is True
+        assert isinstance(config.checks, ChecksConfig)
+        assert config.checks.pep8 is True
+        assert config.checks.pylint is True
+        assert config.checks.security is True
+        assert config.checks.complexity is True
+        assert config.checks.types is True
+        assert config.checks.imports is True
 
         # Exclusiones
         assert "__pycache__" in config.exclude_patterns
@@ -70,17 +111,19 @@ class TestCodeGuardConfig:
 [tool.codeguard]
 min_pylint_score = 7.5
 max_cyclomatic_complexity = 15
-check_pep8 = false
-check_security = true
 exclude_patterns = ["tests/*", "migrations/*"]
+
+[tool.codeguard.checks]
+pep8 = false
+security = true
 """)
 
         config = CodeGuardConfig.from_pyproject_toml(pyproject)
 
         assert config.min_pylint_score == 7.5
         assert config.max_cyclomatic_complexity == 15
-        assert config.check_pep8 is False
-        assert config.check_security is True
+        assert config.checks.pep8 is False
+        assert config.checks.security is True
         assert "tests/*" in config.exclude_patterns
         assert "migrations/*" in config.exclude_patterns
 
@@ -133,19 +176,20 @@ something = "value"
         config_file.write_text("""
 min_pylint_score: 7.0
 max_cyclomatic_complexity: 12
-check_pep8: true
-check_security: false
 exclude_patterns:
   - "*.pyc"
   - "build/*"
+checks:
+  pep8: true
+  security: false
 """)
 
         config = CodeGuardConfig.from_yaml(config_file)
 
         assert config.min_pylint_score == 7.0
         assert config.max_cyclomatic_complexity == 12
-        assert config.check_pep8 is True
-        assert config.check_security is False
+        assert config.checks.pep8 is True
+        assert config.checks.security is False
         assert "build/*" in config.exclude_patterns
 
     def test_from_yaml_with_ai(self, tmp_path):
@@ -216,7 +260,7 @@ check_hexagonal = true
         """Debe guardar configuración a YAML correctamente."""
         config = CodeGuardConfig(
             min_pylint_score=7.5,
-            check_pep8=False,
+            checks=ChecksConfig(pep8=False),
         )
         config.ai.enabled = True
 
@@ -228,7 +272,7 @@ check_hexagonal = true
         # Leer de vuelta para verificar
         config_loaded = CodeGuardConfig.from_yaml(output_file)
         assert config_loaded.min_pylint_score == 7.5
-        assert config_loaded.check_pep8 is False
+        assert config_loaded.checks.pep8 is False
         assert config_loaded.ai.enabled is True
 
 
@@ -241,26 +285,29 @@ class TestLoadConfig:
         config_file.write_text("""
 [tool.codeguard]
 min_pylint_score = 9.0
-check_pep8 = false
+
+[tool.codeguard.checks]
+pep8 = false
 """)
 
         config = load_config(config_path=config_file)
 
         assert config.min_pylint_score == 9.0
-        assert config.check_pep8 is False
+        assert config.checks.pep8 is False
 
     def test_load_config_explicit_path_yaml(self, tmp_path):
         """Debe cargar desde path explícito (YAML)."""
         config_file = tmp_path / "custom.yml"
         config_file.write_text("""
 min_pylint_score: 6.5
-check_security: false
+checks:
+  security: false
 """)
 
         config = load_config(config_path=config_file)
 
         assert config.min_pylint_score == 6.5
-        assert config.check_security is False
+        assert config.checks.security is False
 
     def test_load_config_explicit_path_not_found(self, tmp_path):
         """Debe retornar defaults si path explícito no existe."""
@@ -270,7 +317,7 @@ check_security: false
 
         # Debe retornar defaults
         assert config.min_pylint_score == 8.0
-        assert config.check_pep8 is True
+        assert config.checks.pep8 is True
 
     def test_load_config_from_pyproject_toml(self, tmp_path):
         """Debe auto-descubrir pyproject.toml en project_root."""
@@ -297,13 +344,14 @@ max_tokens = 600
         yml_file = tmp_path / ".codeguard.yml"
         yml_file.write_text("""
 min_pylint_score: 6.0
-check_types: false
+checks:
+  types: false
 """)
 
         config = load_config(project_root=tmp_path)
 
         assert config.min_pylint_score == 6.0
-        assert config.check_types is False
+        assert config.checks.types is False
 
     def test_load_config_pyproject_toml_priority_over_yml(self, tmp_path):
         """pyproject.toml debe tener prioridad sobre .codeguard.yml."""
@@ -332,7 +380,7 @@ min_pylint_score: 5.0
 
         # Debe retornar todos los defaults
         assert config.min_pylint_score == 8.0
-        assert config.check_pep8 is True
+        assert config.checks.pep8 is True
         assert config.ai.enabled is False
 
     def test_load_config_default_project_root(self):

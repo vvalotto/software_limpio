@@ -11,7 +11,7 @@ from unittest.mock import MagicMock, patch
 
 from quality_agents.codeguard.agent import Severity
 from quality_agents.codeguard.checks.complexity_check import ComplexityCheck
-from quality_agents.codeguard.config import CodeGuardConfig
+from quality_agents.codeguard.config import ChecksConfig, CodeGuardConfig
 from quality_agents.shared.verifiable import ExecutionContext
 
 
@@ -43,7 +43,7 @@ class TestComplexityCheckShouldRun:
         context = ExecutionContext(
             file_path=Path("test.py"),
             is_excluded=False,
-            config=CodeGuardConfig(check_complexity=True),
+            config=CodeGuardConfig(checks=ChecksConfig(complexity=True)),
         )
         assert check.should_run(context) is True
 
@@ -52,7 +52,7 @@ class TestComplexityCheckShouldRun:
         context = ExecutionContext(
             file_path=Path("test.py"),
             is_excluded=True,
-            config=CodeGuardConfig(check_complexity=True),
+            config=CodeGuardConfig(checks=ChecksConfig(complexity=True)),
         )
         assert check.should_run(context) is False
 
@@ -61,7 +61,7 @@ class TestComplexityCheckShouldRun:
         context = ExecutionContext(
             file_path=Path("test.txt"),
             is_excluded=False,
-            config=CodeGuardConfig(check_complexity=True),
+            config=CodeGuardConfig(checks=ChecksConfig(complexity=True)),
         )
         assert check.should_run(context) is False
 
@@ -70,7 +70,7 @@ class TestComplexityCheckShouldRun:
         context = ExecutionContext(
             file_path=Path("test.py"),
             is_excluded=False,
-            config=CodeGuardConfig(check_complexity=False),
+            config=CodeGuardConfig(checks=ChecksConfig(complexity=False)),
         )
         assert check.should_run(context) is False
 

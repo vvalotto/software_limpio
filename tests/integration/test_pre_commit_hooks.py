@@ -106,13 +106,13 @@ class TestPreCommitHooksConfiguration:
             )
 
     def test_example_config_file_exists(self):
-        """Debe existir un archivo de ejemplo .pre-commit-config.yaml.example."""
-        example_file = PROJECT_ROOT / ".pre-commit-config.yaml.example"
-        assert example_file.exists(), ".pre-commit-config.yaml.example not found"
+        """Debe existir un archivo de ejemplo pre-commit-config.yaml.example en examples/."""
+        example_file = PROJECT_ROOT / "examples" / "pre-commit-config.yaml.example"
+        assert example_file.exists(), "examples/pre-commit-config.yaml.example not found"
 
     def test_example_config_is_valid_yaml(self):
         """El archivo de ejemplo debe ser YAML válido."""
-        example_file = PROJECT_ROOT / ".pre-commit-config.yaml.example"
+        example_file = PROJECT_ROOT / "examples" / "pre-commit-config.yaml.example"
         with open(example_file) as f:
             try:
                 yaml.safe_load(f)
