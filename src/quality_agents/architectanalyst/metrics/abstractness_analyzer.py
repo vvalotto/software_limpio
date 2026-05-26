@@ -109,6 +109,8 @@ class AbstractnessAnalyzer(ProjectMetric):
         return results
 
     def should_run(self, config: Any) -> bool:
+        if config and hasattr(config, "checks") and not config.checks.abstractness:
+            return False
         return True
 
     # -------------------------------------------------------------------------
