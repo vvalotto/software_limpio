@@ -5,6 +5,7 @@ Fecha de creación: 2026-02-19
 Ticket: 1.5
 """
 
+import dataclasses
 import logging
 import sys
 from dataclasses import dataclass, field
@@ -12,6 +13,15 @@ from pathlib import Path
 from typing import List, Optional
 
 logger = logging.getLogger(__name__)
+
+
+def _filter_fields(cls: type, data: dict) -> dict:
+    """Filtra un dict dejando solo las claves que son campos del dataclass."""
+    known = {f.name for f in dataclasses.fields(cls)}
+    for key in set(data) - known:
+        logger.warning(f"[tool.designreviewer] clave desconocida ignorada: '{key}'")
+    return {k: v for k, v in data.items() if k in known}
+
 
 # Python 3.11+ tiene tomllib en stdlib, versiones anteriores usan tomli
 if sys.version_info >= (3, 11):
@@ -112,9 +122,9 @@ class DesignReviewerConfig:
 
         # Extraer sub-sección de IA
         ai_data = tool_config.pop("ai", {})
-        ai_config = AIConfig(**ai_data) if ai_data else AIConfig()
+        ai_config = AIConfig(**_filter_fields(AIConfig, ai_data)) if ai_data else AIConfig()
 
-        config = cls(**tool_config)
+        config = cls(**_filter_fields(cls, tool_config))
         config.ai = ai_config
         return config
 

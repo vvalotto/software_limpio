@@ -2,6 +2,7 @@
 Configuración para CodeGuard.
 """
 
+import dataclasses
 import logging
 import sys
 from dataclasses import dataclass, field
@@ -11,6 +12,15 @@ from typing import List, Optional
 import yaml
 
 logger = logging.getLogger(__name__)
+
+
+def _filter_fields(cls: type, data: dict) -> dict:
+    """Filtra un dict dejando solo las claves que son campos del dataclass."""
+    known = {f.name for f in dataclasses.fields(cls)}
+    for key in set(data) - known:
+        logger.warning(f"[tool.codeguard] clave desconocida ignorada: '{key}'")
+    return {k: v for k, v in data.items() if k in known}
+
 
 # Python 3.11+ tiene tomllib en stdlib, versiones anteriores usan tomli
 if sys.version_info >= (3, 11):
@@ -81,10 +91,10 @@ class CodeGuardConfig:
 
         # Extraer configuración de IA si existe
         ai_data = data.pop("ai", {})
-        ai_config = AIConfig(**ai_data) if ai_data else AIConfig()
+        ai_config = AIConfig(**_filter_fields(AIConfig, ai_data)) if ai_data else AIConfig()
 
         # Crear instancia con el resto de la configuración
-        config = cls(**data)
+        config = cls(**_filter_fields(cls, data))
         config.ai = ai_config
 
         return config
@@ -127,10 +137,10 @@ class CodeGuardConfig:
 
         # Extraer configuración de IA si existe
         ai_config_data = tool_config.pop("ai", {})
-        ai_config = AIConfig(**ai_config_data) if ai_config_data else AIConfig()
+        ai_config = AIConfig(**_filter_fields(AIConfig, ai_config_data)) if ai_config_data else AIConfig()
 
         # Crear instancia con el resto de la configuración
-        config = cls(**tool_config)
+        config = cls(**_filter_fields(cls, tool_config))
         config.ai = ai_config
 
         return config
