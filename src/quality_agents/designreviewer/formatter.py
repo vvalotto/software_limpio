@@ -77,8 +77,10 @@ def format_results(
 
 
 def _module_name(r: "ReviewResult") -> str:
-    """Extrae el nombre del módulo (.py) del file_path."""
-    return r.file_path.name
+    """Retorna 'directorio/archivo.py' para identificar el módulo unívocamente."""
+    p = r.file_path
+    parent = p.parent.name
+    return f"{parent}/{p.name}" if parent and parent != "." else p.name
 
 
 def _group_by_module(results: List[ReviewResult]) -> Dict[str, List[ReviewResult]]:

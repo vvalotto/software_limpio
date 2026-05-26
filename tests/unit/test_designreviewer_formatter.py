@@ -194,7 +194,7 @@ class TestFormatJson:
         json.loads(output)  # no debe lanzar excepción
 
     def test_json_incluye_by_module(self):
-        """JSON debe incluir sección by_module (#56)."""
+        """JSON debe incluir sección by_module con clave directorio/archivo (#56)."""
         results = [
             ReviewResult(
                 analyzer_name="CBO",
@@ -215,8 +215,8 @@ class TestFormatJson:
         ]
         data = json.loads(format_json(results, elapsed=1.0, total_files=2, analyzers_executed=8))
         assert "by_module" in data
-        assert "user_service.py" in data["by_module"]
-        assert "pedido.py" in data["by_module"]
+        assert "servicios/user_service.py" in data["by_module"]
+        assert "entidades/pedido.py" in data["by_module"]
 
     def test_json_by_module_mismo_archivo(self):
         """Resultados del mismo archivo deben agruparse (#56)."""
@@ -239,7 +239,7 @@ class TestFormatJson:
             ),
         ]
         data = json.loads(format_json(results, elapsed=1.0, total_files=2, analyzers_executed=8))
-        assert len(data["by_module"]["servicio.py"]) == 2
+        assert len(data["by_module"]["servicios/servicio.py"]) == 2
 
     def test_json_by_module_archivos_distintos(self):
         """Archivos distintos del mismo directorio tienen entradas separadas (#56)."""
@@ -262,15 +262,15 @@ class TestFormatJson:
             ),
         ]
         data = json.loads(format_json(results, elapsed=1.0, total_files=2, analyzers_executed=8))
-        assert "a.py" in data["by_module"]
-        assert "b.py" in data["by_module"]
+        assert "servicios/a.py" in data["by_module"]
+        assert "servicios/b.py" in data["by_module"]
 
 
 class TestFormatResultsByModule:
     """Tests de agrupación por módulo en salida text (#56)."""
 
     def test_muestra_header_de_modulo(self, capsys):
-        """La salida text debe mostrar encabezado con nombre del módulo."""
+        """La salida text debe mostrar encabezado con directorio/módulo."""
         results = [
             ReviewResult(
                 analyzer_name="CBO",
@@ -283,7 +283,7 @@ class TestFormatResultsByModule:
         ]
         format_results(results, elapsed=0.1, total_files=1, analyzers_executed=8)
         out = capsys.readouterr().out
-        assert "servicio.py" in out
+        assert "mipaquete/servicio.py" in out
 
     def test_agrupa_dos_modulos(self, capsys):
         """Archivos distintos deben mostrar dos encabezados."""
@@ -307,5 +307,5 @@ class TestFormatResultsByModule:
         ]
         format_results(results, elapsed=0.1, total_files=2, analyzers_executed=8)
         out = capsys.readouterr().out
-        assert "pedido.py" in out
-        assert "user.py" in out
+        assert "entidades/pedido.py" in out
+        assert "servicios/user.py" in out

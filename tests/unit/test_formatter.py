@@ -469,17 +469,17 @@ class TestFormatJson:
         assert data["results"][0]["line"] is None
 
     def test_format_json_incluye_by_module(self):
-        """JSON debe incluir sección by_module (#53)."""
+        """JSON debe incluir sección by_module con clave directorio/archivo (#53)."""
         results = [
             CheckResult("PEP8", Severity.ERROR, "Line too long", "src/modulo.py", 10),
             CheckResult("Pylint", Severity.WARNING, "Low score", "lib/utils.py"),
         ]
         data = json.loads(format_json(results))
         assert "by_module" in data
-        assert "modulo.py" in data["by_module"]
-        assert "utils.py" in data["by_module"]
-        assert len(data["by_module"]["modulo.py"]) == 1
-        assert len(data["by_module"]["utils.py"]) == 1
+        assert "src/modulo.py" in data["by_module"]
+        assert "lib/utils.py" in data["by_module"]
+        assert len(data["by_module"]["src/modulo.py"]) == 1
+        assert len(data["by_module"]["lib/utils.py"]) == 1
 
     def test_format_json_by_module_mismo_archivo(self):
         """Resultados del mismo archivo deben agruparse juntos (#53)."""
@@ -489,7 +489,7 @@ class TestFormatJson:
         ]
         data = json.loads(format_json(results))
         assert "by_module" in data
-        assert len(data["by_module"]["modulo.py"]) == 2
+        assert len(data["by_module"]["src/modulo.py"]) == 2
 
     def test_format_json_by_module_archivos_distintos(self):
         """Archivos distintos del mismo directorio tienen entradas separadas (#53)."""
@@ -499,22 +499,22 @@ class TestFormatJson:
         ]
         data = json.loads(format_json(results))
         assert "by_module" in data
-        assert "a.py" in data["by_module"]
-        assert "b.py" in data["by_module"]
+        assert "src/a.py" in data["by_module"]
+        assert "src/b.py" in data["by_module"]
 
 
 class TestFormatResultsByModule:
     """Tests de agrupación por módulo en salida text (#53)."""
 
     def test_muestra_header_de_modulo(self, capsys):
-        """La salida text debe mostrar encabezado con nombre del módulo."""
+        """La salida text debe mostrar encabezado con directorio/módulo."""
         from quality_agents.codeguard.formatter import format_results as fmt
         results = [
             CheckResult("PEP8", Severity.ERROR, "msg", "mipaquete/modulo.py", 1),
         ]
         fmt(results, elapsed=0.1, total_files=1, checks_executed=3)
         out = capsys.readouterr().out
-        assert "modulo.py" in out
+        assert "mipaquete/modulo.py" in out
 
     def test_agrupa_dos_modulos(self, capsys):
         """Archivos distintos deben mostrar dos encabezados."""
@@ -525,5 +525,5 @@ class TestFormatResultsByModule:
         ]
         fmt(results, elapsed=0.1, total_files=2, checks_executed=3)
         out = capsys.readouterr().out
-        assert "x.py" in out
-        assert "y.py" in out
+        assert "paquete_a/x.py" in out
+        assert "paquete_b/y.py" in out

@@ -81,10 +81,12 @@ def format_results(
 
 
 def _module_name(file_path: Optional[str]) -> str:
-    """Extrae el nombre del módulo (.py) del file_path."""
+    """Retorna 'directorio/archivo.py' para identificar el módulo unívocamente."""
     if not file_path:
         return "(sin archivo)"
-    return Path(file_path).name or file_path
+    p = Path(file_path)
+    parent = p.parent.name
+    return f"{parent}/{p.name}" if parent and parent != "." else p.name
 
 
 def _group_by_module(results: List[CheckResult]) -> Dict[str, List[CheckResult]]:
