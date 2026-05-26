@@ -7,7 +7,12 @@ Ticket: 1.7
 
 import pytest
 
-from quality_agents.designreviewer.config import AIConfig, DesignReviewerConfig, load_config
+from quality_agents.designreviewer.config import (
+    AIConfig,
+    DesignReviewerChecksConfig,
+    DesignReviewerConfig,
+    load_config,
+)
 
 
 class TestAIConfig:
@@ -26,6 +31,39 @@ class TestAIConfig:
         ai = AIConfig(enabled=True)
 
         assert ai.enabled is True
+
+
+class TestDesignReviewerChecksConfig:
+    """Tests para DesignReviewerChecksConfig (#61)."""
+
+    def test_defaults(self):
+        """Todos los analyzers deben estar habilitados por defecto."""
+        checks = DesignReviewerChecksConfig()
+        assert checks.cbo is True
+        assert checks.fan_out is True
+        assert checks.circular_imports is True
+        assert checks.lcom is True
+        assert checks.wmc is True
+        assert checks.dit is True
+        assert checks.nop is True
+        assert checks.god_object is True
+        assert checks.long_method is True
+        assert checks.long_parameter_list is True
+        assert checks.feature_envy is True
+        assert checks.data_clumps is True
+
+    def test_from_pyproject_toml(self, tmp_path):
+        """Debe leer toggles desde [tool.designreviewer.checks]."""
+        pyproject = tmp_path / "pyproject.toml"
+        pyproject.write_text("""
+[tool.designreviewer.checks]
+cbo = false
+lcom = false
+""")
+        config = DesignReviewerConfig.from_pyproject_toml(pyproject)
+        assert config.checks.cbo is False
+        assert config.checks.lcom is False
+        assert config.checks.fan_out is True  # default
 
 
 class TestDesignReviewerConfig:
