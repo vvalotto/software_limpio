@@ -58,16 +58,16 @@ def format_results(
     warnings = [r for r in results if r.severity == Severity.WARNING]
     infos = [r for r in results if r.severity == Severity.INFO]
 
-    # Mostrar resultados agrupados por paquete
-    by_package = _group_by_package(results)
-    for pkg_name in sorted(by_package.keys()):
-        pkg_results = by_package[pkg_name]
-        console.print(Rule(f"📦  {pkg_name}  ({len(pkg_results)} issues)", style="cyan"))
+    # Mostrar resultados agrupados por módulo
+    by_module = _group_by_module(results)
+    for module_name in sorted(by_module.keys()):
+        mod_results = by_module[module_name]
+        console.print(Rule(f"📄  {module_name}  ({len(mod_results)} issues)", style="cyan"))
         console.print()
 
-        pkg_errors = [r for r in pkg_results if r.severity == Severity.ERROR]
-        pkg_warnings = [r for r in pkg_results if r.severity == Severity.WARNING]
-        pkg_infos = [r for r in pkg_results if r.severity == Severity.INFO]
+        pkg_errors = [r for r in mod_results if r.severity == Severity.ERROR]
+        pkg_warnings = [r for r in mod_results if r.severity == Severity.WARNING]
+        pkg_infos = [r for r in mod_results if r.severity == Severity.INFO]
 
         if pkg_errors:
             _print_results_table(console, pkg_errors, "Errores", "red")
@@ -80,19 +80,18 @@ def format_results(
     _print_summary(console, errors, warnings, infos)
 
 
-def _package_name(file_path: Optional[str]) -> str:
-    """Extrae el nombre del paquete (directorio padre) del file_path."""
+def _module_name(file_path: Optional[str]) -> str:
+    """Extrae el nombre del módulo (.py) del file_path."""
     if not file_path:
         return "(sin archivo)"
-    parent = Path(file_path).parent
-    return parent.name or "."
+    return Path(file_path).name or file_path
 
 
-def _group_by_package(results: List[CheckResult]) -> Dict[str, List[CheckResult]]:
-    """Agrupa resultados por paquete (directorio padre del archivo)."""
+def _group_by_module(results: List[CheckResult]) -> Dict[str, List[CheckResult]]:
+    """Agrupa resultados por módulo (nombre del archivo .py)."""
     groups: Dict[str, List[CheckResult]] = defaultdict(list)
     for r in results:
-        groups[_package_name(r.file_path)].append(r)
+        groups[_module_name(r.file_path)].append(r)
     return dict(groups)
 
 
@@ -332,10 +331,10 @@ def format_json(
             "infos": [_r_to_dict(r) for r in infos],
         }
 
-        by_pkg = _group_by_package(results)
-        output["by_package"] = {
-            pkg: [_r_to_dict(r) for r in pkg_results]
-            for pkg, pkg_results in sorted(by_pkg.items())
+        by_mod = _group_by_module(results)
+        output["by_module"] = {
+            mod: [_r_to_dict(r) for r in mod_results]
+            for mod, mod_results in sorted(by_mod.items())
         }
 
     return json.dumps(output, indent=2, ensure_ascii=False)
