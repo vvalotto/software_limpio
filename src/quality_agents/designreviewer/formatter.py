@@ -54,39 +54,38 @@ def format_results(
     warnings = [r for r in results if r.severity == ReviewSeverity.WARNING]
     infos = [r for r in results if r.severity == ReviewSeverity.INFO]
 
-    # Mostrar resultados agrupados por paquete
-    by_package = _group_by_package(results)
-    for pkg_name in sorted(by_package.keys()):
-        pkg_results = by_package[pkg_name]
-        console.print(Rule(f"📦  {pkg_name}  ({len(pkg_results)} issues)", style="cyan"))
+    # Mostrar resultados agrupados por módulo
+    by_module = _group_by_module(results)
+    for module_name in sorted(by_module.keys()):
+        mod_results = by_module[module_name]
+        console.print(Rule(f"📄  {module_name}  ({len(mod_results)} issues)", style="cyan"))
         console.print()
 
-        pkg_criticals = [r for r in pkg_results if r.severity == ReviewSeverity.CRITICAL]
-        pkg_warnings = [r for r in pkg_results if r.severity == ReviewSeverity.WARNING]
-        pkg_infos = [r for r in pkg_results if r.severity == ReviewSeverity.INFO]
+        mod_criticals = [r for r in mod_results if r.severity == ReviewSeverity.CRITICAL]
+        mod_warnings = [r for r in mod_results if r.severity == ReviewSeverity.WARNING]
+        mod_infos = [r for r in mod_results if r.severity == ReviewSeverity.INFO]
 
-        if pkg_criticals:
-            _print_blocking_issues(console, pkg_criticals)
-        if pkg_warnings:
-            _print_results_table(console, pkg_warnings, "Advertencias de Diseño", "yellow")
-        if pkg_infos:
-            _print_results_table(console, pkg_infos, "Informativos", "blue")
+        if mod_criticals:
+            _print_blocking_issues(console, mod_criticals)
+        if mod_warnings:
+            _print_results_table(console, mod_warnings, "Advertencias de Diseño", "yellow")
+        if mod_infos:
+            _print_results_table(console, mod_infos, "Informativos", "blue")
 
     _print_summary(console, criticals, warnings, infos)
     _print_effort_summary(console, results)
 
 
-def _package_name(r: "ReviewResult") -> str:
-    """Extrae el nombre del paquete (directorio padre) del file_path."""
-    parent = r.file_path.parent
-    return parent.name or "."
+def _module_name(r: "ReviewResult") -> str:
+    """Extrae el nombre del módulo (.py) del file_path."""
+    return r.file_path.name
 
 
-def _group_by_package(results: List[ReviewResult]) -> Dict[str, List[ReviewResult]]:
-    """Agrupa resultados por paquete (directorio padre del archivo)."""
+def _group_by_module(results: List[ReviewResult]) -> Dict[str, List[ReviewResult]]:
+    """Agrupa resultados por módulo (nombre del archivo .py)."""
     groups: Dict[str, List[ReviewResult]] = defaultdict(list)
     for r in results:
-        groups[_package_name(r)].append(r)
+        groups[_module_name(r)].append(r)
     return dict(groups)
 
 
@@ -271,7 +270,7 @@ def format_json(
     total_effort = sum(r.estimated_effort for r in results)
     critical_effort = sum(r.estimated_effort for r in criticals)
 
-    by_pkg = _group_by_package(results)
+    by_mod = _group_by_module(results)
 
     output: Dict[str, Any] = {
         "summary": {
@@ -295,9 +294,9 @@ def format_json(
             "warning": [_result_to_dict(r) for r in warnings],
             "info": [_result_to_dict(r) for r in infos],
         },
-        "by_package": {
-            pkg: [_result_to_dict(r) for r in pkg_results]
-            for pkg, pkg_results in sorted(by_pkg.items())
+        "by_module": {
+            mod: [_result_to_dict(r) for r in mod_results]
+            for mod, mod_results in sorted(by_mod.items())
         },
     }
 
