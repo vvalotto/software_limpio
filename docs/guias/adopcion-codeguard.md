@@ -75,12 +75,6 @@ max_cyclomatic_complexity = 15   # default: 10 — empezar más permisivo
 max_line_length = 120            # default: 100 — ajustar al estilo existente
 min_pylint_score = 6.0           # default: 8.0 — bajar si el score actual es bajo
 
-# Activar solo los checks que agreguen valor ahora
-check_pep8 = true
-check_security = true            # seguridad siempre activa
-check_complexity = true
-check_types = false              # desactivar si no hay type hints en el proyecto
-
 # Excluir lo que no controlás
 exclude_patterns = [
     "tests/*",
@@ -89,6 +83,13 @@ exclude_patterns = [
     ".venv/*",
     "setup.py",
 ]
+
+# Activar solo los checks que agreguen valor ahora
+[tool.codeguard.checks]
+pep8 = true
+security = true            # seguridad siempre activa
+complexity = true
+types = false              # desactivar si no hay type hints en el proyecto
 ```
 
 **Estrategia de mejora gradual:**
@@ -96,9 +97,9 @@ exclude_patterns = [
 | Semana | Acción |
 |--------|--------|
 | 1-2 | Corrida exploratoria, configurar umbrales actuales |
-| 3-4 | Activar `check_security`, resolver errores críticos |
+| 3-4 | Activar `security = true`, resolver errores críticos |
 | 5-8 | Bajar `max_cyclomatic_complexity` de a 1 por semana |
-| 9+  | Activar `check_types`, agregar type hints progresivamente |
+| 9+  | Activar `types = true`, agregar type hints progresivamente |
 
 ### Paso 3: Integrar con pre-commit (cuando el equipo esté listo)
 
@@ -162,16 +163,17 @@ max_cyclomatic_complexity = 10
 max_line_length = 100
 min_pylint_score = 8.0
 
-# Todos los checks activos
-check_pep8 = true
-check_security = true
-check_complexity = true
-check_types = true        # type hints desde el primer módulo
-
 exclude_patterns = [
     "tests/*",
     ".venv/*",
 ]
+
+# Todos los checks activos
+[tool.codeguard.checks]
+pep8 = true
+security = true
+complexity = true
+types = true        # type hints desde el primer módulo
 ```
 
 ### Paso 3: Pre-commit desde el primer commit
@@ -230,14 +232,6 @@ Todas las opciones disponibles en `[tool.codeguard]`:
 
 ```toml
 [tool.codeguard]
-# --- Checks activos ---
-check_pep8 = true                # Estilo PEP8 (flake8)
-check_security = true            # Vulnerabilidades (bandit)
-check_complexity = true          # Complejidad ciclomática (radon)
-check_types = true               # Tipos (mypy)
-check_pylint = true              # Score general (pylint)
-check_imports = true             # Imports sin usar (pylint)
-
 # --- Umbrales ---
 max_cyclomatic_complexity = 10   # Complejidad máxima por función
 max_line_length = 100            # Longitud máxima de línea
@@ -249,6 +243,15 @@ exclude_patterns = [
     "migrations/*",
     ".venv/*",
 ]
+
+# --- Checks activos (todos habilitados por defecto) ---
+[tool.codeguard.checks]
+pep8 = true                # Estilo PEP8 (flake8)
+security = true            # Vulnerabilidades (bandit)
+complexity = true          # Complejidad ciclomática (radon)
+types = true               # Tipos (mypy)
+pylint = true              # Score general (pylint)
+imports = true             # Imports sin usar (pylint)
 
 # --- IA opcional (requiere API key de Anthropic) ---
 [tool.codeguard.ai]
@@ -285,7 +288,7 @@ codeguard src/ --format json > out.json
 | | Proyecto existente | Proyecto nuevo |
 |---|---|---|
 | **Umbrales iniciales** | Laxos, ajustar gradualmente | Estrictos desde el inicio |
-| **`check_types`** | Desactivar si no hay type hints | Activar desde el primer módulo |
+| **`checks.types`** | Desactivar si no hay type hints | Activar desde el primer módulo |
 | **Pre-commit** | Agregar cuando el equipo esté listo | Antes del primer commit |
 | **Primera corrida** | Exploratoria, generar baseline | Debe dar 0 errores |
 | **Estrategia** | Mejora gradual semana a semana | Mantener verde desde el día uno |

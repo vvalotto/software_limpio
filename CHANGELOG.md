@@ -9,6 +9,82 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### ✨ Improvements — Incremento 1: Fundamentos de UX y Configuración
+
+#### Fix #53 / #56: Output agrupado por módulo (`directorio/archivo.py`)
+
+Los formatters de CodeGuard y DesignReviewer agrupaban por paquete (directorio padre), lo que causaba colisiones cuando archivos `__init__.py` de distintos directorios se fusionaban bajo la misma clave.
+
+**Fix:** la clave de agrupación ahora es `directorio/archivo.py` — combinación del directorio padre con el nombre del archivo. Esto garantiza unicidad y mejora la navegabilidad del output.
+
+```
+# Antes
+📦  codeguard  (24 issues)   ← mezclaba archivos de tres directorios
+
+# Ahora
+📄  codeguard/formatter.py  (3 issues)
+📄  codeguard/config.py     (1 issue)
+📄  shared/__init__.py      (2 issues)
+```
+
+En JSON: la sección `by_package` pasó a llamarse `by_module`, con claves `"directorio/archivo.py"`.
+
+#### Fix #60: CodeGuard — toggles por verificación en `[tool.codeguard.checks]`
+
+Las verificaciones individuales (pep8, pylint, security, complexity, types, imports) solo podían habilitarse o deshabilitarse con campos de primer nivel en `[tool.codeguard]`. Esto mezclaba configuración de umbrales con toggles booleanos y no seguía el patrón estándar de subsecciones TOML.
+
+**Fix:** los toggles se movieron a la subsección `[tool.codeguard.checks]`:
+
+```toml
+[tool.codeguard.checks]
+pep8 = true
+pylint = true
+security = false   # deshabilitar bandit
+complexity = true
+types = true
+imports = true
+```
+
+En YAML:
+```yaml
+checks:
+  security: false
+```
+
+> **Nota de migración:** los campos `check_pep8`, `check_pylint`, etc. en `[tool.codeguard]` ya no son válidos. Moverlos a `[tool.codeguard.checks]` sin el prefijo `check_`.
+
+#### Fix #61: DesignReviewer — toggles por analyzer en `[tool.designreviewer.checks]`
+
+```toml
+[tool.designreviewer.checks]
+cbo = true
+fan_out = true
+circular_imports = true
+lcom = true
+wmc = true
+dit = true
+nop = true
+god_object = true
+long_method = true
+long_parameter_list = true
+feature_envy = false   # deshabilitar para este proyecto
+data_clumps = false
+```
+
+#### Fix #62: ArchitectAnalyst — toggles por métrica en `[tool.architectanalyst.checks]`
+
+```toml
+[tool.architectanalyst.checks]
+coupling = true
+abstractness = true
+instability = true
+distance = true
+dependency_cycles = true
+layer_violations = false   # solo si no se declaran capas
+```
+
+---
+
 ### 🐛 Bug Fixes — CodeGuard y DesignReviewer
 
 #### Fix #36 / #39: `exclude_patterns` no se aplicaba en `collect_files`
