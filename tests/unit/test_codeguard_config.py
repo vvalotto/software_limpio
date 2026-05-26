@@ -178,6 +178,40 @@ ai:
         assert config.min_pylint_score == 8.0
         assert config.ai.enabled is False
 
+    def test_from_pyproject_toml_claves_desconocidas_ignoradas(self, tmp_path):
+        """Claves desconocidas en [tool.codeguard] deben ignorarse sin lanzar excepción."""
+        pyproject = tmp_path / "pyproject.toml"
+        pyproject.write_text("""
+[tool.codeguard]
+min_pylint_score = 7.0
+paths = ["src"]
+check_hexagonal = true
+""")
+
+        config = CodeGuardConfig.from_pyproject_toml(pyproject)
+
+        assert config.min_pylint_score == 7.0
+        assert config.max_cyclomatic_complexity == 10  # default no pisado
+
+    def test_from_pyproject_toml_claves_desconocidas_loguea_warning(self, tmp_path, caplog):
+        """Claves desconocidas deben generar un WARNING por cada una."""
+        import logging
+
+        pyproject = tmp_path / "pyproject.toml"
+        pyproject.write_text("""
+[tool.codeguard]
+min_pylint_score = 7.0
+paths = ["src"]
+check_hexagonal = true
+""")
+
+        with caplog.at_level(logging.WARNING, logger="quality_agents.codeguard.config"):
+            CodeGuardConfig.from_pyproject_toml(pyproject)
+
+        warned_keys = [r.message for r in caplog.records if "desconocida" in r.message]
+        assert any("paths" in msg for msg in warned_keys)
+        assert any("check_hexagonal" in msg for msg in warned_keys)
+
     def test_to_yaml(self, tmp_path):
         """Debe guardar configuración a YAML correctamente."""
         config = CodeGuardConfig(

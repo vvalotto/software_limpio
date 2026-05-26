@@ -195,6 +195,40 @@ key = "value"
         with pytest.raises(FileNotFoundError):
             ArchitectAnalystConfig.from_pyproject_toml(pyproject)
 
+    def test_from_pyproject_toml_claves_desconocidas_ignoradas(self, tmp_path):
+        """Claves desconocidas en [tool.architectanalyst] deben ignorarse sin lanzar excepción."""
+        pyproject = tmp_path / "pyproject.toml"
+        pyproject.write_text("""
+[tool.architectanalyst]
+max_instability = 0.7
+layer_roles = { "*/application/*" = "leaf" }
+sprint_cadence = "2w"
+""")
+
+        config = ArchitectAnalystConfig.from_pyproject_toml(pyproject)
+
+        assert config.max_instability == 0.7
+        assert config.max_distance_warning == 0.3  # default no pisado
+
+    def test_from_pyproject_toml_claves_desconocidas_loguea_warning(self, tmp_path, caplog):
+        """Claves desconocidas deben generar un WARNING por cada una."""
+        import logging
+
+        pyproject = tmp_path / "pyproject.toml"
+        pyproject.write_text("""
+[tool.architectanalyst]
+max_instability = 0.7
+layer_roles = { "*/application/*" = "leaf" }
+sprint_cadence = "2w"
+""")
+
+        with caplog.at_level(logging.WARNING, logger="quality_agents.architectanalyst.config"):
+            ArchitectAnalystConfig.from_pyproject_toml(pyproject)
+
+        warned_keys = [r.message for r in caplog.records if "desconocida" in r.message]
+        assert any("layer_roles" in msg for msg in warned_keys)
+        assert any("sprint_cadence" in msg for msg in warned_keys)
+
 
 class TestLoadConfig:
     """Tests para la función load_config()."""

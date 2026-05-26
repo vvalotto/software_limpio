@@ -5,6 +5,7 @@ Fecha de creación: 2026-02-28
 Ticket: 1.4
 """
 
+import dataclasses
 import logging
 import sys
 from dataclasses import dataclass, field
@@ -12,6 +13,15 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
+
+
+def _filter_fields(cls: type, data: dict) -> dict:
+    """Filtra un dict dejando solo las claves que son campos del dataclass."""
+    known = {f.name for f in dataclasses.fields(cls)}
+    for key in set(data) - known:
+        logger.warning(f"[tool.architectanalyst] clave desconocida ignorada: '{key}'")
+    return {k: v for k, v in data.items() if k in known}
+
 
 # Python 3.11+ tiene tomllib en stdlib, versiones anteriores usan tomli
 if sys.version_info >= (3, 11):
@@ -141,10 +151,10 @@ class ArchitectAnalystConfig:
         ai_data = tool_config.pop("ai", {})
         layers_data = tool_config.pop("layers", {})
 
-        ai_config = AIConfig(**ai_data) if ai_data else AIConfig()
+        ai_config = AIConfig(**_filter_fields(AIConfig, ai_data)) if ai_data else AIConfig()
         layers_config = LayersConfig(rules=layers_data) if layers_data else LayersConfig()
 
-        config = cls(**tool_config)
+        config = cls(**_filter_fields(cls, tool_config))
         config.ai = ai_config
         config.layers = layers_config
         return config

@@ -121,6 +121,41 @@ key = "value"
         with pytest.raises(FileNotFoundError):
             DesignReviewerConfig.from_pyproject_toml(pyproject)
 
+    def test_from_pyproject_toml_claves_desconocidas_ignoradas(self, tmp_path):
+        """Claves desconocidas en [tool.designreviewer] deben ignorarse sin lanzar excepción."""
+        pyproject = tmp_path / "pyproject.toml"
+        pyproject.write_text("""
+[tool.designreviewer]
+max_cbo = 10
+paths = ["src"]
+check_hexagonal = true
+forbidden_imports_in_domain = ["infrastructure"]
+""")
+
+        config = DesignReviewerConfig.from_pyproject_toml(pyproject)
+
+        assert config.max_cbo == 10
+        assert config.max_fan_out == 7  # default no pisado
+
+    def test_from_pyproject_toml_claves_desconocidas_loguea_warning(self, tmp_path, caplog):
+        """Claves desconocidas deben generar un WARNING por cada una."""
+        import logging
+
+        pyproject = tmp_path / "pyproject.toml"
+        pyproject.write_text("""
+[tool.designreviewer]
+max_cbo = 10
+paths = ["src"]
+check_hexagonal = true
+""")
+
+        with caplog.at_level(logging.WARNING, logger="quality_agents.designreviewer.config"):
+            DesignReviewerConfig.from_pyproject_toml(pyproject)
+
+        warned_keys = [r.message for r in caplog.records if "desconocida" in r.message]
+        assert any("paths" in msg for msg in warned_keys)
+        assert any("check_hexagonal" in msg for msg in warned_keys)
+
 
 class TestLoadConfig:
     """Tests para la función load_config()."""
