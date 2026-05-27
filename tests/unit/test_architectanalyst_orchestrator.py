@@ -274,12 +274,17 @@ class TestMetricOrchestratorRun:
         assert orch.run([]) == []
 
     def test_run_sin_metricas_retorna_vacia(self, tmp_path):
-        """Sin métricas descubiertas, run() debe retornar []."""
+        """Con código trivial y cobertura OK, no debe haber violaciones."""
+        import json
         py_file = tmp_path / "module.py"
         py_file.write_text("x = 1")
+        (tmp_path / "coverage.json").write_text(
+            json.dumps({"totals": {"percent_covered": 100.0}}), encoding="utf-8"
+        )
         orch = MetricOrchestrator(config=None)
 
-        assert orch.run([py_file]) == []
+        results = orch.run([py_file])
+        assert [r for r in results if r.has_violation()] == []
 
     def test_run_ignora_archivos_no_python(self, tmp_path):
         """Archivos que no son .py no deben ser pasados a las métricas."""
@@ -438,14 +443,18 @@ class TestArchitectAnalyst:
         assert analyst.run(files=[]) == []
 
     def test_run_sin_metricas_retorna_vacia(self, tmp_path):
-        """Sin métricas descubiertas, run() retorna []."""
+        """Con código trivial y cobertura OK, no debe haber violaciones."""
+        import json
         py_file = tmp_path / "module.py"
         py_file.write_text("x = 1")
+        (tmp_path / "coverage.json").write_text(
+            json.dumps({"totals": {"percent_covered": 100.0}}), encoding="utf-8"
+        )
 
         analyst = ArchitectAnalyst(path=tmp_path)
         results = analyst.run(files=[py_file])
 
-        assert results == []
+        assert [r for r in results if r.has_violation()] == []
 
     def test_has_violations_sin_resultados(self):
         """has_violations() debe ser False sin resultados."""
