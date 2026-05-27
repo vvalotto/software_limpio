@@ -104,6 +104,7 @@ Ticket: 1.5.3
 from .complexity_check import ComplexityCheck
 from .dead_code_check import DeadCodeCheck
 from .import_check import ImportCheck
+from .maintainability_check import MaintainabilityCheck
 from .pep8_check import PEP8Check
 from .pylint_check import PylintCheck
 from .security_check import SecurityCheck
@@ -118,4 +119,5 @@ __all__ = [
     "TypeCheck",
     "ImportCheck",
     "DeadCodeCheck",
+    "MaintainabilityCheck",
 ]
