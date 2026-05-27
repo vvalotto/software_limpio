@@ -63,6 +63,7 @@ class ChecksConfig:
     complexity: bool = True
     types: bool = True
     imports: bool = True
+    dead_code: bool = True
 
 
 @dataclass
@@ -74,6 +75,7 @@ class CodeGuardConfig:
     max_cyclomatic_complexity: int = 10
     max_line_length: int = 100
     max_function_lines: int = 20
+    min_dead_code_confidence: int = 60
 
     # Exclusiones
     exclude_patterns: List[str] = field(default_factory=lambda: [
@@ -187,6 +189,7 @@ class CodeGuardConfig:
                 "complexity": self.checks.complexity,
                 "types": self.checks.types,
                 "imports": self.checks.imports,
+                "dead_code": self.checks.dead_code,
             },
             "ai": {
                 "enabled": self.ai.enabled,

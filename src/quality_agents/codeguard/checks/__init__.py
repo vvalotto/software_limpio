@@ -102,6 +102,7 @@ Ticket: 1.5.3
 
 # Imports de checks implementados
 from .complexity_check import ComplexityCheck
+from .dead_code_check import DeadCodeCheck
 from .import_check import ImportCheck
 from .pep8_check import PEP8Check
 from .pylint_check import PylintCheck
@@ -116,4 +117,5 @@ __all__ = [
     "ComplexityCheck",
     "TypeCheck",
     "ImportCheck",
+    "DeadCodeCheck",
 ]
