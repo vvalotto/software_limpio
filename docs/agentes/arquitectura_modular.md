@@ -756,12 +756,12 @@ shared/
 ### Fase 3: DesignReviewer y ArchitectAnalyst
 - [x] Aplicar patrón a DesignReviewer (`analyzers/`)
 - [x] Aplicar patrón a ArchitectAnalyst (`metrics/`)
-- [x] Tests completos (788 tests totales)
+- [x] Tests completos (~970 tests totales)
 
-### Fase 4: Optimización
-- [ ] Implementar cache de registry
-- [ ] Optimización de tiempo
-- [ ] Integración IA en orquestador (pendiente v0.4.0)
+### Fase 4: Expansión (v0.4.0)
+- [x] Nuevos checks en CodeGuard (9 total), analyzers en DesignReviewer (14 total), métricas en ArchitectAnalyst (10 total)
+- [x] Toggles individuales por check/analyzer/métrica
+- [ ] Integración IA en orquestador (infraestructura lista, wiring pendiente)
 
 ---
 
@@ -813,10 +813,11 @@ Esta arquitectura:
 - ✅ Escala sin degradar la arquitectura
 - ✅ Mantiene el presupuesto de tiempo (< 5s en pre-commit)
 
-**Implementada en tres releases:**
+**Implementada en todas las releases:**
 - v0.1.0 — CodeGuard: 6 checks modulares, `CheckOrchestrator`, auto-discovery
 - v0.2.0 — DesignReviewer: 12 analyzers modulares, `AnalyzerOrchestrator`
-- v0.3.0 — ArchitectAnalyst: 5 metrics modulares, `MetricOrchestrator`
+- v0.3.0 — ArchitectAnalyst: 7 métricas modulares, `MetricOrchestrator`
+- v0.4.0 — Expansión: 9 checks (CodeGuard), 14 analyzers (DesignReviewer), 10 métricas (ArchitectAnalyst)
 
 ---
 

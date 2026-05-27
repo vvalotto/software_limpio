@@ -1,7 +1,7 @@
 # ESPECIFICACIÓN DE AGENTES DE CONTROL DE CALIDAD
 **Sistema de Control de Calidad en Tres Niveles**
 
-Versión 1.3 - Marzo 2026
+Versión 1.4 - Mayo 2026
 
 ---
 
@@ -111,9 +111,9 @@ Total: 3.0s de 5.0s disponibles
 
 | Agente | Bloquea | Advierte | Uso de IA | Tiempo |
 |--------|---------|----------|-----------|--------|
-| CodeGuard | NO | SÍ | Opcional (explicaciones) | < 5s |
-| DesignReviewer | SÍ (crítico) | SÍ | Opcional (pendiente v0.4.0) | 2-5 min |
-| ArchitectAnalyst | NO | SÍ | Opcional (pendiente v0.4.0) | 10-30 min |
+| CodeGuard | NO | SÍ | Opt-in (infraestructura lista, wiring pendiente) | < 5s |
+| DesignReviewer | SÍ (crítico) | SÍ | Opt-in (infraestructura lista, wiring pendiente) | 2-5 min |
+| ArchitectAnalyst | NO | SÍ | Opt-in (infraestructura lista, wiring pendiente) | 10-30 min |
 
 ---
 
@@ -398,16 +398,17 @@ Validación rápida de calidad básica de código antes de cada commit. **NO blo
 
 ### 1.3 Métricas Monitoreadas
 
-| # | Métrica | Umbral | Severidad | Acción |
-|---|---------|--------|-----------|--------|
-| 1 | PEP8 Violations | 0 | WARN | Advertir + listar violaciones |
-| 2 | Pylint Score | ≥ 7.0 | WARN | Advertir si < 7.0 |
-| 3 | Unused Imports | 0 | WARN | Advertir + sugerir autoflake |
-| 4 | Insecure Functions | 0 | **ERROR** | Advertir + ejemplo seguro |
-| 5 | Hardcoded Secrets | 0 | **ERROR** | Advertir + sugerir variables de entorno |
-| 6 | Bare Excepts | 0 | WARN | Advertir + ejemplo específico |
-| 7 | Type Errors | 0 | WARN | Solo si .py tiene type hints |
-| 8 | CC por función | ≤ 15 | INFO | Informar si > 15 (no bloquea) |
+| # | Métrica | Umbral | Severidad | Check |
+|---|---------|--------|-----------|-------|
+| 1 | PEP8 Violations | 0 | WARNING | `PEP8Check` (flake8) |
+| 2 | Pylint Score | ≥ 8.0 | WARNING | `PylintCheck` |
+| 3 | Unused Imports | 0 | WARNING | `ImportCheck` (pylint) |
+| 4 | Security Issues | 0 | WARNING/ERROR | `SecurityCheck` (bandit) |
+| 5 | Cyclomatic Complexity | ≤ 10 | WARNING | `ComplexityCheck` (radon) |
+| 6 | Type Errors | 0 | WARNING | `TypeCheck` (mypy) |
+| 7 | Dead Code | confianza ≥ 60 | WARNING | `DeadCodeCheck` (vulture) |
+| 8 | Maintainability Index | ≥ 20 | WARNING | `MaintainabilityCheck` (radon MI) |
+| 9 | Spelling Errors | 0 | WARNING | `SpellingCheck` (codespell) |
 
 ### 1.4 Herramientas Necesarias
 
@@ -625,12 +626,15 @@ Cada check es un módulo autocontenido en `codeguard/checks/`:
 
 | Check | Archivo | Priority | Duration | Categoría |
 |-------|---------|----------|----------|-----------|
-| PEP8 | `pep8_check.py` | 2 (alta) | 0.5s | style |
 | Security | `security_check.py` | 1 (máxima) | 1.5s | security |
+| PEP8 | `pep8_check.py` | 2 (alta) | 0.5s | style |
 | Unused Imports | `imports_check.py` | 3 (alta) | 1.0s | quality |
 | Pylint | `pylint_check.py` | 4 (media) | 2.0s | quality |
 | Complexity | `complexity_check.py` | 5 (media) | 1.0s | quality |
 | Types | `types_check.py` | 6 (baja) | 2.0s | quality |
+| Dead Code | `dead_code_check.py` | 7 (baja) | 3.0s | quality |
+| Maintainability | `maintainability_check.py` | 8 (baja) | 2.0s | quality |
+| Spelling | `spelling_check.py` | 9 (baja) | 1.5s | style |
 
 **3. Orquestador (`CheckOrchestrator`)**
 
@@ -652,9 +656,9 @@ class CheckOrchestrator:
 
 | Análisis | Estrategia | Checks Ejecutados |
 |----------|-----------|-------------------|
-| `pre-commit` | Solo rápidos (<2s) + alta prioridad (≤3) | PEP8, Security, UnusedImports |
-| `pr-review` | Todos los habilitados | Todos |
-| `full` | Todos los habilitados | Todos |
+| `pre-commit` | Solo rápidos (<2s) + alta prioridad (≤3) | Security, PEP8, ImportCheck |
+| `pr-review` | Todos los habilitados | Los 9 checks activos |
+| `full` | Todos los habilitados | Los 9 checks activos |
 
 #### Flujo de Ejecución
 
@@ -738,7 +742,7 @@ __all__ = [..., "MiCheck"]
 
 3. ✅ Listo - El orquestador lo descubre automáticamente
 
-**Referencia:** Ver `src/quality_agents/codeguard/PLAN_IMPLEMENTACION.md` para plan de implementación completo.
+**Referencia:** Ver `src/quality_agents/codeguard/` para la implementación completa.
 
 ---
 
@@ -766,11 +770,13 @@ Análisis profundo de calidad de diseño a nivel clase/módulo en momentos de re
 | 5 | WMC (Weighted Methods per Class) | ≤ 20 | **CRITICAL** | `WMCAnalyzer` |
 | 6 | DIT (Depth of Inheritance Tree) | ≤ 5 | **CRITICAL** | `DITAnalyzer` |
 | 7 | NOP (Number of Parents) | ≤ 1 | **CRITICAL** | `NOPAnalyzer` |
-| 8 | God Object | N clases > umbral | **CRITICAL** | `GodObjectAnalyzer` |
-| 9 | Long Method | métodos > umbral | WARNING | `LongMethodAnalyzer` |
-| 10 | Long Parameter List | parámetros > umbral | WARNING | `LongParameterListAnalyzer` |
+| 8 | God Object | métodos > 20 o líneas > 300 | **CRITICAL** | `GodObjectAnalyzer` |
+| 9 | Long Method | líneas > 20 | WARNING | `LongMethodAnalyzer` |
+| 10 | Long Parameter List | parámetros > 5 | WARNING | `LongParameterListAnalyzer` |
 | 11 | Feature Envy | métodos afectados | WARNING | `FeatureEnvyAnalyzer` |
-| 12 | Data Clumps | grupos detectados | WARNING | `DataClumpsAnalyzer` |
+| 12 | Data Clumps | grupos detectados (≥3 params en ≥2 lugares) | WARNING | `DataClumpsAnalyzer` |
+| 13 | Law of Demeter | cadena de acceso > 1 | WARNING | `LawOfDemeterAnalyzer` |
+| 14 | Primitive Obsession | ≥3 params del mismo tipo primitivo | WARNING | `PrimitiveObsessionAnalyzer` |
 
 ### 2.4 Herramientas Utilizadas
 
@@ -839,7 +845,7 @@ designreviewer src/
 2. **Solo advierte si hay WARNING** — no bloquea (exit code 0)
 3. **Salida formateada** con Rich en consola: sección BLOCKING separada de Advertencias
 4. **Salida JSON** disponible con `--format json` para integración CI/CD (campo `should_block`)
-5. **IA**: no implementada en v0.3.0 — pendiente para v0.4.0 como funcionalidad opt-in
+5. **IA**: opt-in, infraestructura lista, wiring pendiente
 
 ### 2.7 Configuración
 
@@ -848,30 +854,41 @@ designreviewer src/
 ```toml
 [tool.designreviewer]
 # Umbrales de acoplamiento
-max_cbo = 5             # CBO > 5 → CRITICAL
-max_fan_out = 7         # Fan-Out > 7 → WARNING
+max_cbo = 5                    # CBO > 5 → CRITICAL
+max_fan_out = 7                # Fan-Out > 7 → WARNING
 
 # Umbrales de cohesión y herencia
-max_lcom = 1.0          # LCOM > 1.0 → WARNING
-max_wmc = 20            # WMC > 20 → CRITICAL
-max_dit = 5             # DIT > 5 → CRITICAL
-max_nop = 1             # NOP > 1 → CRITICAL
+max_lcom = 1                   # LCOM > 1 → WARNING
+max_wmc = 20                   # WMC > 20 → CRITICAL
+max_dit = 5                    # DIT > 5 → CRITICAL
+max_nop = 1                    # NOP > 1 → CRITICAL
 
 # Code Smells
-max_method_lines = 50   # Líneas por método → WARNING
-max_parameters = 5      # Parámetros por función → WARNING
+max_god_object_methods = 20    # God Object: métodos públicos → CRITICAL
+max_god_object_lines = 300     # God Object: líneas de código → CRITICAL
+max_method_lines = 20          # Long Method → WARNING
+max_parameters = 5             # Long Parameter List → WARNING
+min_data_clump_size = 3        # Data Clumps: mínimo de parámetros
+min_data_clump_occurrences = 2 # Data Clumps: mínimo de ocurrencias
+max_demeter_depth = 1          # Law of Demeter: profundidad de cadena
+max_primitive_params = 3       # Primitive Obsession: params del mismo tipo
 
 # Exclusiones
-exclude = ["tests/", "migrations/", "__pycache__/"]
+exclude_patterns = ["tests/", "migrations/", "__pycache__/"]
 
-# IA (pendiente v0.4.0)
+# Checks activos (todos habilitados por defecto)
+[tool.designreviewer.checks]
+law_of_demeter = true
+primitive_obsession = true
+
+# IA (opt-in — requiere ANTHROPIC_API_KEY)
 [tool.designreviewer.ai]
 enabled = false
 ```
 
-### 2.8 Integración con IA (pendiente v0.4.0)
+### 2.8 Integración con IA
 
-La integración con IA es opt-in y está planificada para v0.4.0. Cuando esté implementada, Claude analizará las métricas problemáticas y sugerirá planes de refactorización específicos.
+La integración con IA es opt-in. La infraestructura está lista en v0.4.0. Cuando se active, Claude analizará las métricas problemáticas y sugerirá planes de refactorización específicos.
 
 La configuración será:
 
@@ -962,8 +979,11 @@ Análisis estratégico de la arquitectura del sistema al finalizar sprints o hit
 | 3 | I (Instability) | > 0.8 → WARNING | Martin | ↑↓= | `InstabilityAnalyzer` |
 | 4 | A (Abstractness) | — informativo | Martin | ↑↓= | `AbstractnessAnalyzer` |
 | 5 | D (Distance from Main Seq.) | > 0.3 → WARNING, > 0.5 → CRITICAL | Martin | ↑↓= | `DistanceAnalyzer` |
-| 6 | Dependency Cycles | 0 → CRITICAL | Deps | ↑↓= | `DependencyCyclesAnalyzer` |
-| 7 | Layer Violations | 0 → CRITICAL | Arch | ↑↓= | `LayerViolationsAnalyzer` |
+| 6 | H (Relational Cohesion) | < 1.5 → WARNING | Martin | ↑↓= | `RelationalCohesionAnalyzer` |
+| 7 | Dependency Cycles | 0 → CRITICAL | Deps | ↑↓= | `DependencyCyclesAnalyzer` |
+| 8 | Layer Violations | 0 → CRITICAL | Arch | ↑↓= | `LayerViolationsAnalyzer` |
+| 9 | God Package | n_clases > 20 o Ca > 10 → WARNING | Smells | ↑↓= | `GodPackageAnalyzer` |
+| 10 | Coverage | < 80% → WARNING | Quality | ↑↓= | `CoverageAnalyzer` |
 
 **Leyenda trends:** ↑ Degradando · ↓ Mejorando · = Estable · — Sin histórico
 
@@ -1044,7 +1064,7 @@ architectanalyst src/ --sprint-id sprint-12
 3. **Calcula tendencias** comparando con el snapshot anterior (↑ degradando / ↓ mejorando / = estable)
 4. **Salida Rich** en consola con tabla de métricas por módulo y tendencias
 5. **Salida JSON** disponible con `--format json` para integración CI/CD
-6. **IA**: no implementada en v0.3.0 — pendiente para v0.4.0 como funcionalidad opt-in
+6. **IA**: opt-in, infraestructura lista, wiring pendiente
 
 ### 3.7 Configuración
 
@@ -1056,12 +1076,34 @@ architectanalyst src/ --sprint-id sprint-12
 max_instability = 0.8          # I > 0.8 → WARNING
 max_distance_warning = 0.3     # D > 0.3 → WARNING
 max_distance_critical = 0.5    # D > 0.5 → CRITICAL
+min_relational_cohesion = 1.5  # H < 1.5 → WARNING
+
+# God Package
+max_package_classes = 20       # n_clases > 20 → WARNING
+max_package_ca = 10            # Ca > 10 → WARNING
+
+# Cobertura
+min_coverage = 80.0            # cobertura < 80% → WARNING
+coverage_report_path = "coverage.json"
+
+# Granularidad
+analysis_depth = 1             # 1=primer nivel, 2=segundo nivel (hexagonal)
 
 # Persistencia
 db_path = ".quality_control/architecture.db"
 
 # Exclusiones
-exclude = ["__pycache__", ".venv", "migrations", "tests/", "dist/", "build/"]
+exclude_patterns = ["__pycache__", ".venv", "migrations", "tests", "dist", "build"]
+
+# Checks activos (todos habilitados por defecto)
+[tool.architectanalyst.checks]
+instability = true
+distance = true
+cycles = true
+layer_violations = true
+relational_cohesion = true
+god_package = true
+coverage = true
 
 # Arquitectura en capas (para LayerViolationsAnalyzer)
 [tool.architectanalyst.layers]
@@ -1069,14 +1111,14 @@ domain = []
 application = ["domain"]
 infrastructure = ["application", "domain"]
 
-# IA (pendiente v0.4.0)
+# IA (opt-in — requiere ANTHROPIC_API_KEY)
 [tool.architectanalyst.ai]
 enabled = false
 ```
 
-### 3.8 Integración con IA (pendiente v0.4.0)
+### 3.8 Integración con IA
 
-La integración con IA es opt-in y está planificada para v0.4.0. Cuando esté implementada, Claude recibirá las métricas del sprint actual más el histórico de snapshots y generará análisis estratégico con tendencias y recomendaciones.
+La integración con IA es opt-in. La infraestructura está lista en v0.4.0. Cuando se active, Claude recibirá las métricas del sprint actual más el histórico de snapshots y generará análisis estratégico con tendencias y recomendaciones.
 
 La configuración será:
 
@@ -1247,11 +1289,14 @@ project_root/
     ├── codeguard/
     │   ├── agent.py            # CLI + main()
     │   ├── orchestrator.py     # Selección contextual de checks
-    │   └── checks/             # PEP8, Pylint, Security, Complexity, Type, Import
+    │   └── checks/             # PEP8, Pylint, Security, Complexity, Type, Import,
+    │                           # DeadCode, Maintainability, Spelling (9 checks)
     ├── designreviewer/
     │   ├── agent.py            # CLI + main()
     │   ├── orchestrator.py     # Selección contextual de analyzers
-    │   └── analyzers/          # CBO, FanOut, Circular, LCOM, WMC, DIT, NOP, code smells
+    │   └── analyzers/          # CBO, FanOut, Circular, LCOM, WMC, DIT, NOP,
+    │                           # GodObject, LongMethod, LongParameterList, FeatureEnvy,
+    │                           # DataClumps, LawOfDemeter, PrimitiveObsession (14 analyzers)
     └── architectanalyst/
         ├── agent.py            # CLI + main()
         ├── orchestrator.py     # Ejecución de métricas
@@ -1259,7 +1304,8 @@ project_root/
         ├── trends.py           # TrendCalculator
         ├── formatter.py        # Rich + JSON output
         └── metrics/            # CouplingAnalyzer, Instability, Abstractness, Distance,
-                                # DependencyCycles, LayerViolations
+                                # RelationalCohesion, DependencyCycles, LayerViolations,
+                                # GodPackage, Coverage (10 métricas)
 ```
 
 ### 4.4 Base de Datos de Histórico (ArchitectAnalyst)
@@ -1326,26 +1372,31 @@ CREATE TABLE results (
 
 **Objetivo:** Análisis estratégico de arquitectura con tendencias históricas
 
-- [x] 7 métricas de Martin: Ca, Ce, I, A, D + DependencyCycles + LayerViolations
+- [x] 7 métricas: Ca, Ce, I, A, D (Martin), DependencyCycles, LayerViolations
 - [x] SnapshotStore (SQLite) para persistencia histórica entre sprints
 - [x] TrendCalculator para comparación sprint-actual vs anterior (↑↓=)
 - [x] CLI con Rich + JSON output, siempre exit code 0 (informativo)
 - [x] Configuración via `pyproject.toml` ([tool.architectanalyst])
-- [x] Tests unitarios e integración + E2E (~200 tests)
+- [x] Tests unitarios e integración + E2E (~350 tests)
 
 **Entregable:** `quality-agents v0.3.0` publicado en GitHub Releases
 
 ---
 
-### Fase 4: Integración IA opt-in (v0.4.0 — pendiente)
+### Fase 4: Mejoras y Nuevos Checks ✅ (v0.4.0 — Mayo 2026)
 
-**Objetivo:** Agregar análisis IA opcional a los 3 agentes
+**Objetivo:** Expandir capacidades de los 3 agentes y preparar infraestructura IA
 
-- [ ] CodeGuard: explicaciones IA para warnings (opt-in)
-- [ ] DesignReviewer: sugerencias de refactorización IA (opt-in)
-- [ ] ArchitectAnalyst: análisis estratégico IA con histórico (opt-in)
+- [x] Output agrupado por módulo (los 3 agentes)
+- [x] Toggles de checks individuales vía `[tool.<agente>.checks]` (los 3 agentes)
+- [x] CodeGuard: 3 nuevos checks — DeadCodeCheck (vulture), MaintainabilityCheck (radon MI), SpellingCheck (codespell) → total 9 checks
+- [x] DesignReviewer: 2 nuevos analyzers — LawOfDemeterAnalyzer, PrimitiveObsessionAnalyzer → total 14 analyzers
+- [x] ArchitectAnalyst: 3 nuevas métricas — RelationalCohesionAnalyzer (H), GodPackageAnalyzer, CoverageAnalyzer → total 10 métricas
+- [x] ArchitectAnalyst: `analysis_depth` y `layer_roles` para arquitecturas hexagonales
+- [x] Infraestructura IA opt-in (wiring pendiente)
 - [ ] Publicación en PyPI (`pip install quality-agents`)
 - [ ] GitHub Actions CI/CD
+- [ ] Wiring IA para los 3 agentes (CodeGuard: explicaciones, DesignReviewer: refactorización, ArchitectAnalyst: análisis estratégico)
 
 **Entregable:** `quality-agents v0.4.0`
 
@@ -1402,7 +1453,7 @@ CREATE TABLE results (
 
 ---
 
-**Versión:** 1.3
-**Fecha:** Marzo 2026
+**Versión:** 1.4
+**Fecha:** Mayo 2026
 **Autor:** Sistema de Control de Calidad - ISSE
 **Licencia:** MIT (para uso académico y personal)

@@ -24,12 +24,12 @@ Pre-commit (seg)     Review (min)        Sprint-end (horas)
 
 | Agente | Versión | Estado | Guía |
 |--------|---------|--------|------|
-| CodeGuard | v0.1.0 | ✅ Completo | `docs/guias/codeguard.md` |
-| DesignReviewer | v0.2.0 | ✅ Completo (sin IA) | `docs/guias/designreviewer.md` |
-| ArchitectAnalyst | v0.3.0 | ✅ Completo (sin IA, sin dashboard) | `docs/guias/architectanalyst.md` |
+| CodeGuard | v0.4.0 | ✅ 9 checks, toggles, output por módulo | `docs/guias/codeguard.md` |
+| DesignReviewer | v0.4.0 | ✅ 14 analyzers, toggles, output por módulo | `docs/guias/designreviewer.md` |
+| ArchitectAnalyst | v0.4.0 | ✅ 10 métricas, toggles, analysis_depth, layer_roles | `docs/guias/architectanalyst.md` |
 
 ## Pendiente
 
-- [ ] Integración IA opt-in (CodeGuard, DesignReviewer, ArchitectAnalyst)
+- [ ] Wiring IA opt-in (infraestructura lista en v0.4.0)
 - [ ] Publicación en PyPI (`pip install quality-agents`)
 - [ ] GitHub Actions CI/CD
