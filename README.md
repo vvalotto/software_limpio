@@ -8,9 +8,9 @@ Framework Python para control de calidad automatizado en tres niveles, inspirado
 
 | Agente | Momento | Duración | Acción | Versión |
 |--------|---------|----------|--------|---------|
-| **CodeGuard** | Pre-commit | < 5s | Advierte, no bloquea | ✅ v0.1.0 |
-| **DesignReviewer** | PR Review | 2-5 min | **Bloquea si hay CRITICAL** | ✅ v0.2.0 |
-| **ArchitectAnalyst** | Fin de sprint | 10-30 min | Informa tendencias, no bloquea | ✅ v0.3.0 |
+| **CodeGuard** | Pre-commit | < 5s | Advierte, no bloquea | ✅ v0.4.0 |
+| **DesignReviewer** | PR Review | 2-5 min | **Bloquea si hay CRITICAL** | ✅ v0.4.0 |
+| **ArchitectAnalyst** | Fin de sprint | 10-30 min | Informa tendencias, no bloquea | ✅ v0.4.0 |
 
 ---
 
@@ -41,7 +41,7 @@ Nunca bloquea. Integración con pre-commit:
 # .pre-commit-config.yaml
 repos:
   - repo: https://github.com/vvalotto/software_limpio
-    rev: v0.3.0
+    rev: v0.4.0
     hooks:
       - id: codeguard
         args: ['--analysis-type', 'pre-commit']
@@ -71,7 +71,7 @@ Siempre exit code 0. Persiste snapshots en SQLite y muestra tendencias ↑↓= e
 
 ### CodeGuard
 
-6 checks modulares sobre cada archivo Python del changeset:
+9 checks modulares sobre cada archivo Python del changeset:
 
 - **PEP8Check** — estilo de código (flake8)
 - **SecurityCheck** — vulnerabilidades (bandit)
@@ -79,6 +79,9 @@ Siempre exit code 0. Persiste snapshots en SQLite y muestra tendencias ↑↓= e
 - **PylintCheck** — calidad general
 - **TypeCheck** — tipos estáticos (mypy)
 - **ImportCheck** — imports sin usar
+- **DeadCodeCheck** — código muerto (vulture)
+- **MaintainabilityCheck** — índice de mantenibilidad (radon MI)
+- **SpellingCheck** — errores de ortografía (codespell)
 
 📖 [Guía de Usuario](docs/guias/codeguard.md) · [Guía de Adopción](docs/guias/adopcion-codeguard.md)
 
@@ -86,11 +89,11 @@ Siempre exit code 0. Persiste snapshots en SQLite y muestra tendencias ↑↓= e
 
 ### DesignReviewer
 
-12 analyzers AST que detectan problemas de diseño:
+14 analyzers AST que detectan problemas de diseño:
 
 - **Acoplamiento:** CBO, Fan-Out, Importaciones Circulares
 - **Cohesión y herencia:** LCOM, WMC, DIT, NOP
-- **Code Smells + SOLID:** God Object, Long Method, Long Parameter List, Feature Envy, Data Clumps
+- **Code Smells + SOLID:** God Object, Long Method, Long Parameter List, Feature Envy, Data Clumps, Law of Demeter, Primitive Obsession
 
 Configuración en `pyproject.toml`:
 
@@ -107,17 +110,22 @@ max_dit = 5
 
 ### ArchitectAnalyst
 
-7 métricas cross-module sobre la arquitectura completa:
+9 métricas cross-module sobre la arquitectura completa:
 
-- **Métricas de Martin:** Ca, Ce, I (inestabilidad), A (abstracción), D (distancia al Main Sequence)
-- **Estructurales:** Ciclos de dependencias (algoritmo de Tarjan), Violaciones de capas
+- **Métricas de Martin:** Ca, Ce, I (inestabilidad), A (abstracción), D (distancia al Main Sequence), H (cohesión relacional)
+- **Estructurales:** Ciclos de dependencias (Tarjan), Violaciones de capas, God Package
+- **Calidad:** Cobertura de tests (coverage.json)
 
 Configuración en `pyproject.toml`:
 
 ```toml
 [tool.architectanalyst]
-max_instability = 0.8
-max_distance_critical = 0.5
+max_instability         = 0.8
+max_distance_critical   = 0.5
+min_relational_cohesion = 1.5
+max_package_classes     = 20
+min_coverage            = 80.0
+analysis_depth          = 1    # 2 para arquitecturas hexagonales
 
 [tool.architectanalyst.layers]
 domain = []

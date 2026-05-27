@@ -17,7 +17,7 @@ Este archivo provee orientación a Claude Code (claude.ai/code) cuando trabaja c
 # Instalar en modo desarrollo
 pip install -e ".[dev]"
 
-# Ejecutar todos los tests (~766 tests, ~30s)
+# Ejecutar todos los tests (~970 tests, ~30s)
 pytest
 
 # Ejecutar por categoría
@@ -68,7 +68,7 @@ Pre-commit (<5s)    →    PR Review (2-5min)    →    Fin de Sprint (10-30min)
  (solo advierte)       (bloquea si crítico)        (análisis de tendencias)
 ```
 
-Los **tres agentes están implementados** (v0.3.0): CodeGuard (v0.1.0), DesignReviewer (v0.2.0), ArchitectAnalyst (v0.3.0). La integración IA es opt-in y está pendiente para v0.4.0.
+Los **tres agentes están implementados** y en v0.4.0 con mejoras: CodeGuard (9 checks), DesignReviewer (14 analyzers), ArchitectAnalyst (9 métricas). La integración IA es opt-in (infraestructura lista, wiring pendiente).
 
 ### Estructura de Agentes
 
@@ -108,14 +108,14 @@ Cada check retorna `CheckResult(check_name, severity: Severity, message, file_pa
 
 ### Checks de CodeGuard (todos implementados)
 
-`PEP8Check` (flake8), `PylintCheck`, `SecurityCheck` (bandit), `ComplexityCheck` (radon), `TypeCheck` (mypy), `ImportCheck` (pylint).
+`PEP8Check` (flake8), `PylintCheck`, `SecurityCheck` (bandit), `ComplexityCheck` (radon), `TypeCheck` (mypy), `ImportCheck` (pylint), `DeadCodeCheck` (vulture), `MaintainabilityCheck` (radon MI), `SpellingCheck` (codespell).
 
 ### Carga de Configuración
 
 Los tres agentes usan `[tool.<agente>]` en `pyproject.toml`:
 - `[tool.codeguard]` — con fallback a `.codeguard.yml`
 - `[tool.designreviewer]`
-- `[tool.architectanalyst]` — incluye sección `[tool.architectanalyst.layers]` opcional
+- `[tool.architectanalyst]` — incluye secciones opcionales `[tool.architectanalyst.layers]` y `[tool.architectanalyst.layer_roles]`
 
 ### Configuración de Herramientas
 
@@ -143,7 +143,7 @@ En `tests/conftest.py`:
 
 ## Decisiones Técnicas
 
-- **IA:** Claude API (`claude-sonnet-4-20250514`) — opt-in, pendiente v0.4.0
+- **IA:** Claude API (`claude-sonnet-4-6`) — opt-in, infraestructura lista, wiring pendiente
 - **CLI:** Click
 - **Salida en consola:** Rich
 - **Reportes JSON:** Jinja2 (en DesignReviewer reporters.py)
