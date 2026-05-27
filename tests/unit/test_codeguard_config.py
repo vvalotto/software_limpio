@@ -2,6 +2,7 @@
 Tests unitarios para configuración de CodeGuard.
 """
 
+from pathlib import Path
 
 import pytest
 
@@ -391,3 +392,38 @@ min_pylint_score: 5.0
         # Debe retornar una instancia válida (puede tener defaults o config del proyecto actual)
         assert isinstance(config, CodeGuardConfig)
         assert isinstance(config.ai, AIConfig)
+
+
+class TestLoadConfigFromProjectPyproject:
+    """Verifica que load_config() lee correctamente el pyproject.toml real del proyecto."""
+
+    def _project_root(self) -> Path:
+        return Path(__file__).parent.parent.parent
+
+    def test_carga_desde_pyproject_toml_real(self):
+        config = load_config(project_root=self._project_root())
+        assert isinstance(config, CodeGuardConfig)
+
+    def test_campos_basicos_leidos(self):
+        config = load_config(project_root=self._project_root())
+        assert config.min_pylint_score == 8.0
+        assert config.max_cyclomatic_complexity == 10
+        assert config.max_line_length == 100
+        assert config.max_function_lines == 20
+
+    def test_nuevos_campos_v04_leidos(self):
+        config = load_config(project_root=self._project_root())
+        assert config.min_dead_code_confidence == 60
+        assert config.min_maintainability_index == 20
+
+    def test_checks_leidos_desde_archivo(self):
+        config = load_config(project_root=self._project_root())
+        assert config.checks.dead_code is True
+        assert config.checks.maintainability is True
+        assert config.checks.spelling is True
+
+    def test_ai_leido_desde_archivo(self):
+        config = load_config(project_root=self._project_root())
+        assert config.ai.enabled is False
+        assert config.ai.explain_errors is True
+        assert config.ai.max_tokens == 500

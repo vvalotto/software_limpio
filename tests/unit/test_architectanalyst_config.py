@@ -4,6 +4,8 @@ Tests unitarios para ArchitectAnalystConfig, AIConfig, LayersConfig y load_confi
 Ticket: 1.6
 """
 
+from pathlib import Path
+
 import pytest
 
 from quality_agents.architectanalyst.config import (
@@ -325,5 +327,42 @@ max_line_length = 100
         config = load_config()
 
         assert isinstance(config, ArchitectAnalystConfig)
+
+
+class TestLoadConfigFromProjectPyproject:
+    """Verifica que load_config() lee correctamente el pyproject.toml real del proyecto."""
+
+    def _project_root(self) -> Path:
+        return Path(__file__).parent.parent.parent
+
+    def test_carga_desde_pyproject_toml_real(self):
+        config = load_config(project_root=self._project_root())
+        assert isinstance(config, ArchitectAnalystConfig)
+
+    def test_campos_basicos_leidos(self):
+        config = load_config(project_root=self._project_root())
+        assert config.max_instability == 0.8
+        assert config.max_distance_warning == 0.3
+        assert config.max_distance_critical == 0.5
+
+    def test_nuevos_campos_v04_leidos(self):
+        config = load_config(project_root=self._project_root())
+        assert config.min_relational_cohesion == 1.5
+        assert config.max_package_classes == 20
+        assert config.max_package_ca == 10
+        assert config.min_coverage == 80.0
+        assert config.coverage_report_path == "coverage.json"
+        assert config.analysis_depth == 1
+
+    def test_checks_leidos_desde_archivo(self):
+        config = load_config(project_root=self._project_root())
+        assert config.checks.relational_cohesion is True
+        assert config.checks.god_package is True
+        assert config.checks.coverage is True
+
+    def test_ai_leido_desde_archivo(self):
+        config = load_config(project_root=self._project_root())
+        assert config.ai.enabled is False
+        assert config.ai.max_tokens == 1500
         assert isinstance(config.ai, AIConfig)
         assert isinstance(config.layers, LayersConfig)
