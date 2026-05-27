@@ -406,13 +406,13 @@ class TestDesignReviewerPipelineCompleto:
         data = json.loads(result.output)
         assert data["summary"]["total_files"] > 1
 
-    def test_12_analyzers_ejecutados(self, proyecto_limpio):
-        """Deben ejecutarse los 12 analyzers del DesignReviewer."""
+    def test_14_analyzers_ejecutados(self, proyecto_limpio):
+        """Deben ejecutarse los 14 analyzers del DesignReviewer."""
         runner = CliRunner()
         result = runner.invoke(main, [str(proyecto_limpio), "--format", "json"])
 
         data = json.loads(result.output)
-        assert data["summary"]["analyzers_executed"] == 12
+        assert data["summary"]["analyzers_executed"] == 14
 
     def test_elapsed_seconds_mayor_que_cero(self, proyecto_limpio):
         """El tiempo de ejecución debe ser mayor que cero."""
@@ -544,7 +544,7 @@ class TestDogfooding:
         summary = data["summary"]
 
         assert summary["total_files"] > 0
-        assert summary["analyzers_executed"] == 12
+        assert summary["analyzers_executed"] == 14
         assert summary["elapsed_seconds"] >= 0
         assert isinstance(summary["should_block"], bool)
         assert "total" in summary["estimated_effort_hours"]
