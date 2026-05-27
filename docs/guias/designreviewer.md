@@ -104,7 +104,7 @@ designreviewer src/ --no-ai
 
 ## Métricas Analizadas
 
-DesignReviewer ejecuta **12 analyzers** sobre cada archivo Python del changeset.
+DesignReviewer ejecuta **14 analyzers** sobre cada archivo Python del changeset.
 
 ### Acoplamiento
 
@@ -189,28 +189,26 @@ Número de clases padre directas (herencia múltiple). Más de una clase padre =
 ### Code Smells y Principios SOLID
 
 #### God Object (SRP)
-Clase con demasiados métodos — viola el Principio de Responsabilidad Única.
+Clase con demasiados métodos públicos o demasiadas líneas — viola el Principio de Responsabilidad Única.
 
 | Umbral | Severidad |
 |--------|-----------|
-| > 10 métodos | WARNING |
-| > 20 métodos | CRITICAL |
+| > max_god_object_methods métodos públicos (default: 20) | CRITICAL |
+| > max_god_object_lines líneas de código (default: 300) | CRITICAL |
 
 #### Long Method (SRP)
 Método con demasiadas líneas — hace varias cosas a la vez.
 
 | Umbral | Severidad |
 |--------|-----------|
-| > 20 líneas | WARNING |
-| > 40 líneas | CRITICAL |
+| > max_method_lines líneas (default: 20) | WARNING |
 
 #### Long Parameter List (ISP)
 Función o método con demasiados parámetros — señal de que agrupa conceptos distintos.
 
 | Umbral | Severidad |
 |--------|-----------|
-| > 4 parámetros | WARNING |
-| > 7 parámetros | CRITICAL |
+| > max_parameters parámetros (default: 5) | WARNING |
 
 #### Feature Envy (SRP/DIP)
 Método que accede más a datos de otra clase que a los propios — debería estar en esa otra clase.
@@ -224,7 +222,40 @@ Grupos de parámetros que siempre aparecen juntos — candidatos a convertirse e
 
 | Umbral | Severidad |
 |--------|-----------|
-| Detectado | WARNING |
+| ≥ min_data_clump_size params (default: 3) en ≥ min_data_clump_occurrences lugares (default: 2) | WARNING |
+
+#### Law of Demeter (LoD)
+Método que accede a objetos a través de cadenas largas (`a.b.c.d`) — viola el principio "solo hablar con los vecinos directos".
+
+| Umbral | Severidad |
+|--------|-----------|
+| Profundidad de cadena > max_demeter_depth (default: 1) | WARNING |
+
+```python
+# ❌ Cadena de profundidad 2 — viola LoD
+def procesar(self, pedido):
+    ciudad = pedido.cliente.direccion.ciudad   # depth=2 > max_demeter_depth=1
+```
+
+Las cadenas que comienzan con `self` se excluyen del análisis.
+
+#### Primitive Obsession (SRP/OOP)
+Uso excesivo de tipos primitivos (`str`, `int`, `float`, `bool`, `bytes`) donde deberían usarse Value Objects, o paso de `dict`/`Dict` en lugar de objetos de dominio.
+
+| Umbral | Severidad |
+|--------|-----------|
+| ≥ max_primitive_params params del mismo tipo primitivo (default: 3) | WARNING |
+| Parámetro de tipo `dict`/`Dict` en método público | WARNING |
+
+```python
+# ❌ 3 strings — candidato a Value Object "Dirección"
+def registrar(self, calle: str, ciudad: str, codigo_postal: str): ...
+
+# ❌ dict como parámetro — falta tipado de dominio
+def actualizar(self, datos: dict) -> None: ...
+```
+
+Se excluyen métodos dunder, métodos privados (`_`) y constructores alternativos (`from_*`, `create_*`).
 
 ---
 
@@ -238,7 +269,7 @@ Grupos de parámetros que siempre aparecen juntos — candidatos a convertirse e
 ╰──────────────────────────────────────────────────────────╯
 
 Archivos analizados:   7
-Analyzers ejecutados:  12
+Analyzers ejecutados:  14
 Tiempo de ejecución:   0.07s
 Resultados totales:    3
 
@@ -287,37 +318,41 @@ En tu `pyproject.toml`:
 ```toml
 [tool.designreviewer]
 # Acoplamiento
-max_cbo = 5              # Coupling Between Objects
-max_fan_out = 7          # Fan-Out por módulo
+max_cbo     = 5   # Coupling Between Objects
+max_fan_out = 7   # Fan-Out por módulo
 
 # Cohesión y herencia
-max_lcom = 1             # Lack of Cohesion of Methods
-max_wmc = 20             # Weighted Methods per Class
-max_dit = 5              # Depth of Inheritance Tree
-max_nop = 1              # Number of Parents
+max_lcom = 1    # Lack of Cohesion of Methods
+max_wmc  = 20   # Weighted Methods per Class
+max_dit  = 5    # Depth of Inheritance Tree
+max_nop  = 1    # Number of Parents
 
 # Code Smells
-max_methods_per_class = 10     # God Object (warning)
-max_methods_critical = 20      # God Object (critical)
-max_method_lines = 20          # Long Method (warning)
-max_method_lines_critical = 40 # Long Method (critical)
-max_parameters = 4             # Long Parameter List (warning)
-max_parameters_critical = 7    # Long Parameter List (critical)
+max_god_object_methods     = 20   # God Object: métodos públicos → CRITICAL
+max_god_object_lines       = 300  # God Object: líneas de código → CRITICAL
+max_method_lines           = 20   # Long Method → WARNING
+max_parameters             = 5    # Long Parameter List → WARNING
+min_data_clump_size        = 3    # Data Clumps: mínimo de parámetros
+min_data_clump_occurrences = 2    # Data Clumps: mínimo de ocurrencias
+max_demeter_depth          = 1    # Law of Demeter: profundidad de cadena → WARNING
+max_primitive_params       = 3    # Primitive Obsession: params del mismo tipo → WARNING
 
 # Analyzers habilitados (todos activos por defecto)
 [tool.designreviewer.checks]
-cbo = true
-fan_out = true
-circular_imports = true
-lcom = true
-wmc = true
-dit = true
-nop = true
-god_object = true
-long_method = true
+cbo                 = true
+fan_out             = true
+circular_imports    = true
+lcom                = true
+wmc                 = true
+dit                 = true
+nop                 = true
+god_object          = true
+long_method         = true
 long_parameter_list = true
-feature_envy = true
-data_clumps = true
+feature_envy        = true
+data_clumps         = true
+law_of_demeter      = true   # Ley de Demeter
+primitive_obsession = true   # Obsesión por primitivos
 ```
 
 ### Valores por defecto
@@ -330,8 +365,10 @@ Si no configurás `[tool.designreviewer]`, se usan los umbrales mostrados en la 
 
 ```toml
 [tool.designreviewer.checks]
-feature_envy = false    # Deshabilitar Feature Envy
-data_clumps = false     # Deshabilitar Data Clumps
+feature_envy        = false   # Deshabilitar Feature Envy
+data_clumps         = false   # Deshabilitar Data Clumps
+law_of_demeter      = false   # Deshabilitar Ley de Demeter
+primitive_obsession = false   # Deshabilitar Primitive Obsession
 ```
 
 ---
@@ -350,7 +387,7 @@ designreviewer src/ --format json | python -m json.tool
 {
   "summary": {
     "total_files": 7,
-    "analyzers_executed": 12,
+    "analyzers_executed": 14,
     "elapsed_seconds": 0.07,
     "timestamp": "2026-02-21T10:30:00",
     "total_issues": 3,
