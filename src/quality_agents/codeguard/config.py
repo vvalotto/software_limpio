@@ -65,6 +65,7 @@ class ChecksConfig:
     imports: bool = True
     dead_code: bool = True
     maintainability: bool = True
+    spelling: bool = True
 
 
 @dataclass
@@ -78,6 +79,7 @@ class CodeGuardConfig:
     max_function_lines: int = 20
     min_dead_code_confidence: int = 60
     min_maintainability_index: int = 20
+    spelling_ignore_words: List[str] = field(default_factory=list)
 
     # Exclusiones
     exclude_patterns: List[str] = field(default_factory=lambda: [
@@ -193,6 +195,7 @@ class CodeGuardConfig:
                 "imports": self.checks.imports,
                 "dead_code": self.checks.dead_code,
                 "maintainability": self.checks.maintainability,
+                "spelling": self.checks.spelling,
             },
             "ai": {
                 "enabled": self.ai.enabled,

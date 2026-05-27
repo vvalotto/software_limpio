@@ -108,6 +108,7 @@ from .maintainability_check import MaintainabilityCheck
 from .pep8_check import PEP8Check
 from .pylint_check import PylintCheck
 from .security_check import SecurityCheck
+from .spelling_check import SpellingCheck
 from .type_check import TypeCheck
 
 # Lista de checks exportados (actualizar cuando se agreguen checks)
@@ -120,4 +121,5 @@ __all__ = [
     "ImportCheck",
     "DeadCodeCheck",
     "MaintainabilityCheck",
+    "SpellingCheck",
 ]
