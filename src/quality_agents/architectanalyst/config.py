@@ -130,6 +130,12 @@ class ArchitectAnalystConfig:
         "build",
     ])
 
+    # --- Roles de capa para calibración arquitectural (CQRS/ES/Hexagonal) ---
+    # Mapeo glob → "leaf" | "stable"
+    # leaf:   módulo terminal — se advierte si I es bajo (algo depende de él)
+    # stable: módulo estable — se advierte si I es alto (comportamiento actual)
+    layer_roles: Dict[str, str] = field(default_factory=dict)
+
     # --- Subsecciones ---
     checks: ArchitectAnalystChecksConfig = field(default_factory=ArchitectAnalystChecksConfig)
     ai: AIConfig = field(default_factory=AIConfig)
@@ -174,6 +180,7 @@ class ArchitectAnalystConfig:
         ai_data = tool_config.pop("ai", {})
         layers_data = tool_config.pop("layers", {})
         checks_data = tool_config.pop("checks", {})
+        layer_roles_data = tool_config.pop("layer_roles", {})
 
         ai_config = AIConfig(**_filter_fields(AIConfig, ai_data)) if ai_data else AIConfig()
         layers_config = LayersConfig(rules=layers_data) if layers_data else LayersConfig()
@@ -186,6 +193,7 @@ class ArchitectAnalystConfig:
         config.ai = ai_config
         config.layers = layers_config
         config.checks = checks_config
+        config.layer_roles = layer_roles_data
         return config
 
 
