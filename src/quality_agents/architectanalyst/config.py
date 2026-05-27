@@ -61,6 +61,7 @@ class ArchitectAnalystChecksConfig:
     distance: bool = True
     dependency_cycles: bool = True
     layer_violations: bool = True
+    relational_cohesion: bool = True
 
 
 @dataclass
@@ -129,6 +130,9 @@ class ArchitectAnalystConfig:
         "dist",
         "build",
     ])
+
+    # --- Cohesión Relacional ---
+    min_relational_cohesion: float = 1.5   # H < umbral → WARNING
 
     # --- Profundidad de análisis para DistanceAnalyzer ---
     # 1 = primer componente del módulo (default, comportamiento original)

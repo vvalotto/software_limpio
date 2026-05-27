@@ -14,6 +14,9 @@ from quality_agents.architectanalyst.metrics.instability_analyzer import Instabi
 from quality_agents.architectanalyst.metrics.layer_violations_analyzer import (
     LayerViolationsAnalyzer,
 )
+from quality_agents.architectanalyst.metrics.relational_cohesion_analyzer import (
+    RelationalCohesionAnalyzer,
+)
 
 __all__ = [
     "DependencyCyclesAnalyzer",
@@ -22,4 +25,5 @@ __all__ = [
     "InstabilityAnalyzer",
     "AbstractnessAnalyzer",
     "DistanceAnalyzer",
+    "RelationalCohesionAnalyzer",
 ]
