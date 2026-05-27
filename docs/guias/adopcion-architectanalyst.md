@@ -21,7 +21,7 @@ todas las opciones, ver la [Guía de Usuario](architectanalyst.md).
 ### Desde la release oficial (recomendado)
 
 ```bash
-pip install git+https://github.com/vvalotto/software_limpio.git@v0.3.0
+pip install git+https://github.com/vvalotto/software_limpio.git@v0.4.0
 ```
 
 ### En modo desarrollo (para contribuir)
@@ -78,9 +78,14 @@ de partida — el foco es configurar las exclusiones y, opcionalmente, las capas
 ```toml
 [tool.architectanalyst]
 # Umbrales — los defaults están bien para empezar
-max_instability = 0.8       # I > 0.8 → WARNING
-max_distance_warning = 0.3  # D > 0.3 → WARNING
-max_distance_critical = 0.5 # D > 0.5 → CRITICAL
+max_instability = 0.8         # I > 0.8 → WARNING
+max_distance_warning = 0.3    # D > 0.3 → WARNING
+max_distance_critical = 0.5   # D > 0.5 → CRITICAL
+min_relational_cohesion = 1.5 # H < 1.5 → WARNING
+max_package_classes = 20      # n_clases > 20 → WARNING (God Package)
+max_package_ca = 10           # Ca > 10 → WARNING (God Package)
+min_coverage = 80.0           # cobertura < 80% → WARNING
+analysis_depth = 1            # 1 para arquitecturas planas, 2 para hexagonales
 
 # Ajustar según tu estructura de directorios
 exclude_patterns = [
@@ -205,6 +210,11 @@ Definí la arquitectura en capas **antes de escribir el primer módulo**:
 max_instability = 0.8
 max_distance_warning = 0.3
 max_distance_critical = 0.5
+min_relational_cohesion = 1.5
+max_package_classes = 20
+max_package_ca = 10
+min_coverage = 80.0
+analysis_depth = 1
 
 db_path = ".quality_control/architecture.db"
 
@@ -285,6 +295,18 @@ Todas las opciones disponibles en `[tool.architectanalyst]`:
 max_instability = 0.8          # I > 0.8 → WARNING
 max_distance_warning = 0.3     # D > 0.3 → WARNING
 max_distance_critical = 0.5    # D > 0.5 → CRITICAL
+min_relational_cohesion = 1.5  # H < 1.5 → WARNING (cohesión relacional)
+
+# --- God Package ---
+max_package_classes = 20       # n_clases > 20 → WARNING
+max_package_ca = 10            # Ca > 10 → WARNING
+
+# --- Cobertura ---
+min_coverage = 80.0            # cobertura < 80% → WARNING
+coverage_report_path = "coverage.json"  # relativo al project_path
+
+# --- Granularidad del análisis ---
+analysis_depth = 1             # 1=paquetes de primer nivel, 2=segundo nivel (hexagonal)
 
 # --- Persistencia ---
 db_path = ".quality_control/architecture.db"
@@ -298,6 +320,16 @@ exclude_patterns = [
     "dist",
     "build",
 ]
+
+# --- Checks activos (todos habilitados por defecto) ---
+[tool.architectanalyst.checks]
+instability = true
+distance = true
+cycles = true
+layer_violations = true
+relational_cohesion = true
+god_package = true
+coverage = true
 
 # --- IA (opt-in — desactivada por defecto) ---
 [tool.architectanalyst.ai]

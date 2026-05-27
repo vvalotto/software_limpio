@@ -21,7 +21,7 @@ todas las opciones, ver la [Guía de Usuario](codeguard.md).
 ### Desde la release oficial (recomendado)
 
 ```bash
-pip install git+https://github.com/vvalotto/software_limpio.git@v0.3.0
+pip install git+https://github.com/vvalotto/software_limpio.git@v0.4.0
 ```
 
 ### En modo desarrollo (para contribuir)
@@ -90,6 +90,9 @@ pep8 = true
 security = true            # seguridad siempre activa
 complexity = true
 types = false              # desactivar si no hay type hints en el proyecto
+dead_code = false          # desactivar al principio — puede tener muchos falsos positivos
+maintainability = true     # activar para tener visibilidad del estado actual
+spelling = false           # desactivar si hay mucha terminología de dominio no estándar
 ```
 
 **Estrategia de mejora gradual:**
@@ -149,7 +152,7 @@ El objetivo es que cada commit ya cumpla con los estándares.
 mkdir mi-proyecto && cd mi-proyecto
 git init
 python -m venv .venv && source .venv/bin/activate
-pip install git+https://github.com/vvalotto/software_limpio.git@v0.3.0
+pip install git+https://github.com/vvalotto/software_limpio.git@v0.4.0
 ```
 
 ### Paso 2: Configuración estricta desde el inicio
@@ -162,6 +165,8 @@ En `pyproject.toml`:
 max_cyclomatic_complexity = 10
 max_line_length = 100
 min_pylint_score = 8.0
+min_maintainability_index = 20   # umbral conservador para empezar
+min_dead_code_confidence = 60    # confianza mínima para reportar código muerto
 
 exclude_patterns = [
     "tests/*",
@@ -173,7 +178,10 @@ exclude_patterns = [
 pep8 = true
 security = true
 complexity = true
-types = true        # type hints desde el primer módulo
+types = true         # type hints desde el primer módulo
+dead_code = true
+maintainability = true
+spelling = true
 ```
 
 ### Paso 3: Pre-commit desde el primer commit
@@ -236,6 +244,8 @@ Todas las opciones disponibles en `[tool.codeguard]`:
 max_cyclomatic_complexity = 10   # Complejidad máxima por función
 max_line_length = 100            # Longitud máxima de línea
 min_pylint_score = 8.0           # Score mínimo de pylint (0-10)
+min_maintainability_index = 20   # Índice de mantenibilidad mínimo (0-100)
+min_dead_code_confidence = 60    # Confianza mínima para reportar código muerto (0-100)
 
 # --- Exclusiones ---
 exclude_patterns = [
@@ -243,6 +253,9 @@ exclude_patterns = [
     "migrations/*",
     ".venv/*",
 ]
+
+# --- Palabras ignoradas por SpellingCheck ---
+spelling_ignore_words = []       # ej: ["param", "kwargs", "cls"]
 
 # --- Checks activos (todos habilitados por defecto) ---
 [tool.codeguard.checks]
@@ -252,6 +265,9 @@ complexity = true          # Complejidad ciclomática (radon)
 types = true               # Tipos (mypy)
 pylint = true              # Score general (pylint)
 imports = true             # Imports sin usar (pylint)
+dead_code = true           # Código muerto (vulture)
+maintainability = true     # Índice de mantenibilidad (radon MI)
+spelling = true            # Ortografía en identificadores (codespell)
 
 # --- IA opcional (requiere API key de Anthropic) ---
 [tool.codeguard.ai]

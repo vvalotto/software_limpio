@@ -21,7 +21,7 @@ todas las opciones, ver la [Guía de Usuario](designreviewer.md).
 ### Desde la release oficial (recomendado)
 
 ```bash
-pip install git+https://github.com/vvalotto/software_limpio.git@v0.3.0
+pip install git+https://github.com/vvalotto/software_limpio.git@v0.4.0
 ```
 
 ### En modo desarrollo (para contribuir)
@@ -74,13 +74,16 @@ max_dit = 7              # default: 5 — common en frameworks con herencia prof
 max_fan_out = 12         # default: 7
 max_lcom = 2             # default: 1
 
-# Code smells: empezar desactivando critical, solo warnings
-max_methods_per_class = 15     # default: 10 (warning)
-max_methods_critical = 40      # default: 20 (critical) — muy permisivo al inicio
-max_method_lines = 40          # default: 20 (warning)
-max_method_lines_critical = 80 # default: 40 (critical)
-max_parameters = 6             # default: 4 (warning)
-max_parameters_critical = 10   # default: 7 (critical)
+# Code smells: empezar más permisivo que los defaults
+max_god_object_methods = 40    # default: 20 — muy permisivo al inicio
+max_god_object_lines = 600     # default: 300
+max_method_lines = 40          # default: 20
+max_parameters = 8             # default: 5
+
+# Nuevos checks de v0.4.0: desactivar si generan mucho ruido al principio
+[tool.designreviewer.checks]
+law_of_demeter = false         # activar cuando el equipo entienda el principio
+primitive_obsession = false    # activar gradualmente
 ```
 
 **Estrategia de mejora gradual:**
@@ -155,12 +158,19 @@ max_dit = 5
 max_nop = 1
 
 # Code smells
-max_methods_per_class = 10
-max_methods_critical = 20
+max_god_object_methods = 20
+max_god_object_lines = 300
 max_method_lines = 20
-max_method_lines_critical = 40
-max_parameters = 4
-max_parameters_critical = 7
+max_parameters = 5
+min_data_clump_size = 3
+min_data_clump_occurrences = 2
+max_demeter_depth = 1
+max_primitive_params = 3
+
+# Todos los checks activos
+[tool.designreviewer.checks]
+law_of_demeter = true
+primitive_obsession = true
 ```
 
 ### Paso 2: Verificar que el proyecto base pasa limpio
@@ -228,12 +238,14 @@ max_dit = 5              # DIT > 5 → CRITICAL
 max_nop = 1              # NOP > 1 → CRITICAL
 
 # --- Code Smells ---
-max_methods_per_class = 10     # God Object → WARNING
-max_methods_critical = 20      # God Object → CRITICAL
+max_god_object_methods = 20    # God Object: métodos públicos → CRITICAL
+max_god_object_lines = 300     # God Object: líneas de código → CRITICAL
 max_method_lines = 20          # Long Method → WARNING
-max_method_lines_critical = 40 # Long Method → CRITICAL
-max_parameters = 4             # Long Parameter List → WARNING
-max_parameters_critical = 7    # Long Parameter List → CRITICAL
+max_parameters = 5             # Long Parameter List → WARNING
+min_data_clump_size = 3        # Data Clumps: mínimo de parámetros repetidos
+min_data_clump_occurrences = 2 # Data Clumps: mínimo de ocurrencias
+max_demeter_depth = 1          # Law of Demeter: profundidad de cadena → WARNING
+max_primitive_params = 3       # Primitive Obsession: params del mismo tipo → WARNING
 
 # --- Exclusiones ---
 exclude_patterns = [
@@ -242,6 +254,23 @@ exclude_patterns = [
     "__pycache__/",
     ".venv/",
 ]
+
+# --- Checks activos (todos habilitados por defecto) ---
+[tool.designreviewer.checks]
+cbo = true
+fan_out = true
+circular_imports = true
+lcom = true
+wmc = true
+dit = true
+nop = true
+god_object = true
+long_method = true
+long_parameter_list = true
+feature_envy = true
+data_clumps = true
+law_of_demeter = true
+primitive_obsession = true
 ```
 
 ### Comparación de perfiles
