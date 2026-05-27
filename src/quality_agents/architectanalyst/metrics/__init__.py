@@ -6,6 +6,7 @@ Cada métrica hereda de ProjectMetric y se auto-descubre via MetricOrchestrator.
 
 from quality_agents.architectanalyst.metrics.abstractness_analyzer import AbstractnessAnalyzer
 from quality_agents.architectanalyst.metrics.coupling_analyzer import CouplingAnalyzer
+from quality_agents.architectanalyst.metrics.coverage_analyzer import CoverageAnalyzer
 from quality_agents.architectanalyst.metrics.dependency_cycles_analyzer import (
     DependencyCyclesAnalyzer,
 )
@@ -28,4 +29,5 @@ __all__ = [
     "DistanceAnalyzer",
     "RelationalCohesionAnalyzer",
     "GodPackageAnalyzer",
+    "CoverageAnalyzer",
 ]

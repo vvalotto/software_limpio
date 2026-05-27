@@ -63,6 +63,7 @@ class ArchitectAnalystChecksConfig:
     layer_violations: bool = True
     relational_cohesion: bool = True
     god_package: bool = True
+    coverage: bool = True
 
 
 @dataclass
@@ -138,6 +139,10 @@ class ArchitectAnalystConfig:
     # --- God Package ---
     max_package_classes: int = 20          # n_clases > umbral → WARNING
     max_package_ca: int = 10               # Ca > umbral → WARNING
+
+    # --- Cobertura de tests ---
+    min_coverage: float = 80.0             # cobertura < umbral → WARNING
+    coverage_report_path: str = "coverage.json"  # relativo al project_path
 
     # --- Profundidad de análisis para DistanceAnalyzer ---
     # 1 = primer componente del módulo (default, comportamiento original)
