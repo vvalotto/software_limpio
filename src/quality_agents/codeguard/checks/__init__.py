@@ -102,10 +102,13 @@ Ticket: 1.5.3
 
 # Imports de checks implementados
 from .complexity_check import ComplexityCheck
+from .dead_code_check import DeadCodeCheck
 from .import_check import ImportCheck
+from .maintainability_check import MaintainabilityCheck
 from .pep8_check import PEP8Check
 from .pylint_check import PylintCheck
 from .security_check import SecurityCheck
+from .spelling_check import SpellingCheck
 from .type_check import TypeCheck
 
 # Lista de checks exportados (actualizar cuando se agreguen checks)
@@ -116,4 +119,7 @@ __all__ = [
     "ComplexityCheck",
     "TypeCheck",
     "ImportCheck",
+    "DeadCodeCheck",
+    "MaintainabilityCheck",
+    "SpellingCheck",
 ]
