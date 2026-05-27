@@ -254,7 +254,8 @@ sprint_cadence = "2w"
             ArchitectAnalystConfig.from_pyproject_toml(pyproject)
 
         warned_keys = [r.message for r in caplog.records if "desconocida" in r.message]
-        assert any("layer_roles" in msg for msg in warned_keys)
+        # layer_roles es una sección especial reconocida — no genera warning
+        assert not any("layer_roles" in msg for msg in warned_keys)
         assert any("sprint_cadence" in msg for msg in warned_keys)
 
 

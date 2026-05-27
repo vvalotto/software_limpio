@@ -61,6 +61,9 @@ class ArchitectAnalystChecksConfig:
     distance: bool = True
     dependency_cycles: bool = True
     layer_violations: bool = True
+    relational_cohesion: bool = True
+    god_package: bool = True
+    coverage: bool = True
 
 
 @dataclass
@@ -130,6 +133,28 @@ class ArchitectAnalystConfig:
         "build",
     ])
 
+    # --- Cohesión Relacional ---
+    min_relational_cohesion: float = 1.5   # H < umbral → WARNING
+
+    # --- God Package ---
+    max_package_classes: int = 20          # n_clases > umbral → WARNING
+    max_package_ca: int = 10               # Ca > umbral → WARNING
+
+    # --- Cobertura de tests ---
+    min_coverage: float = 80.0             # cobertura < umbral → WARNING
+    coverage_report_path: str = "coverage.json"  # relativo al project_path
+
+    # --- Profundidad de análisis para DistanceAnalyzer ---
+    # 1 = primer componente del módulo (default, comportamiento original)
+    # 2 = dos componentes — útil en arquitecturas hexagonales con namespace de app
+    analysis_depth: int = 1
+
+    # --- Roles de capa para calibración arquitectural (CQRS/ES/Hexagonal) ---
+    # Mapeo glob → "leaf" | "stable"
+    # leaf:   módulo terminal — se advierte si I es bajo (algo depende de él)
+    # stable: módulo estable — se advierte si I es alto (comportamiento actual)
+    layer_roles: Dict[str, str] = field(default_factory=dict)
+
     # --- Subsecciones ---
     checks: ArchitectAnalystChecksConfig = field(default_factory=ArchitectAnalystChecksConfig)
     ai: AIConfig = field(default_factory=AIConfig)
@@ -174,6 +199,7 @@ class ArchitectAnalystConfig:
         ai_data = tool_config.pop("ai", {})
         layers_data = tool_config.pop("layers", {})
         checks_data = tool_config.pop("checks", {})
+        layer_roles_data = tool_config.pop("layer_roles", {})
 
         ai_config = AIConfig(**_filter_fields(AIConfig, ai_data)) if ai_data else AIConfig()
         layers_config = LayersConfig(rules=layers_data) if layers_data else LayersConfig()
@@ -186,6 +212,7 @@ class ArchitectAnalystConfig:
         config.ai = ai_config
         config.layers = layers_config
         config.checks = checks_config
+        config.layer_roles = layer_roles_data
         return config
 
 
