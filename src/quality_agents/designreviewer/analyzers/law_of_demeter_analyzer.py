@@ -122,8 +122,8 @@ class LawOfDemeterAnalyzer(Verifiable):
                 file_path=file_path,
                 class_name=context_name,
                 suggestion=(
-                    f"Introducir un método en el objeto intermedio que devuelva "
-                    f"el valor necesario, evitando exponer su estructura interna."
+                    "Introducir un método en el objeto intermedio que devuelva "
+                    "el valor necesario, evitando exponer su estructura interna."
                 ),
                 estimated_effort=0.5,
                 solid_principle=SolidPrinciple.OCP,
