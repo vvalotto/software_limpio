@@ -109,10 +109,12 @@ from .dit_analyzer import DITAnalyzer
 from .fan_out_analyzer import FanOutAnalyzer
 from .feature_envy_analyzer import FeatureEnvyAnalyzer
 from .god_object_analyzer import GodObjectAnalyzer
+from .law_of_demeter_analyzer import LawOfDemeterAnalyzer
 from .lcom_analyzer import LCOMAnalyzer
 from .long_method_analyzer import LongMethodAnalyzer
 from .long_parameter_list_analyzer import LongParameterListAnalyzer
 from .nop_analyzer import NOPAnalyzer
+from .primitive_obsession_analyzer import PrimitiveObsessionAnalyzer
 from .wmc_analyzer import WMCAnalyzer
 
 __all__ = [
@@ -123,7 +125,9 @@ __all__ = [
     "FeatureEnvyAnalyzer",
     "FanOutAnalyzer",
     "GodObjectAnalyzer",
+    "LawOfDemeterAnalyzer",
     "LCOMAnalyzer",
+    "PrimitiveObsessionAnalyzer",
     "LongMethodAnalyzer",
     "LongParameterListAnalyzer",
     "NOPAnalyzer",

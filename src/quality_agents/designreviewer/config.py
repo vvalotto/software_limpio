@@ -75,6 +75,8 @@ class DesignReviewerChecksConfig:
     long_parameter_list: bool = True
     feature_envy: bool = True
     data_clumps: bool = True
+    law_of_demeter: bool = True
+    primitive_obsession: bool = True
 
 
 @dataclass
@@ -107,6 +109,8 @@ class DesignReviewerConfig:
     max_parameters: int = 5            # Parámetros de un método (Long Parameter List)
     min_data_clump_size: int = 3       # Mínimo parámetros para considerar Data Clump
     min_data_clump_occurrences: int = 2  # Mínimo de apariciones para Data Clump
+    max_demeter_depth: int = 1         # Profundidad máxima de cadena de acceso (Law of Demeter)
+    max_primitive_params: int = 3      # Máximo de parámetros primitivos del mismo tipo (Primitive Obsession)
 
     # Exclusiones
     exclude_patterns: List[str] = field(default_factory=lambda: [
