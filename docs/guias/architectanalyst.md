@@ -110,11 +110,11 @@ ArchitectAnalyst es un agente de **observabilidad**, no de gatekeeping. Los prob
 
 ## Métricas Analizadas
 
-ArchitectAnalyst ejecuta **5 métricas** (7 con capas configuradas).
+ArchitectAnalyst ejecuta **9 métricas** (Métricas de Martin, análisis estructurales y calidad).
 
 ### Métricas de Martin
 
-Las 5 métricas de Robert C. Martin caracterizan la posición de cada módulo en el **Main Sequence** — la línea diagonal que representa el equilibrio ideal entre estabilidad y abstracción.
+Las métricas de Robert C. Martin caracterizan la posición de cada paquete en el **Main Sequence** — la línea diagonal que representa el equilibrio ideal entre estabilidad y abstracción.
 
 #### Ca — Afferent Coupling (Acoplamiento Aferente)
 
@@ -148,6 +148,20 @@ Cuántos módulos internos del proyecto **importa** este módulo. Alta Ce = mód
 |--------|-----------|
 | I > 0.8 | WARNING |
 
+**Calibración por rol de módulo (`layer_roles`):** En arquitecturas CQRS, Event Sourcing o Hexagonal, algunos módulos tienen un comportamiento esperado que difiere del patrón general. Con `layer_roles` podés declarar el rol de módulos específicos para que el analyzer evalúe correctamente:
+
+- `leaf`: módulo terminal — se advierte si tiene dependientes (Ca > 0 e I bajo), porque un leaf no debería ser dependido por otros.
+- `stable`: módulo estable por diseño — se advierte si I es alto (comportamiento original).
+
+```toml
+[tool.architectanalyst.layer_roles]
+"*/commands/*" = "leaf"    # módulos de comandos no deberían tener dependientes
+"*/queries/*"  = "leaf"
+"*/domain/*"   = "stable"  # domain debe ser estable
+```
+
+Los patrones usan sintaxis glob (`fnmatch`). El nombre del módulo se convierte a path (`.` → `/`) antes de comparar.
+
 #### A — Abstractness (Abstracción)
 
 `A = clases abstractas / total de clases` — qué fracción de las clases del módulo son abstractas o interfaces.
@@ -163,7 +177,7 @@ Cuántos módulos internos del proyecto **importa** este módulo. Alta Ce = mód
 - **Zone of Pain** (D alto, A≈0, I≈0): paquete estable y concreto — rígido, difícil de cambiar
 - **Zone of Uselessness** (D alto, A≈1, I≈1): paquete abstracto e inestable — interfaces sin usuarios estables
 
-> **Nota:** D se calcula a nivel de **paquete** (directorio), no de módulo individual. Esto sigue la definición original de Robert C. Martin y evita falsos positivos: cualquier archivo con solo clases concretas daría D=1.00 si se analizara por módulo.
+> **Nota:** D se calcula a nivel de **paquete**, no de módulo individual. La granularidad del paquete se controla con `analysis_depth` (default: 1 = primer componente del módulo). Con `depth=2`, `myapp.domain.model` → paquete `myapp.domain`, útil en arquitecturas hexagonales con namespace de aplicación.
 
 | Umbral | Severidad |
 |--------|-----------|
@@ -232,6 +246,66 @@ Con esta configuración, un módulo en `domain/` que importe algo de `applicatio
 
 ---
 
+### Cohesión Relacional
+
+#### H — Relational Cohesion (Cohesión Relacional)
+
+`H = (R + 1) / N` — relación entre las relaciones internas de un paquete y el número de tipos (clases) que contiene.
+
+- **R**: imports entre módulos del mismo paquete (relaciones internas)
+- **N**: total de clases en el paquete
+
+Un H bajo indica que las clases del paquete no se usan entre sí — probablemente deberían estar en paquetes distintos.
+
+| Umbral | Severidad |
+|--------|-----------|
+| H < min_relational_cohesion (default: 1.5) | WARNING |
+
+Rango esperado según Martin: **1.5 – 4.0**. Paquetes con menos de 2 clases se omiten (H no es significativo).
+
+---
+
+### God Package
+
+Detecta paquetes con demasiada concentración — el análogo arquitectónico del God Object de DesignReviewer. Un God Package es un smell crítico porque atrae dependencias y responsabilidades, haciendo que cualquier cambio en él impacte a todo el sistema.
+
+Se manifiesta de dos formas:
+
+**Por tamaño:** demasiadas clases en un paquete (responsabilidades mezcladas)
+
+| Umbral | Severidad |
+|--------|-----------|
+| n_clases > max_package_classes (default: 20) | WARNING |
+
+**Por acoplamiento aferente:** Ca muy alto — casi todo el sistema depende de este paquete
+
+| Umbral | Severidad |
+|--------|-----------|
+| Ca > max_package_ca (default: 10) | WARNING |
+
+---
+
+### Cobertura de Tests
+
+Lee el archivo `coverage.json` generado por `pytest --cov --cov-report=json` y reporta el porcentaje de líneas cubiertas.
+
+| Situación | Severidad |
+|-----------|-----------|
+| Archivo no encontrado | WARNING |
+| Archivo inválido o ilegible | WARNING |
+| Cobertura < min_coverage (default: 80%) | WARNING |
+| Cobertura ≥ min_coverage | INFO |
+
+Para generar el archivo de cobertura:
+
+```bash
+pytest --cov=src --cov-report=json
+```
+
+La ruta del archivo es configurable con `coverage_report_path` (default: `coverage.json`, relativo al project_path).
+
+---
+
 ## Tendencias Históricas
 
 Cada análisis se guarda automáticamente en una base de datos SQLite (`.quality_control/architecture.db`). A partir del **segundo análisis**, cada resultado incluye un indicador de tendencia:
@@ -266,9 +340,23 @@ ArchitectAnalyst se configura en `pyproject.toml`:
 ```toml
 [tool.architectanalyst]
 # Umbrales de Métricas de Martin
-max_instability = 0.8          # I > 0.8 → WARNING
-max_distance_warning = 0.3     # D > 0.3 → WARNING
-max_distance_critical = 0.5    # D > 0.5 → CRITICAL
+max_instability       = 0.8   # I > 0.8 → WARNING
+max_distance_warning  = 0.3   # D > 0.3 → WARNING
+max_distance_critical = 0.5   # D > 0.5 → CRITICAL
+
+# Granularidad de paquete (aplica a DistanceAnalyzer y RelationalCohesionAnalyzer)
+analysis_depth = 1   # 1 = primer componente (default), 2 = dos componentes (hexagonal)
+
+# Cohesión Relacional
+min_relational_cohesion = 1.5  # H < 1.5 → WARNING
+
+# God Package
+max_package_classes = 20   # n_clases > 20 → WARNING
+max_package_ca      = 10   # Ca > 10 → WARNING
+
+# Cobertura de tests
+min_coverage         = 80.0          # cobertura < 80% → WARNING
+coverage_report_path = "coverage.json"  # relativo al project_path
 
 # Persistencia
 db_path = ".quality_control/architecture.db"
@@ -277,47 +365,64 @@ db_path = ".quality_control/architecture.db"
 exclude_patterns = [
     "__pycache__",
     ".venv",
+    "venv",
     "migrations",
-    "tests",
+    "test_",
+    "conftest",
     "dist",
     "build",
 ]
 
 # Métricas habilitadas (todas activas por defecto)
 [tool.architectanalyst.checks]
-coupling = true
-abstractness = true
-instability = true
-distance = true
-dependency_cycles = true
-layer_violations = true
+coupling            = true
+abstractness        = true
+instability         = true
+distance            = true
+dependency_cycles   = true
+layer_violations    = true
+relational_cohesion = true   # Cohesión relacional H
+god_package         = true   # God Package por tamaño o Ca
+coverage            = true   # Cobertura de tests
 
 # IA (opt-in — desactivada por defecto)
 [tool.architectanalyst.ai]
-enabled = false
+enabled    = false
 max_tokens = 1500
+
+# Roles de módulo para calibrar InstabilityAnalyzer (opcional, CQRS/ES/Hexagonal)
+[tool.architectanalyst.layer_roles]
+# "*/commands/*" = "leaf"    # módulos terminales
+# "*/queries/*"  = "leaf"
+# "*/domain/*"   = "stable"  # módulos estables
 
 # Arquitectura en capas (opcional)
 [tool.architectanalyst.layers]
-domain = []
-application = ["domain"]
-infrastructure = ["application", "domain"]
+# domain         = []
+# application    = ["domain"]
+# infrastructure = ["application", "domain"]
 ```
 
 ### Deshabilitar métricas específicas
 
 ```toml
 [tool.architectanalyst.checks]
-layer_violations = false    # Solo si no se usan reglas de capas
-instability = false         # Deshabilitar análisis de inestabilidad
+layer_violations    = false   # Si no se usan reglas de capas
+god_package         = false   # Deshabilitar detección de God Package
+coverage            = false   # Deshabilitar análisis de cobertura
+relational_cohesion = false   # Deshabilitar cohesión relacional
 ```
 
 ### Umbrales por defecto
 
-| Métrica | Umbral WARNING | Umbral CRITICAL | Herramienta |
-|---------|---------------|-----------------|-------------|
+| Métrica | Umbral WARNING | Umbral CRITICAL | Fuente |
+|---------|---------------|-----------------|--------|
 | I (Instability) | > 0.8 | — | Cálculo (Ca, Ce) |
 | D (Distance) | > 0.3 | > 0.5 | Cálculo (A, I) |
+| H (Relational Cohesion) | < 1.5 | — | AST + grafo |
+| God Package (clases) | > 20 clases | — | AST |
+| God Package (Ca) | > 10 | — | Grafo |
+| Cobertura | < 80% | — | coverage.json |
 | Ciclos | — | ≥ 1 ciclo | AST + Tarjan |
 | Violaciones de capas | — | ≥ 1 violación | AST + config |
 
@@ -332,7 +437,7 @@ La opción `--format json` produce un JSON bien estructurado ideal para dashboar
   "summary": {
     "sprint_id": "sprint-12",
     "total_files": 45,
-    "metrics_executed": 5,
+    "metrics_executed": 9,
     "elapsed_seconds": 3.21,
     "timestamp": "2026-03-01T15:30:00.000Z",
     "total_results": 28,
@@ -469,3 +574,15 @@ El analyzer busca el nombre de la capa como segmento del nombre de módulo dotte
 **¿Qué pasa si el archivo `architecture.db` no existe?**
 
 Se crea automáticamente en el primer análisis. El directorio `.quality_control/` también se crea si no existe.
+
+**¿Qué es `analysis_depth` y cuándo usarlo?**
+
+Controla la granularidad del paquete para DistanceAnalyzer y RelationalCohesionAnalyzer. Con el default (`depth=1`), `myapp.domain.model` → paquete `myapp`. Con `depth=2` → paquete `myapp.domain`. Usá `depth=2` en proyectos con arquitecturas hexagonales o Clean Architecture donde el primer componente del módulo es el namespace de la aplicación y el segundo es la capa real (`domain`, `application`, `infrastructure`).
+
+**¿Para qué sirve `layer_roles`?**
+
+Calibra la advertencia de InstabilityAnalyzer para módulos que tienen un comportamiento esperado distinto del patrón estándar. Ejemplo: en CQRS, los módulos de commands son "leaves" — no deberían tener dependientes. Sin `layer_roles`, InstabilityAnalyzer no advertiría si un leaf tiene Ca alto porque su I sería bajo (muchos dependientes = parece estable). Con `"*/commands/*" = "leaf"`, el analyzer advierte cuando un leaf tiene dependientes inesperados.
+
+**¿Por qué CoverageAnalyzer advierte si no encuentra `coverage.json`?**
+
+Porque la ausencia del archivo implica que los tests no se están corriendo con cobertura, lo cual es información valiosa. Generá el archivo con `pytest --cov=src --cov-report=json` antes de correr ArchitectAnalyst. Podés deshabilitar este check con `coverage = false` en `[tool.architectanalyst.checks]`.
