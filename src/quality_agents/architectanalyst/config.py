@@ -62,6 +62,7 @@ class ArchitectAnalystChecksConfig:
     dependency_cycles: bool = True
     layer_violations: bool = True
     relational_cohesion: bool = True
+    god_package: bool = True
 
 
 @dataclass
@@ -133,6 +134,10 @@ class ArchitectAnalystConfig:
 
     # --- Cohesión Relacional ---
     min_relational_cohesion: float = 1.5   # H < umbral → WARNING
+
+    # --- God Package ---
+    max_package_classes: int = 20          # n_clases > umbral → WARNING
+    max_package_ca: int = 10               # Ca > umbral → WARNING
 
     # --- Profundidad de análisis para DistanceAnalyzer ---
     # 1 = primer componente del módulo (default, comportamiento original)

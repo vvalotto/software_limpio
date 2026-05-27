@@ -10,6 +10,7 @@ from quality_agents.architectanalyst.metrics.dependency_cycles_analyzer import (
     DependencyCyclesAnalyzer,
 )
 from quality_agents.architectanalyst.metrics.distance_analyzer import DistanceAnalyzer
+from quality_agents.architectanalyst.metrics.god_package_analyzer import GodPackageAnalyzer
 from quality_agents.architectanalyst.metrics.instability_analyzer import InstabilityAnalyzer
 from quality_agents.architectanalyst.metrics.layer_violations_analyzer import (
     LayerViolationsAnalyzer,
@@ -26,4 +27,5 @@ __all__ = [
     "AbstractnessAnalyzer",
     "DistanceAnalyzer",
     "RelationalCohesionAnalyzer",
+    "GodPackageAnalyzer",
 ]
