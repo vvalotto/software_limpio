@@ -4,6 +4,7 @@ Tests unitarios para DesignReviewerConfig y load_config().
 Ticket: 1.7
 """
 
+from pathlib import Path
 
 import pytest
 
@@ -262,3 +263,38 @@ max_line_length = 100
 
         assert isinstance(config, DesignReviewerConfig)
         assert isinstance(config.ai, AIConfig)
+
+
+class TestLoadConfigFromProjectPyproject:
+    """Verifica que load_config() lee correctamente el pyproject.toml real del proyecto."""
+
+    def _project_root(self) -> Path:
+        return Path(__file__).parent.parent.parent
+
+    def test_carga_desde_pyproject_toml_real(self):
+        config = load_config(project_root=self._project_root())
+        assert isinstance(config, DesignReviewerConfig)
+
+    def test_campos_basicos_leidos(self):
+        config = load_config(project_root=self._project_root())
+        assert config.max_cbo == 5
+        assert config.max_fan_out == 7
+        assert config.max_wmc == 20
+        assert config.max_method_lines == 20
+
+    def test_nuevos_campos_v04_leidos(self):
+        config = load_config(project_root=self._project_root())
+        assert config.max_demeter_depth == 1
+        assert config.max_primitive_params == 3
+
+    def test_checks_leidos_desde_archivo(self):
+        config = load_config(project_root=self._project_root())
+        assert config.checks.law_of_demeter is True
+        assert config.checks.primitive_obsession is True
+        assert config.checks.data_clumps is True
+
+    def test_ai_leido_desde_archivo(self):
+        config = load_config(project_root=self._project_root())
+        assert config.ai.enabled is False
+        assert config.ai.suggest_refactoring is True
+        assert config.ai.max_tokens == 800

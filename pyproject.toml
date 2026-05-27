@@ -125,31 +125,104 @@ exclude = [".venv", "venv", "__pycache__", "migrations"]
 select = ["E", "F", "W", "I", "N", "B", "C4"]
 ignore = ["E501"]  # Line too long (handled by formatter)
 
+[tool.codeguard]
+min_pylint_score          = 8.0
+max_cyclomatic_complexity = 10
+max_line_length           = 100
+max_function_lines        = 20
+min_dead_code_confidence  = 60
+min_maintainability_index = 20
+exclude_patterns          = ["*.pyc", "__pycache__", ".venv", "venv", "migrations"]
+
+[tool.codeguard.checks]
+pep8            = true
+pylint          = true
+security        = true
+complexity      = true
+types           = true
+imports         = true
+dead_code       = true
+maintainability = true
+spelling        = true
+
+[tool.codeguard.ai]
+enabled        = false
+explain_errors = true
+suggest_fixes  = true
+max_tokens     = 500
+
 [tool.designreviewer]
-max_cbo = 5
-max_fan_out = 7
-max_dit = 5
-max_nop = 1
-max_lcom = 1
-max_wmc = 20
+max_cbo                    = 5
+max_fan_out                = 7
+max_dit                    = 5
+max_nop                    = 1
+max_lcom                   = 1
+max_wmc                    = 20
+max_god_object_methods     = 20
+max_god_object_lines       = 300
+max_method_lines           = 20
+max_parameters             = 5
+min_data_clump_size        = 3
+min_data_clump_occurrences = 2
+max_demeter_depth          = 1
+max_primitive_params       = 3
+exclude_patterns           = ["__pycache__", ".venv", "venv", "migrations", "test_", "conftest"]
+
+[tool.designreviewer.checks]
+cbo                 = true
+fan_out             = true
+circular_imports    = true
+lcom                = true
+wmc                 = true
+dit                 = true
+nop                 = true
+god_object          = true
+long_method         = true
+long_parameter_list = true
+feature_envy        = true
+data_clumps         = true
+law_of_demeter      = true
+primitive_obsession = true
 
 [tool.designreviewer.ai]
-enabled = false
+enabled             = false
+suggest_refactoring = true
+max_tokens          = 800
 
 [tool.architectanalyst]
-max_instability = 0.8
-max_distance_warning = 0.3
-max_distance_critical = 0.5
-db_path = ".quality_control/architecture.db"
+max_instability        = 0.8
+max_distance_warning   = 0.3
+max_distance_critical  = 0.5
+db_path                = ".quality_control/architecture.db"
+min_relational_cohesion = 1.5
+analysis_depth         = 1
+max_package_classes    = 20
+max_package_ca         = 10
+min_coverage           = 80.0
+coverage_report_path   = "coverage.json"
+exclude_patterns       = ["__pycache__", ".venv", "venv", "migrations", "test_", "conftest", "dist", "build"]
+
+[tool.architectanalyst.checks]
+coupling          = true
+abstractness      = true
+instability       = true
+distance          = true
+dependency_cycles = true
+layer_violations  = true
+relational_cohesion = true
+god_package       = true
+coverage          = true
+
+[tool.architectanalyst.layers]
+# Arquitectura de quality_agents: cada agente es independiente.
+# Descomentar y adaptar para proyectos con arquitectura en capas explícita:
+# domain         = []
+# application    = ["domain"]
+# infrastructure = ["application", "domain"]
 
 [tool.architectanalyst.ai]
-enabled = false
-
-# Ejemplo de configuración de capas (descomentar y adaptar a tu proyecto):
-# [tool.architectanalyst.layers]
-# domain = []
-# application = ["domain"]
-# infrastructure = ["application", "domain"]
+enabled    = false
+max_tokens = 1500
 
 [tool.mypy]
 python_version = "3.11"
