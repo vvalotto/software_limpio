@@ -106,10 +106,13 @@ Agregar en tu `pyproject.toml`:
 ```toml
 [tool.codeguard]
 # Umbrales de calidad
-min_pylint_score = 8.0
+min_pylint_score          = 8.0
 max_cyclomatic_complexity = 10
-max_line_length = 100
-max_function_lines = 20
+max_line_length           = 100
+max_function_lines        = 20
+min_dead_code_confidence  = 60    # Confianza mínima para reportar código muerto (vulture)
+min_maintainability_index = 20    # Índice de mantenibilidad mínimo (radon MI)
+spelling_ignore_words     = []    # Palabras a ignorar en el check de ortografía
 
 # Exclusiones
 exclude_patterns = [
@@ -123,19 +126,22 @@ exclude_patterns = [
 
 # Verificaciones habilitadas (todas activas por defecto)
 [tool.codeguard.checks]
-pep8 = true
-pylint = true
-security = true
-complexity = true
-types = true
-imports = true
+pep8            = true
+pylint          = true
+security        = true
+complexity      = true
+types           = true
+imports         = true
+dead_code       = true   # Detecta código muerto con vulture
+maintainability = true   # Verifica índice de mantenibilidad con radon
+spelling        = true   # Detecta errores de ortografía con codespell
 
 # Configuración de IA (opcional)
 [tool.codeguard.ai]
-enabled = false              # Cambiar a true para habilitar sugerencias con IA
-explain_errors = true        # IA explica los errores detectados
-suggest_fixes = true         # IA sugiere correcciones
-max_tokens = 500            # Máximo de tokens por respuesta
+enabled        = false   # Cambiar a true para habilitar sugerencias con IA
+explain_errors = true    # IA explica los errores detectados
+suggest_fixes  = true    # IA sugiere correcciones
+max_tokens     = 500     # Máximo de tokens por respuesta
 ```
 
 **Ventajas:**
@@ -171,6 +177,9 @@ checks:
   complexity: true
   types: true
   imports: true
+  dead_code: true
+  maintainability: true
+  spelling: true
 ```
 
 ### Búsqueda Automática de Configuración
@@ -300,23 +309,26 @@ Estructura del JSON:
 
 ### Qué Verifica CodeGuard
 
-CodeGuard usa una **arquitectura modular** con 6 checks independientes que se ejecutan según el contexto:
+CodeGuard usa una **arquitectura modular** con 9 checks independientes que se ejecutan según el contexto:
 
 | Check | Herramienta | Verifica | Prioridad | Tiempo | Severidad |
 |-------|-------------|----------|-----------|--------|-----------|
-| **PEP8Check** | flake8 | Estilo de código PEP8 | 2 | ~0.5s | WARNING |
 | **SecurityCheck** | bandit | Vulnerabilidades, secretos, funciones inseguras | 1 | ~1.5s | ERROR |
+| **PEP8Check** | flake8 | Estilo de código PEP8 | 2 | ~0.5s | WARNING |
 | **ComplexityCheck** | radon | Complejidad ciclomática, anidamiento | 3 | ~1.0s | INFO/WARNING |
 | **PylintCheck** | pylint | Calidad general, score | 4 | ~2.0s | WARNING |
 | **TypeCheck** | mypy | Tipos, anotaciones | 5 | ~3.0s | WARNING |
 | **ImportCheck** | pylint | Imports sin usar, duplicados | 6 | ~0.5s | WARNING |
+| **DeadCodeCheck** | vulture | Código muerto: funciones, variables, imports sin usar | 7 | ~1.0s | WARNING/ERROR |
+| **MaintainabilityCheck** | radon | Índice de mantenibilidad (MI) | 8 | ~1.0s | INFO/WARNING/ERROR |
+| **SpellingCheck** | codespell | Errores de ortografía en comentarios y strings | 9 | ~0.5s | WARNING |
 
 **Prioridad:** 1 = más crítico (se ejecuta primero)
 
 **Checks ejecutados según análisis:**
-- `pre-commit`: Priority 1-3 (PEP8, Security, Complexity) → < 5s
-- `pr-review`: Priority 1-5 (+ Pylint, Types) → ~10-15s
-- `full`: Priority 1-6 (todos los checks) → ~20-30s
+- `pre-commit`: Priority 1-3 (Security, PEP8, Complexity) → < 5s
+- `pr-review`: Priority 1-6 (+ Pylint, Types, Imports) → ~10-15s
+- `full`: Priority 1-9 (todos los checks) → ~20-30s
 
 ### Detalles de Cada Check
 
@@ -354,6 +366,22 @@ CodeGuard usa una **arquitectura modular** con 6 checks independientes que se ej
 - Imports duplicados
 - Imports dentro de funciones
 
+#### 7. DeadCodeCheck (vulture)
+- ⚠️ **WARNING (60–79% confianza):** posible código muerto — función, variable o import sin usar
+- ❌ **ERROR (≥80% confianza):** código muerto con alta certeza
+- Umbral configurable con `min_dead_code_confidence` (default: 60)
+
+#### 8. MaintainabilityCheck (radon MI)
+- ℹ️ **INFO (MI ≥ umbral):** mantenibilidad aceptable
+- ⚠️ **WARNING (10 ≤ MI < umbral):** mantenibilidad baja, considerar refactorización
+- ❌ **ERROR (MI < 10):** mantenibilidad muy baja, refactorización urgente
+- Umbral configurable con `min_maintainability_index` (default: 20)
+- Escala radon: A (>100), B (20–100), C (<20)
+
+#### 9. SpellingCheck (codespell)
+- ⚠️ **WARNING:** typo detectado en comentarios, docstrings o strings
+- Lista de palabras a ignorar configurable con `spelling_ignore_words`
+
 ---
 
 ## Opciones Avanzadas
@@ -380,8 +408,8 @@ CodeGuard adapta qué checks ejecuta según el contexto:
 | Tipo | Uso | Checks | Tiempo | Prioridad |
 |------|-----|--------|--------|-----------|
 | `pre-commit` | Commits rápidos | Solo checks críticos (priority 1-3) | < 5s | Default |
-| `pr-review` | Pull Requests | Checks importantes (priority 1-5) | ~10-15s | Completo |
-| `full` | Análisis completo | Todos los checks (priority 1-6) | ~20-30s | Exhaustivo |
+| `pr-review` | Pull Requests | Checks importantes (priority 1-6) | ~10-15s | Completo |
+| `full` | Análisis completo | Todos los checks (priority 1-9) | ~20-30s | Exhaustivo |
 
 **Ejemplos:**
 
@@ -541,7 +569,7 @@ cat > .pre-commit-config.yaml << 'EOF'
 repos:
   # CodeGuard - Análisis rápido para commits
   - repo: https://github.com/vvalotto/software_limpio
-    rev: v0.3.0  # Usar la última versión
+    rev: v0.4.0  # Usar la última versión
     hooks:
       - id: codeguard
         name: CodeGuard Quality Check
@@ -584,7 +612,7 @@ CodeGuard proporciona 3 hooks diferentes:
 ```yaml
 repos:
   - repo: https://github.com/vvalotto/software_limpio
-    rev: v0.3.0
+    rev: v0.4.0
     hooks:
       - id: codeguard
 ```
@@ -593,7 +621,7 @@ repos:
 ```yaml
 repos:
   - repo: https://github.com/vvalotto/software_limpio
-    rev: v0.3.0
+    rev: v0.4.0
     hooks:
       - id: codeguard         # Pre-commit rápido
       - id: codeguard-pr      # Pre-push completo
@@ -604,7 +632,7 @@ repos:
 ```yaml
 repos:
   - repo: https://github.com/vvalotto/software_limpio
-    rev: v0.3.0
+    rev: v0.4.0
     hooks:
       - id: codeguard-full
         stages: [manual]
@@ -770,7 +798,7 @@ git commit --no-verify -m "Mensaje"
 
 ```bash
 # En .pre-commit-config.yaml, cambiar:
-# rev: v0.2.0  → rev: v0.3.0
+# rev: v0.3.1  → rev: v0.4.0
 
 # Luego ejecutar:
 pre-commit autoupdate
@@ -804,8 +832,11 @@ codeguard /path/to/proyecto
 En `pyproject.toml`:
 ```toml
 [tool.codeguard.checks]
-pep8 = false        # Deshabilitar PEP8
-complexity = false  # Deshabilitar complejidad
+pep8            = false   # Deshabilitar PEP8
+complexity      = false   # Deshabilitar complejidad
+dead_code       = false   # Deshabilitar detección de código muerto
+maintainability = false   # Deshabilitar índice de mantenibilidad
+spelling        = false   # Deshabilitar ortografía
 ```
 
 O en `.codeguard.yml`:
@@ -813,6 +844,9 @@ O en `.codeguard.yml`:
 checks:
   pep8: false
   complexity: false
+  dead_code: false
+  maintainability: false
+  spelling: false
 ```
 
 ### ¿Cómo excluir archivos o directorios?
@@ -888,11 +922,20 @@ Usa `.codeguard.yml` solo si tu proyecto no tiene `pyproject.toml`.
 ### ¿Qué diferencia hay entre pre-commit, pr-review y full?
 
 Son **tipos de análisis** que ejecutan diferentes checks:
-- `pre-commit`: Solo checks críticos (< 5s) - Para commits rápidos
-- `pr-review`: Checks importantes (~10-15s) - Para pull requests
-- `full`: Todos los checks (~20-30s) - Análisis exhaustivo
+- `pre-commit`: Checks críticos (priority 1-3: Security, PEP8, Complexity) → < 5s, para commits rápidos
+- `pr-review`: Checks importantes (priority 1-6: + Pylint, Types, Imports) → ~10-15s, para pull requests
+- `full`: Todos los checks (priority 1-9: + DeadCode, Maintainability, Spelling) → ~20-30s, análisis exhaustivo
 
-Ejemplo: `codeguard --analysis-type pr-review .`
+Ejemplo: `codeguard --analysis-type full .`
+
+### ¿Qué herramientas externas necesita instalar?
+
+Los 9 checks usan herramientas instaladas automáticamente con el paquete:
+- `flake8`, `pylint`, `bandit`, `mypy`, `radon` — ya incluidos en las dependencias
+- `vulture` — necesario para DeadCodeCheck
+- `codespell` — necesario para SpellingCheck
+
+Si alguna herramienta no está instalada, el check correspondiente se omite sin error.
 
 ### ¿Los checks se ejecutan en paralelo?
 
@@ -929,7 +972,10 @@ src/quality_agents/codeguard/
     ├── complexity_check.py
     ├── pylint_check.py
     ├── type_check.py
-    └── import_check.py
+    ├── import_check.py
+    ├── dead_code_check.py       # vulture — código muerto
+    ├── maintainability_check.py # radon MI — mantenibilidad
+    └── spelling_check.py        # codespell — ortografía
 ```
 
 ### Patrón Verifiable
