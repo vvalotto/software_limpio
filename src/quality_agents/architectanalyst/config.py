@@ -130,6 +130,11 @@ class ArchitectAnalystConfig:
         "build",
     ])
 
+    # --- Profundidad de análisis para DistanceAnalyzer ---
+    # 1 = primer componente del módulo (default, comportamiento original)
+    # 2 = dos componentes — útil en arquitecturas hexagonales con namespace de app
+    analysis_depth: int = 1
+
     # --- Roles de capa para calibración arquitectural (CQRS/ES/Hexagonal) ---
     # Mapeo glob → "leaf" | "stable"
     # leaf:   módulo terminal — se advierte si I es bajo (algo depende de él)

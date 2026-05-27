@@ -6,16 +6,15 @@ D (Distance from Main Sequence) = |A + I - 1|
 La Main Sequence es la línea ideal A + I = 1. Paquetes sobre esa línea
 tienen el balance perfecto entre estabilidad y abstracción.
 
-Las métricas se calculan a nivel de **paquete** (directorio de primer nivel),
-no de módulo individual. Esto sigue la definición original de Robert C. Martin
-y evita falsos positivos: cualquier clase concreta tiene A=0, I=0 → D=1.00
-si se analiza por módulo.
+Las métricas se calculan a nivel de **paquete**, cuya granularidad se controla
+con `analysis_depth` (default: 1 = primer componente del módulo).
+
+Con depth=1: `myapp.domain.model` → paquete `myapp`
+Con depth=2: `myapp.domain.model` → paquete `myapp.domain`
 
 Zonas problemáticas:
-  Zone of Pain (A≈0, I≈0): paquete estable pero concreto — muy rígido,
-    difícil de cambiar porque muchos dependen de una implementación concreta.
-  Zone of Uselessness (A≈1, I≈1): paquete abstracto pero inestable —
-    nadie depende de él, las abstracciones no se usan.
+  Zone of Pain (A≈0, I≈0): paquete estable pero concreto — muy rígido.
+  Zone of Uselessness (A≈1, I≈1): paquete abstracto pero nadie depende de él.
 
 Rango de D: [0.0, 1.0]
   0.0 = sobre la Main Sequence (ideal)
@@ -25,8 +24,8 @@ Umbrales en ArchitectAnalystConfig:
   max_distance_warning  (default: 0.3) → WARNING
   max_distance_critical (default: 0.5) → CRITICAL
 
-Ticket: 2.5 / Issue #33
-Fecha: 2026-03-01 / 2026-03-08
+Ticket: 2.5 / Issues #33 #48
+Fecha: 2026-03-01 / 2026-05-27
 """
 
 import ast
@@ -102,6 +101,7 @@ class DistanceAnalyzer(ProjectMetric):
         config = self._config
         warn_threshold = config.max_distance_warning if config is not None else 0.3
         crit_threshold = config.max_distance_critical if config is not None else 0.5
+        depth = getattr(config, "analysis_depth", 1) if config is not None else 1
 
         builder = DependencyGraphBuilder()
         graph = builder.build(project_path, files)
@@ -109,7 +109,7 @@ class DistanceAnalyzer(ProjectMetric):
         python_files = [f for f in files if f.suffix == ".py"]
         module_to_file = self._build_module_to_file(project_path, python_files, graph.modules)
 
-        package_data = self._aggregate_to_packages(graph, module_to_file)
+        package_data = self._aggregate_to_packages(graph, module_to_file, depth)
 
         results: List[ArchitectureResult] = []
 
@@ -162,12 +162,14 @@ class DistanceAnalyzer(ProjectMetric):
         self,
         graph: Any,
         module_to_file: Dict[str, Path],
+        depth: int = 1,
     ) -> Dict[str, Dict[str, Any]]:
         """
         Agrega métricas de módulos individuales al nivel de paquete.
 
-        Un paquete es el primer componente del nombre dotted del módulo.
-        Por ejemplo: `entidades.sensor` → paquete `entidades`.
+        La granularidad del paquete se controla con `depth`:
+          depth=1: `myapp.domain.model` → `myapp`   (default, comportamiento original)
+          depth=2: `myapp.domain.model` → `myapp.domain`
 
         Ca y Ce se calculan contando dependencias **entre paquetes distintos**,
         no entre módulos individuales.
@@ -175,6 +177,7 @@ class DistanceAnalyzer(ProjectMetric):
         Args:
             graph: DependencyGraph con módulos y sus dependencias.
             module_to_file: Mapa módulo → archivo para parsear clases.
+            depth: Número de componentes del módulo que forman el nombre del paquete.
 
         Returns:
             Diccionario paquete → {abstract_classes, total_classes, ca, ce}.
@@ -185,7 +188,7 @@ class DistanceAnalyzer(ProjectMetric):
         pkg_modules: Dict[str, Set[str]] = defaultdict(set)
 
         for module in graph.modules:
-            pkg = module.split(".")[0]
+            pkg = ".".join(module.split(".")[:depth])
             pkg_modules[pkg].add(module)
 
             file_path = module_to_file.get(module)
@@ -202,7 +205,7 @@ class DistanceAnalyzer(ProjectMetric):
             ce_pkgs: Set[str] = set()
             for m in pkg_modules[pkg]:
                 for dep in graph.efferent_coupling(m):
-                    dep_pkg = dep.split(".")[0]
+                    dep_pkg = ".".join(dep.split(".")[:depth])
                     if dep_pkg != pkg and dep_pkg in all_packages:
                         ce_pkgs.add(dep_pkg)
 
@@ -213,7 +216,7 @@ class DistanceAnalyzer(ProjectMetric):
                     continue
                 for m in pkg_modules[other_pkg]:
                     for dep in graph.efferent_coupling(m):
-                        if dep.split(".")[0] == pkg:
+                        if ".".join(dep.split(".")[:depth]) == pkg:
                             ca_pkgs.add(other_pkg)
                             break
 
