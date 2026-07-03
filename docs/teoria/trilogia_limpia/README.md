@@ -98,7 +98,7 @@ El nivel **macro**: la organización del sistema completo.
 | **Diseño** | LCOM (Cohesión) | ≤ 1 |
 | | CBO (Acoplamiento) | ≤ 5 |
 | | MI (Mantenibilidad) | > 20 |
-| **Arquitectura** | D (Distance from Main Sequence) | ≈ 0 |
+| **Arquitectura** | D (Distance from Main Sequence) | ≤ 0.3 |
 | | Violaciones de capa | = 0 |
 | | Ciclos de dependencia | = 0 |
 

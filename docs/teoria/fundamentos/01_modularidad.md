@@ -98,7 +98,9 @@ Un cambio en la base de datos no debería requerir cambios en la interfaz de usu
 |---------|----------|-----------------|
 | LOC por módulo | Tamaño | ≤ 500 líneas |
 | Funciones por módulo | Complejidad | ≤ 20 |
-| Dependencias | Acoplamiento | ≤ 10 imports |
+| Imports por módulo | Proxy rápido de acoplamiento | ≤ 10 imports |
+
+Este conteo de imports es solo una señal de alerta temprana. Para medir acoplamiento con precisión (CBO, Ca, Ce), ver [Acoplamiento](04_acoplamiento.md#métricas).
 
 **Herramientas:** `radon`, `cloc`, `pydeps`
 

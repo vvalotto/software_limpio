@@ -17,6 +17,10 @@ La arquitectura limpia organiza el sistema en componentes independientes con dep
 
 **Es:** tomar decisiones de diseño que permitan cambiar lo periférico sin tocar lo esencial.
 
+A nivel de arquitectura, los principios de [Fundamentos](../fundamentos/README.md) siguen aplicando: la separación en capas es **modularidad** a escala de sistema, los boundaries son **ocultamiento de información** y **abstracción** entre componentes, y la Regla de Dependencia no es otra cosa que mantener el **acoplamiento** bajo y unidireccional.
+
+*Los ejemplos de esta sección están basados en [ISSE_Termostato](https://github.com/vvalotto/ISSE_Termostato), un sistema real de control de termostato con Clean Architecture, simplificados para fines didácticos.*
+
 ---
 
 ## Por Qué Importa
@@ -47,16 +51,16 @@ El sistema se divide en capas concéntricas. Las dependencias apuntan **hacia ad
 ```
 ┌───────────────────────────────────────────────┐
 │          Frameworks y Drivers                 │  ← Externo
-│    (Web, DB, UI, Devices)                     │
+│    (sockets, sensores, displays)              │
 ├───────────────────────────────────────────────┤
 │       Interface Adapters                      │
-│    (Controllers, Presenters, Gateways)        │
+│    (Proxies, Visualizadores, Factories)       │
 ├───────────────────────────────────────────────┤
 │         Casos de Uso                          │
-│    (Application Business Rules)               │
+│    (Gestores de entidades)                    │
 ├───────────────────────────────────────────────┤
 │          Entidades                            │  ← Interno
-│    (Enterprise Business Rules)                │
+│    (Ambiente, Batería, Climatizador)          │
 └───────────────────────────────────────────────┘
 
         Dependencias apuntan →  hacia adentro
@@ -67,19 +71,20 @@ El sistema se divide en capas concéntricas. Las dependencias apuntan **hacia ad
 
 **Ejemplo:**
 ```python
-# Bien: Entidad no conoce frameworks
-class User:
-    def __init__(self, name, email):
-        self.name = name
-        self.email = email
+# Bien: entidad no conoce sockets, hardware ni frameworks
+class Ambiente:
+    def __init__(self, temperatura_deseada_inicial=None):
+        self.__temperatura_ambiente = None
+        self.__temperatura_deseada = temperatura_deseada_inicial or 22
 
-    def is_valid(self):
-        return "@" in self.email
+    @property
+    def temperatura_ambiente(self):
+        return self.__temperatura_ambiente
 
-# Mal: Entidad acoplada a Flask
-class User(db.Model):  # ¡Violación! Entidad depende de framework
-    __tablename__ = "users"
-    id = db.Column(db.Integer, primary_key=True)
+# Mal: entidad acoplada al detalle de infraestructura
+class Ambiente:
+    def __init__(self, socket_conexion):  # ¡Violación! Entidad depende de socket
+        self.socket = socket_conexion
 ```
 
 ---
@@ -92,33 +97,35 @@ class User(db.Model):  # ¡Violación! Entidad depende de framework
     Detalles  →  Políticas
     (cambios frecuentes)  →  (cambios raros)
 
-    UI        →  Casos de Uso  →  Entidades
-    DB        →  Casos de Uso  →  Reglas de Negocio
-    Framework →  Aplicación    →  Dominio
+    Socket/Archivo  →  Gestor  →  Ambiente
+    Sensor físico   →  Caso de Uso  →  Reglas de Negocio
 ```
 
 **Inversión de Dependencias (DIP):**
 
 ```python
-# Mal: política depende de detalle
-class OrderService:
-    def process(self, order):
-        mysql = MySQLDatabase()  # ¡Dependencia incorrecta!
-        mysql.save(order)
+# Mal: el gestor depende del detalle concreto
+class GestorAmbiente:
+    def leer_temperatura_ambiente(self):
+        proxy = ProxySensorTemperaturaSocket("0.0.0.0", 12000)  # ¡Dependencia incorrecta!
+        self._ambiente.temperatura_ambiente = proxy.leer_temperatura()
 
-# Bien: detalle depende de política
-class OrderService:
-    def __init__(self, repository: OrderRepository):
-        self.repository = repository  # Abstracción (política)
+# Bien: el gestor recibe la abstracción inyectada (así es en ISSE_Termostato)
+class GestorAmbiente:
+    def __init__(self, ambiente, proxy_sensor, visualizador, incremento_temperatura=1):
+        self._ambiente = ambiente
+        self._proxy_sensor_temperatura = proxy_sensor  # Abstracción (política)
+        self._visualizador_temperatura = visualizador
 
-    def process(self, order):
-        self.repository.save(order)
-
-class MySQLOrderRepository(OrderRepository):
-    def save(self, order):
-        # Implementación concreta (detalle)
-        pass
+    def leer_temperatura_ambiente(self):
+        try:
+            temperatura = self._proxy_sensor_temperatura.leer_temperatura()
+            self._ambiente.temperatura_ambiente = temperatura
+        except (OSError, ValueError, TimeoutError):
+            self._ambiente.temperatura_ambiente = None
 ```
+
+El `GestorAmbiente` no sabe si el sensor lee de un archivo o de un socket TCP. Solo conoce la abstracción.
 
 ---
 
@@ -130,40 +137,36 @@ Los boundaries separan componentes. Aislan cambios. Permiten testar independient
 
 | Tipo | Ejemplo | Cuándo usar |
 |------|---------|-------------|
-| **API** | Interface / Protocol | Entre capas del mismo proceso |
-| **Adaptador** | Gateway / Repository | Entre dominio y persistencia |
-| **Servicio** | Microservicio | Entre bounded contexts |
+| **API** | Interface / ABC | Entre capas del mismo proceso |
+| **Adaptador** | Proxy / Gateway | Entre dominio y sensores/hardware |
+| **Servicio** | Microservicio, API REST | Entre bounded contexts |
 
-**Ejemplo de boundary:**
+**Ejemplo de boundary (real, de ISSE_Termostato):**
 
 ```python
-# Boundary: interfaz (Protocol)
-class PaymentGateway(Protocol):
-    def charge(self, amount: float, token: str) -> bool:
+# Boundary: interfaz abstracta
+class AbsSelectorTemperatura(ABC):
+    @abstractmethod
+    def obtener_selector(self):
         pass
 
-# Dominio usa la abstracción
-class CheckoutService:
-    def __init__(self, payment: PaymentGateway):
-        self.payment = payment
+# El gestor usa la abstracción, no le importa el origen
+class SelectorTemperaturaArchivo(AbsSelectorTemperatura):
+    def obtener_selector(self):
+        with open("tipo_temperatura", "r", encoding="utf-8") as archivo:
+            return archivo.read().strip()
 
-    def complete_order(self, order):
-        success = self.payment.charge(order.total, order.token)
-        return success
-
-# Implementaciones concretas (detalles)
-class StripeGateway(PaymentGateway):
-    def charge(self, amount, token):
-        # Llamada a API de Stripe
+class SelectorTemperaturaSocket(AbsSelectorTemperatura):
+    def __init__(self, host, puerto):
+        # ... setup de socket TCP persistente
         pass
 
-class MercadoPagoGateway(PaymentGateway):
-    def charge(self, amount, token):
-        # Llamada a API de MercadoPago
+    def obtener_selector(self):
+        # Lee el modo (ambiente/deseada) desde el socket
         pass
 ```
 
-**Beneficio:** cambiar de Stripe a MercadoPago no toca `CheckoutService`.
+**Beneficio:** cambiar de "archivo" a "socket" es una línea en `termostato.json`. No toca al `GestorAmbiente`.
 
 ---
 
@@ -173,47 +176,57 @@ class MercadoPagoGateway(PaymentGateway):
 
 **Qué son:** Reglas de negocio que son verdad independientemente de la aplicación.
 
-**Ejemplo:**
+**Ejemplo (simplificado de `entidades/ambiente.py`):**
 ```python
-class LoanApplication:
-    def __init__(self, amount, applicant):
-        self.amount = amount
-        self.applicant = applicant
+class Ambiente:
+    """Entidad que representa el ambiente a climatizar."""
 
-    def is_approvable(self):
-        # Regla de negocio: no prestar más del 40% del ingreso
-        return self.amount <= self.applicant.monthly_income * 0.4
+    def __init__(self, temperatura_deseada_inicial=None):
+        self.__temperatura_ambiente = None  # Aún no leída del sensor
+        self.__temperatura_deseada = temperatura_deseada_inicial or 22
+        self.__temperatura_a_mostrar = "ambiente"
+
+    @property
+    def temperatura_ambiente(self):
+        return self.__temperatura_ambiente
+
+    @temperatura_ambiente.setter
+    def temperatura_ambiente(self, valor):
+        self.__temperatura_ambiente = valor
 ```
 
-**No dependen de:** UI, DB, frameworks. Son pura lógica de dominio.
+**No depende de:** sockets, archivos, hardware, frameworks. Es pura lógica de dominio.
 
 ---
 
 ### 2. Casos de Uso (Application Business Rules)
 
-**Qué son:** Orquestación específica de la aplicación. "Cómo se hace X en este sistema".
+**Qué son:** Orquestación específica de la aplicación. "Cómo se coordina X en este sistema".
 
-**Ejemplo:**
+**Ejemplo (simplificado de `gestores_entidades/gestor_ambiente.py`):**
 ```python
-class ApplyForLoan:
-    def __init__(self, loan_repo, notifier):
-        self.loan_repo = loan_repo
-        self.notifier = notifier
+class GestorAmbiente:
+    """Orquesta lectura de sensor, entidad Ambiente y visualización."""
 
-    def execute(self, request):
-        loan = LoanApplication(request.amount, request.applicant)
+    def __init__(self, ambiente, proxy_sensor, visualizador, incremento_temperatura=1):
+        self._ambiente = ambiente
+        self._proxy_sensor_temperatura = proxy_sensor
+        self._visualizador_temperatura = visualizador
+        self._incremento_temperatura = incremento_temperatura
 
-        if not loan.is_approvable():
-            return Response(success=False, reason="Exceeds income ratio")
+    def leer_temperatura_ambiente(self):
+        try:
+            temperatura = self._proxy_sensor_temperatura.leer_temperatura()
+            self._ambiente.temperatura_ambiente = temperatura
+        except (OSError, ValueError, TimeoutError):
+            self._ambiente.temperatura_ambiente = None
 
-        self.loan_repo.save(loan)
-        self.notifier.send_confirmation(request.applicant)
-
-        return Response(success=True, loan_id=loan.id)
+    def aumentar_temperatura_deseada(self):
+        self._ambiente.temperatura_deseada += self._incremento_temperatura
 ```
 
-**Dependen de:** Entidades (inner).
-**No dependen de:** UI, DB (outer).
+**Depende de:** Entidades (inner) y abstracciones de proxy/visualizador.
+**No depende de:** sockets concretos, archivos concretos (outer).
 
 ---
 
@@ -221,56 +234,42 @@ class ApplyForLoan:
 
 **Qué son:** Traductores entre la aplicación y el mundo externo.
 
-**Tipos:**
-- **Controllers:** traducen HTTP → Casos de Uso
-- **Presenters:** traducen Casos de Uso → JSON/HTML
-- **Gateways:** traducen Casos de Uso → DB/APIs externas
+**Tipos en ISSE_Termostato:**
+- **Proxies:** traducen sensor físico/simulado → valor de dominio (`ProxySensorTemperatura`)
+- **Visualizadores:** traducen estado de dominio → consola/socket/API (`VisualizadorTemperatura`)
+- **Factories:** construyen la implementación correcta según configuración (`FactorySelectorTemperatura`)
 
-**Ejemplo - Controller:**
+**Ejemplo — Factory (Registry Pattern, real):**
 ```python
-class LoanController:
-    def __init__(self, use_case: ApplyForLoan):
-        self.use_case = use_case
+class FactorySelectorTemperatura(RegistryFactory):
+    """Factory para crear instancias de selector de temperatura."""
+    _registry = {}
 
-    def post(self, http_request):
-        # Traduce HTTP → Request del caso de uso
-        request = LoanRequest(
-            amount=http_request.json["amount"],
-            applicant_id=http_request.json["applicant_id"]
-        )
-
-        response = self.use_case.execute(request)
-
-        # Traduce Response → HTTP
-        if response.success:
-            return {"status": "approved", "loan_id": response.loan_id}, 200
-        else:
-            return {"status": "rejected", "reason": response.reason}, 400
+FactorySelectorTemperatura.registrar("archivo", lambda **kw: SelectorTemperaturaArchivo())
+FactorySelectorTemperatura.registrar(
+    "socket",
+    lambda host=None, puerto=None, **kw: SelectorTemperaturaSocket(host, puerto)
+)
 ```
+
+Agregar una nueva variante (ej. un selector via API) no modifica el Factory: solo se registra. Esto es Open/Closed aplicado a la construcción de objetos.
 
 ---
 
 ### 4. Frameworks y Drivers
 
-**Qué son:** Detalles concretos. Web frameworks, ORMs, librerías.
+**Qué son:** Detalles concretos. Sockets TCP, archivos, hardware, librerías externas.
 
 **Ejemplo:**
 ```python
-# Flask (framework) - capa más externa
-app = Flask(__name__)
+# actores_externos/ — simuladores que envían datos por socket
+# Frameworks y Drivers: la capa más externa
 
-@app.route("/loans", methods=["POST"])
-def apply_loan():
-    # Inyecta dependencias concretas
-    repo = SQLAlchemyLoanRepository(db)
-    notifier = SMTPNotifier()
-    use_case = ApplyForLoan(repo, notifier)
-    controller = LoanController(use_case)
-
-    return controller.post(request)
+simulador = SimuladorTemperatura(host="192.168.0.14", puerto=12000)
+simulador.enviar_temperatura(21.5)
 ```
 
-**Objetivo:** que cambiar de Flask a FastAPI sea trivial.
+**Objetivo:** que cambiar de "socket" a "archivo" en `termostato.json`, o de Raspberry Pi a otro dispositivo, sea trivial y no requiera tocar `GestorAmbiente` ni `Ambiente`.
 
 ---
 
@@ -283,6 +282,8 @@ def apply_loan():
 | **Ciclos de dependencia** | Componentes que se importan mutuamente | 0 | `pydeps --show-cycles` |
 | **Acoplamiento Aferente (Ca)** | Cuántos componentes dependen de este | Medido | `pydeps` |
 | **Acoplamiento Eferente (Ce)** | De cuántos componentes depende este | ≤ 5 ideal | `pydeps` |
+
+**Así se ve en la práctica:** el análisis de dependencias de ISSE_Termostato mide CBO promedio de 1.38 (bajo, saludable) pero también detecta **2 violaciones de la regla de dependencia** (`servicios_aplicacion` importando `configurador`, una capa externa) y **3 ciclos de dependencias**. Ni siquiera un proyecto bien diseñado está libre de esto — la diferencia es que las métricas lo hacen visible y accionable.
 
 **Ejecutar:**
 ```bash
@@ -312,19 +313,19 @@ python scripts/check_layer_violations.py
 ```
 # Mal: mezclar concerns en un componente
 utils/
-├── date_helpers.py
-├── email_sender.py
-├── pdf_generator.py
+├── conversion_temperatura.py
+├── envio_notificaciones.py
+├── generador_reportes.py
 
 # Bien: separar por razón de cambio
-date_utils/
-└── helpers.py
+conversion/
+└── temperatura.py
 
-notifications/
-└── email_sender.py
+notificaciones/
+└── enviador.py
 
-reports/
-└── pdf_generator.py
+reportes/
+└── generador.py
 ```
 
 ---
@@ -333,22 +334,15 @@ reports/
 
 **ADP (Acyclic Dependencies Principle):** No ciclos en el grafo de dependencias.
 
-```python
-# Mal: ciclo
-# users.py
-from orders import Order
-
-# orders.py
-from users import User  # Ciclo!
-
-# Bien: extraer abstracción compartida
-# domain/entities.py
-class User: pass
-class Order: pass
-
-# services/user_service.py
-from domain.entities import User, Order
+**Ejemplo real (detectado en el análisis de dependencias de ISSE_Termostato):**
 ```
+Ciclo detectado:
+servicios_aplicacion → configurador → agentes_sensores → servicios_aplicacion
+```
+
+`servicios_aplicacion` importa `configurador` para construir sus dependencias, `configurador` importa `agentes_sensores` para instanciar proxies, y algún componente de `agentes_sensores` termina dependiendo de vuelta de `servicios_aplicacion`. Nadie lo diseñó así a propósito — emergió de agregar imports de a uno.
+
+**Solución aplicada:** extraer una interfaz (`IConfiguradorDependencias`) e inyectar las dependencias ya construidas en lugar de que cada capa importe al configurador directamente.
 
 **SDP (Stable Dependencies Principle):** Depender de lo estable.
 
@@ -362,27 +356,27 @@ from domain.entities import User, Order
 
 ```
          ┌─────────────────────┐
-         │   Driving Adapters  │ (HTTP, CLI)
+         │   Driving Adapters  │ (Simuladores de sensores)
          └──────────┬──────────┘
                     ↓
          ┌─────────────────────┐
-         │    Application      │ (Casos de Uso)
-         │       Core          │ (Entidades)
+         │    Application      │ (Gestores)
+         │       Core          │ (Ambiente, Batería, Climatizador)
          └──────────┬──────────┘
                     ↓
          ┌─────────────────────┐
-         │   Driven Adapters   │ (DB, Email, APIs)
+         │   Driven Adapters   │ (Visualizadores, Actuador)
          └─────────────────────┘
 ```
 
-**Puertos:** interfaces que el core define.
-**Adaptadores:** implementaciones concretas.
+**Puertos:** interfaces que el core define (`AbsProxySensorTemperatura`, `AbsVisualizadorTemperatura`).
+**Adaptadores:** implementaciones concretas (socket, archivo, API REST).
 
 ---
 
 ### Clean Architecture (Uncle Bob)
 
-La versión de Martin de la arquitectura hexagonal, con énfasis en capas concéntricas.
+La versión de Martin de la arquitectura hexagonal, con énfasis en capas concéntricas. Es la que sigue ISSE_Termostato: Entidades → Casos de Uso → Interface Adapters → Frameworks y Drivers.
 
 **Ventaja:** independencia de frameworks, testabilidad, cambios localizados.
 
@@ -390,21 +384,20 @@ La versión de Martin de la arquitectura hexagonal, con énfasis en capas concé
 
 ### Event-Driven Architecture
 
-**Cuándo:** sistema con múltiples bounded contexts que necesitan comunicarse.
+**Cuándo:** sistema con múltiples componentes que necesitan reaccionar a cambios sin acoplarse directamente.
 
 ```python
 # Componente 1: Publica evento
-class OrderPlaced(Event):
-    order_id: str
-    total: float
+class BateriaCritica(Event):
+    nivel: float
 
-order_service.place_order(order)
-event_bus.publish(OrderPlaced(order.id, order.total))
+if bateria.nivel_de_carga < 15:
+    event_bus.publish(BateriaCritica(bateria.nivel_de_carga))
 
 # Componente 2: Escucha evento
-@event_bus.subscribe(OrderPlaced)
-def send_confirmation(event):
-    emailer.send(f"Order {event.order_id} confirmed")
+@event_bus.subscribe(BateriaCritica)
+def alertar_nivel_critico(evento):
+    visualizador.mostrar_alerta(f"Batería crítica: {evento.nivel}%")
 ```
 
 **Beneficio:** componentes desacoplados en tiempo.
@@ -416,19 +409,17 @@ def send_confirmation(event):
 ### Prompt para arquitectura
 
 ```
-"Diseñar arquitectura para sistema de préstamos con:
-- Arquitectura hexagonal (ports & adapters)
-- 3 capas: Entidades → Casos de Uso → Adapters
-- Boundaries claros entre capas
-- Inversión de dependencias (DIP)
+"Diseñar un nuevo proxy de sensor para el sistema de termostato con:
+- Arquitectura de capas: Entidad → Gestor (caso de uso) → Proxy (adapter)
+- Boundary claro: interfaz AbsProxySensorHumedad
+- Inversión de dependencias (DIP): el gestor recibe el proxy inyectado
 - Componentes:
-  * LoanApplication (entidad)
-  * ApplyForLoan (caso de uso)
-  * LoanRepository (puerto)
-  * SQLLoanRepository (adaptador)
-  * LoanController (adaptador HTTP)
-- Sin ciclos de dependencia
-- Type hints en puertos"
+  * Ambiente (entidad, ya existe)
+  * GestorAmbiente (caso de uso, ya existe)
+  * AbsProxySensorHumedad (puerto nuevo)
+  * ProxySensorHumedadSocket (adaptador nuevo)
+- Sin ciclos de dependencia con configurador ni agentes_sensores
+- Type hints en el puerto"
 ```
 
 ### Verificar arquitectura generada
@@ -439,10 +430,10 @@ def send_confirmation(event):
 4. **Medir distancia:** componentes estables son abstractos
 
 **Checklist:**
-- [ ] ¿Las entidades dependen de cero frameworks?
-- [ ] ¿Los casos de uso dependen solo de entidades y puertos?
+- [ ] ¿Las entidades dependen de cero frameworks/hardware?
+- [ ] ¿Los gestores dependen solo de entidades y puertos (proxies abstractos)?
 - [ ] ¿Los adaptadores implementan puertos definidos en capas internas?
-- [ ] ¿Puedo cambiar de framework sin tocar casos de uso?
+- [ ] ¿Puedo cambiar de sensor real a simulado sin tocar el gestor?
 
 ---
 
@@ -456,55 +447,59 @@ def send_confirmation(event):
 
 ---
 
-### 2. Arquitectura Centrada en Base de Datos
+### 2. Arquitectura Centrada en el Hardware
 
-**Síntoma:** La estructura del sistema sigue la estructura de la DB.
+**Síntoma:** La lógica de negocio conoce detalles del dispositivo físico (puerto GPIO, dirección de socket, formato del ADC).
 
 ```python
-# Mal: entidad es un modelo de DB
-class User(db.Model):
-    __tablename__ = "users"
-    # Todo está acoplado al ORM
+# Mal: el gestor conoce el hardware
+class GestorAmbiente:
+    def leer_temperatura_ambiente(self):
+        valor_adc = leer_gpio(pin=4)  # ¡Todo está acoplado al hardware!
+        self._ambiente.temperatura_ambiente = (valor_adc - 150) / 5.0
 ```
 
-**Solución:** Entidades puras, mappers separados.
+**Solución:** capa HAL (Hardware Abstraction Layer) + Proxy que convierte la señal cruda en un valor de dominio, como en ISSE_Termostato.
 
 ---
 
 ### 3. Framework Coupling
 
-**Síntoma:** Lógica de negocio embebida en controllers de Flask/Django.
+**Síntoma:** Lógica de negocio embebida en el adaptador de comunicación.
 
 ```python
 # Mal
-@app.route("/orders", methods=["POST"])
-def create_order():
-    # 50 líneas de lógica de negocio aquí
-    pass
+class ProxySensorTemperaturaSocket:
+    def leer_temperatura(self):
+        datos = self._conexion.recv(4096)
+        # 50 líneas decidiendo si hay que prender el calefactor aquí
+        pass
 ```
 
-**Solución:** Controller delgado, lógica en casos de uso.
+**Solución:** Proxy delgado que solo traduce, lógica de histeresis en `servicios_dominio/ControladorTemperatura`.
 
 ---
 
-### 4. Dependency Cycles
+### 4. Ciclos de Dependencias
 
 **Síntoma:** A → B → C → A
 
 **Consecuencia:** imposible testear componentes por separado.
 
-**Solución:** Invertir una dependencia o extraer abstracción.
+**Caso real:** el propio ISSE_Termostato tiene 3 variaciones del mismo ciclo (`servicios_aplicacion` ↔ `configurador` ↔ `agentes_sensores`), detectadas por análisis automático de dependencias.
+
+**Solución:** Invertir una dependencia o extraer abstracción (ver "Principios de Componentes" arriba).
 
 ---
 
-## La Prueba del Framework
+## La Prueba del Dispositivo
 
-> *"Si cambiar de framework requiere reescribir la lógica de negocio, la arquitectura está mal."*
+> *"Si cambiar de sensor real a simulado requiere reescribir la lógica de negocio, la arquitectura está mal."*
 
 **Preguntas:**
-- ¿Puedo cambiar de Flask a FastAPI sin tocar casos de uso? → Sí
-- ¿Puedo cambiar de SQLAlchemy a MongoDB sin tocar entidades? → Sí
-- ¿Puedo testear casos de uso sin levantar servidor web? → Sí
+- ¿Puedo cambiar `proxy_sensor_temperatura` de "socket" a "archivo" en `termostato.json` sin tocar `GestorAmbiente`? → Sí
+- ¿Puedo cambiar el visualizador de "consola" a "API REST" sin tocar `Ambiente`? → Sí
+- ¿Puedo testear `GestorAmbiente` sin un sensor físico ni una Raspberry Pi? → Sí
 
 **Si alguna respuesta es "No", hay acoplamiento arquitectónico.**
 
@@ -532,7 +527,7 @@ La arquitectura limpia no es sobre el primer sprint. Es sobre el año 5:
 | Velocity decrece con el tiempo | Velocity se mantiene estable |
 | Cada cambio rompe algo inesperado | Cambios localizados |
 | Imposible testear sin todo el stack | Tests rápidos, enfocados |
-| Frameworks obsoletos = reescritura | Frameworks intercambiables |
+| Frameworks/hardware obsoletos = reescritura | Frameworks/hardware intercambiables |
 | Desarrolladores huyen del proyecto | Desarrolladores entienden el sistema |
 
 **La arquitectura es una inversión. Se paga hoy, se cobra en 3 años.**
@@ -543,9 +538,9 @@ La arquitectura limpia no es sobre el primer sprint. Es sobre el año 5:
 
 La arquitectura no es estática. Evoluciona. Pero con reglas:
 
-1. **Cambios periféricos:** fáciles (cambiar DB, UI)
-2. **Cambios de casos de uso:** moderados (agregar feature)
-3. **Cambios de entidades:** difíciles (cambiar reglas de negocio)
+1. **Cambios periféricos:** fáciles (cambiar de sensor socket a archivo)
+2. **Cambios de casos de uso:** moderados (agregar un nuevo gestor)
+3. **Cambios de entidades:** difíciles (cambiar las reglas de histeresis del climatizador)
 
 **El objetivo:** maximizar cambios tipo 1, minimizar tipo 3.
 
@@ -558,6 +553,7 @@ La arquitectura no es estática. Evoluciona. Pero con reglas:
 3. **Evans, E. (2003)**. *Domain-Driven Design*. Parte IV (Strategic Design).
 4. **Vernon, V. (2013)**. *Implementing Domain-Driven Design*. Capítulo 4 (Architecture).
 5. **Parnas, D.L. (1972)**. "On the Criteria To Be Used in Decomposing Systems into Modules". Paper fundacional.
+6. **Valotto, V.** *[ISSE_Termostato](https://github.com/vvalotto/ISSE_Termostato)*. Proyecto de referencia con Clean Architecture aplicada a un sistema embebido real.
 
 ---
 

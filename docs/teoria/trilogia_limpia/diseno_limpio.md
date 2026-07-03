@@ -379,7 +379,7 @@ class UserService:
 
 ## Anti-patrones de Diseño
 
-### 1. God Class
+### 1. Clase Dios
 
 **Síntoma:** Una clase con 50+ métodos que sabe de todo.
 
@@ -402,13 +402,13 @@ class Customer:
         return f"{self.first_name} {self.last_name}"
 ```
 
-### 3. Inappropriate Intimacy
+### 3. Intimidad Inapropiada
 
 **Síntoma:** Dos clases que se conocen demasiado (acceden a atributos privados mutuamente).
 
 **Solución:** Fusionar o separar claramente con interfaces.
 
-### 4. Circular Dependencies
+### 4. Dependencias Circulares
 
 **Síntoma:** A importa B, B importa A.
 

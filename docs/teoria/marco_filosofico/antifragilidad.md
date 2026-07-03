@@ -45,7 +45,7 @@ Si tu valor está en principios fundamentales que trascienden herramientas, sos 
 
 **Vulnerabilidad:** Cuando la herramienta se vuelve obsoleta o la IA la domina, su valor colapsa
 
-**Ante la IA:** Pánico. La IA puede generar código React mejor que él. Su valor se evapora.
+**Ante la IA:** Lo quiebra. Escribe código más rápido que él, no se cansa, no pide aumento. Su única ventaja (velocidad de producción) desaparece.
 
 ### El Robusto
 
@@ -55,7 +55,7 @@ Si tu valor está en principios fundamentales que trascienden herramientas, sos 
 
 **Vulnerabilidad:** Sigue compitiendo en producción de código. Más lento que la IA.
 
-**Ante la IA:** Resistencia. Puede seguir trabajando, pero no crece. Busca nichos donde la IA no llega... todavía.
+**Ante la IA:** Lo desafía. Sigue siendo útil en áreas que la IA no domina, pero está en modo defensivo, buscando refugio. Su valor se mantiene, no crece.
 
 ### El Antifrágil
 
@@ -65,7 +65,9 @@ Si tu valor está en principios fundamentales que trascienden herramientas, sos 
 
 **Vulnerabilidad:** Ninguna. Los principios no se vuelven obsoletos.
 
-**Ante la IA:** Oportunidad. La IA genera código más rápido, él lo evalúa con principios, lo mejora, lo diseña mejor. Su valor **aumenta** porque tiene más material con el cual trabajar.
+**Ante la IA:** Lo amplifica. Genera prototipos 10x más rápido y evalúa su calidad con principios; pide múltiples alternativas y elige la mejor con criterio objetivo; usa la IA para lo mecánico y se enfoca en lo estratégico. Su valor **aumenta** porque tiene más material con el cual trabajar.
+
+**El antifrágil usa el estresor para ascender de nivel**: de productor de código a director de calidad.
 
 ---
 
@@ -139,30 +141,7 @@ Las métricas te dan un lenguaje para hablar de calidad. No reemplazan el criter
 
 ## La IA como estresor positivo
 
-La IA no es una amenaza. Es un **estresor que te obliga a evolucionar**.
-
-### Si sos frágil
-
-La IA te quiebra:
-- Escribe código más rápido que vos
-- No se cansa, no pide aumento, no se enferma
-- Tu única ventaja (velocidad de producción) desaparece
-
-### Si sos robusto
-
-La IA te desafía:
-- Seguís siendo útil en áreas que la IA no domina
-- Pero estás en modo defensivo, buscando refugio
-- Tu valor se mantiene, no crece
-
-### Si sos antifrágil
-
-La IA te **amplifica**:
-- Generás prototipos 10x más rápido y evaluás su calidad con principios
-- Pedís múltiples alternativas y elegís la mejor con criterio objetivo
-- Usás la IA para automatizar lo mecánico y te enfocás en lo estratégico
-
-**El antifrágil usa el estresor para ascender de nivel**: de productor de código a director de calidad.
+La IA no es una amenaza. Es un **estresor que te obliga a evolucionar** — y cómo reaccionás ante ella depende de cuál de los tres perfiles sos (ver sección anterior).
 
 ---
 
@@ -228,6 +207,24 @@ Cuando aprendés estos principios, estás construyendo conocimiento antifrágil:
 - Boundaries claros (fallos aislados)
 - Dependencias unidireccionales (cambios localizados)
 - Separación de concerns (cada capa evoluciona independiente)
+
+---
+
+## Métricas y Anti-patrones
+
+La antifragilidad no es solo actitud: deja señales medibles.
+
+**Anti-patrones (fragilidad):**
+- Cobertura de tests baja (<40%): cualquier cambio puede romper algo sin aviso
+- CBO alto (>10): un cambio en un módulo obliga a tocar muchos otros
+- Deuda técnica que solo crece, nunca se paga
+- Conocimiento atado a una herramienta puntual, sin capa de abstracción que lo proteja
+
+**Métricas (antifragilidad):**
+- Cobertura de tests alta (>80%), con tests que fallan rápido y claro
+- CBO bajo (≤5): los cambios quedan localizados
+- Deuda técnica identificada, priorizada y en descenso sprint a sprint
+- Principios de [Fundamentos](../fundamentos/README.md) aplicados con independencia de la herramienta de turno
 
 ---
 

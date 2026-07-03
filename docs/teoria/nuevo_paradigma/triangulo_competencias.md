@@ -353,9 +353,9 @@ El profesional moderno no domina **un** vértice. Domina **la integración**:
 | 1970s-1990s | Principios (Parnas, Dijkstra) | Sin métricas automatizadas |
 | 2000s-2010s | Métricas + Principios | Sin IA para acelerar |
 | 2020s | IA para generar código | Sin integración con principios ni métricas |
-| **Ahora** | **Triángulo: Principios + Métricas + IA** | **Primera propuesta integral** |
+| **Ahora** | **Triángulo: Principios + Métricas + IA** | **Propuesta de integración sistemática** |
 
-**Software Limpio es el primer framework que integra sistemáticamente los tres vértices.**
+**Software Limpio es una propuesta que integra sistemáticamente los tres vértices.**
 
 ---
 

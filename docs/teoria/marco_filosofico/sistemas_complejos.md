@@ -75,58 +75,26 @@ Presión para ir más rápido (refuerzo negativo)
 
 ### Las cuatro virtudes como nodos del sistema
 
-Cada virtud es un **nodo de influencia** en múltiples loops:
+Cada virtud es un **nodo de influencia** en múltiples loops, y a la vez un **punto de apalancamiento** sobre el sistema:
 
-| Virtud | Influye en | Realimenta desde |
-|--------|------------|------------------|
-| **Pasión** | Curiosidad, exploración, aprendizaje | Descubrimientos, comprensión profunda |
-| **Paciencia** | Calidad de revisión, detección temprana | Confianza, cultura de equipo |
-| **Perseverancia** | Resistencia al atajo, compromiso con principios | Diseño sostenible, facilidad de cambio |
-| **Profesionalismo** | Rendición de cuentas, propiedad del trabajo | Cultura de aprendizaje, ausencia de culpa |
+| Virtud | Influye en | Realimenta desde | Punto de apalancamiento | Cómo actúa |
+|--------|------------|------------------|--------------------------|------------|
+| **Pasión** | Curiosidad, exploración, aprendizaje | Descubrimientos, comprensión profunda | Fortaleza de loops de aprendizaje | Acelera: curiosidad → comprensión → más curiosidad |
+| **Paciencia** | Calidad de revisión, detección temprana | Confianza, cultura de equipo | Estructura de flujos | Asegura que circule información de calidad (revisión cuidadosa) |
+| **Perseverancia** | Resistencia al atajo, compromiso con principios | Diseño sostenible, facilidad de cambio | Fortaleza de loops de calidad | Mantiene: principios → diseño → sostenibilidad → más principios |
+| **Profesionalismo** | Rendición de cuentas, propiedad del trabajo | Cultura de aprendizaje, ausencia de culpa | Paradigma | Cambia "culpar" por "aprender", habilita loops positivos |
 
-**Insight clave:** No "instalás" una virtud. Iniciás un loop que, con cada iteración, refuerza el sistema o lo degrada.
+**Insight clave:** No "instalás" una virtud. Iniciás un loop que, con cada iteración, refuerza el sistema o lo degrada. Y no es solo un nodo: es una palanca. Practicarla no es "aplicar una regla", es **modificar la estructura del sistema**.
 
 ---
 
 ## La antifragilidad como propiedad emergente
 
-La antifragilidad no se construye con "5 pasos" como si fuera un algoritmo. **Emerge** de la interacción entre múltiples elementos del sistema:
-
-- Principios que guían decisiones
-- Prácticas que los aplican
-- Métricas que señalan desviaciones
-- Cultura de equipo que sostiene todo
-- Estructura de código que habilita cambio
-
-Ninguno de estos elementos por sí solo es "antifrágil". La antifragilidad **aparece** cuando todos interactúan correctamente.
-
-### El sistema antifrágil
-
-```
-Principios sólidos
-    ↓
-Decisiones consistentes
-    ↓
-Código modular y cohesivo
-    ↓
-Cambios localizados (bajo riesgo)
-    ↓
-Confianza en modificar
-    ↓
-Más experimentos y aprendizaje
-    ↓
-Fortalecimiento de principios (loop reforzador)
-```
-
-**Ante un estresor (ej: nueva tecnología):**
-- Sistema frágil: el estresor rompe código acoplado → crisis → pérdida de confianza
-- Sistema antifrágil: el estresor expone malas prácticas → aprendizaje → refuerzo de principios
-
-La IA es un **estresor masivo**. Si tu sistema es frágil (valor en herramientas), se quiebra. Si tu sistema tiene loops reforzadores (valor en principios), el estresor acelera los loops positivos.
+La antifragilidad no se instala con "5 pasos" como si fuera un algoritmo: **emerge** de la interacción entre principios, prácticas, métricas y cultura de equipo (ver [Antifragilidad](antifragilidad.md) para el desarrollo completo de frágil/robusto/antifrágil). Desde la mirada sistémica, lo que importa es esto: un sistema con loops reforzadores (principios → decisiones consistentes → código modular → cambios de bajo riesgo → más confianza → más principios) convierte cada estresor en combustible. Un sistema sin esos loops se rompe con el primer shock.
 
 ---
 
-## Las métricas como señales emergentes
+## Las métricas y anti-patrones como señales emergentes
 
 Las métricas **no son causas**. Son **señales emergentes** del estado del sistema.
 
@@ -229,35 +197,7 @@ Enfoque: **partes aisladas**
 
 Enfoque: **interacciones y realimentaciones**
 
-### Ejemplos concretos
-
-**Situación 1: Bug en producción**
-
-**Pensamiento lineal:**
-- "Arreglo el bug, hago hotfix, deploy"
-- Enfoque en la parte rota
-
-**Pensamiento sistémico:**
-- "¿Por qué este bug llegó a producción?"
-- "¿Qué loop de revisión falló?"
-- "¿Qué decisión de diseño lo hizo posible?"
-- "¿Cómo evito este tipo de bug en el futuro?"
-- Enfoque en el sistema que permitió el bug
-
-**Situación 2: Feature lenta de implementar**
-
-**Pensamiento lineal:**
-- "Trabajo más horas, entrego más rápido"
-- Enfoque en la velocidad individual
-
-**Pensamiento sistémico:**
-- "¿Por qué es lenta? ¿Alto acoplamiento?"
-- "¿Falta de tests que den confianza?"
-- "¿Deuda técnica acumulada?"
-- "¿Qué cambio estructural acelera futuras features?"
-- Enfoque en el sistema que determina la velocidad
-
-**Situación 3: Código de IA que "funciona pero no sé cómo"**
+### Ejemplo concreto: código de IA que "funciona pero no sé cómo"
 
 **Pensamiento lineal:**
 - "Funciona, lo commiteo"
@@ -333,45 +273,13 @@ Reconocer que todos los paradigmas son limitados y poder cambiarlos.
 
 **Impacto:** Máximo. Libera al sistema para evolucionar.
 
-### El error común: atacar el punto 12
-
-La mayoría ataca parámetros:
-- "Trabajemos más horas"
-- "Subamos el umbral de complejidad"
-- "Agreguemos más gente"
-
-**Impacto mínimo**. El sistema sigue igual.
-
-### La oportunidad: atacar los puntos 2-6
-
-**Cambiar mentalidades:**
-- De productor de código a evaluador de calidad
-- De frágil a antifrágil
-- De partes a sistemas
-
-**Cambiar flujos de información:**
-- Métricas transparentes
-- Cultura de aprendizaje sin culpa
-- Revisión colectiva
-
-**Impacto máximo**. El sistema se transforma.
+La mayoría ataca el punto 12: más horas, más gente, umbrales más laxos. Impacto mínimo, el sistema sigue igual. La oportunidad real está en los puntos 2-6: cambiar la mentalidad (de productor de código a evaluador de calidad) y los flujos de información (métricas transparentes, cultura sin culpa). Ahí el impacto es máximo — el sistema se transforma.
 
 ---
 
 ## Las virtudes como palancas sistémicas
 
-Ahora podés ver las virtudes desde una perspectiva sistémica:
-
-| Virtud | Punto de apalancamiento | Cómo actúa |
-|--------|-------------------------|------------|
-| **Pasión** | Fortaleza de loops de aprendizaje | Acelera el loop: curiosidad → comprensión → más curiosidad |
-| **Paciencia** | Estructura de flujos | Asegura que información de calidad circule (revisión cuidadosa) |
-| **Perseverancia** | Fortaleza de loops de calidad | Mantiene el loop: principios → diseño → sostenibilidad → más principios |
-| **Profesionalismo** | Paradigma | Cambia de "culpar" a "aprender", habilita loops positivos |
-
-**Las virtudes no son técnicas. Son palancas para cambiar el sistema.**
-
-Cuando practicás una virtud, no estás "aplicando una regla". Estás **modificando la estructura del sistema**.
+Volviendo a la tabla de virtudes (arriba): no son solo nodos de loops, son palancas — algunas de bajo impacto (ajustar un parámetro), otras de alto impacto (cambiar un paradigma). **Profesionalismo**, por ejemplo, opera al nivel más alto: cambia cómo el equipo entero se relaciona con el error.
 
 ---
 

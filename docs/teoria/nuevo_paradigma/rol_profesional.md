@@ -157,21 +157,20 @@ La primera generación rara vez es la óptima. La IA genera código funcional, n
 
 ```python
 # Primera generación: funciona, pero complejidad = 15
-def procesar_pedido(pedido):
-    if pedido.valido:
-        if pedido.tiene_stock:
-            if pedido.cliente.activo:
-                if pedido.total > 0:
+def enviar_notificacion(usuario, evento):
+    if usuario.activo:
+        if usuario.acepta_notificaciones:
+            if evento.tipo == "urgente":
+                if usuario.tiene_telefono:
                     # ... 50 líneas más
                     pass
 
 # Después del refinamiento: complejidad = 6
-def procesar_pedido(pedido):
-    validar_pedido(pedido)
-    verificar_stock(pedido)
-    verificar_cliente(pedido)
-    calcular_total(pedido)
-    guardar_pedido(pedido)
+def enviar_notificacion(usuario, evento):
+    validar_usuario(usuario)
+    verificar_preferencias(usuario)
+    determinar_canal(evento)
+    despachar_mensaje(usuario, evento)
 ```
 
 ### Qué refinar

@@ -56,7 +56,7 @@ A nivel de módulos y paquetes:
 
 - **Interfaces** que definen capacidades
 - **Implementaciones** intercambiables
-- **Inversión de dependencias**: depender de abstracciones
+- **Inversión de dependencias**: depender de abstracciones (desarrollo completo del principio en [Arquitectura Limpia](../trilogia_limpia/arquitectura_limpia.md#2-la-regla-de-dependencia))
 
 ```python
 # Abstracción
@@ -89,7 +89,7 @@ A nivel de sistema:
 
 - **APIs** que exponen capacidades abstractas
 - **Contratos** entre servicios
-- **Puertos y adaptadores**: el dominio define interfaces, la infraestructura las implementa
+- **Puertos y adaptadores**: el dominio define interfaces, la infraestructura las implementa (ver "Boundaries" en [Arquitectura Limpia](../trilogia_limpia/arquitectura_limpia.md#3-boundaries-fronteras) para un ejemplo real)
 
 ```
 ┌─────────────────────────────────────────┐

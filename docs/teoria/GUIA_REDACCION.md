@@ -103,6 +103,47 @@ Qué pasa cuando se viola.
 
 ---
 
+## Formato Ensayo Filosófico
+
+Para `marco_filosofico/` y `nuevo_paradigma/`, donde el contenido es más conceptual y argumentativo que los principios de `fundamentos/`.
+
+- **Extensión objetivo**: 200-250 líneas. Si un archivo supera este rango, dividirlo o recortar redundancia antes de sumar contenido nuevo.
+- **Tablas resumen compartidas**: si un concepto (por ejemplo, una comparación por niveles Código/Diseño/Arquitectura) ya está desarrollado en profundidad en un archivo, los demás archivos que lo mencionen deben **linkear a esa sección** en vez de repetir la tabla completa. La tabla vive en un solo lugar: el archivo que define el concepto en profundidad (no el README de la carpeta).
+- **Métricas/Anti-patrones obligatorias**: todo ensayo debe cerrar con una sección breve (no exhaustiva) de Métricas o Anti-patrones que conecte la reflexión filosófica con algo verificable en código, diseño o arquitectura. No hace falta la profundidad de `fundamentos/`, pero no puede faltar — es lo que sostiene la promesa de "verificación objetiva" del proyecto.
+
+### Plantilla para Ensayo Filosófico
+
+```markdown
+# [Concepto]
+
+> Cita o autor de referencia
+
+**Pregunta guía:** *¿...?*
+
+---
+
+## Definición
+Qué es, en pocos párrafos.
+
+## Por qué importa
+El problema o tensión que aborda.
+
+## Desarrollo
+El argumento central. Puede tener subsecciones (`###`), pero sin extenderse en variaciones redundantes del mismo punto.
+
+## En los Tres Niveles
+Tabla breve Código/Diseño/Arquitectura (solo si este archivo es el dueño del concepto; si no, linkear al archivo que la tiene).
+
+## Métricas / Anti-patrones
+Sección breve: cómo se verifica o qué señales delatan su ausencia.
+
+---
+
+[← Volver](README.md)
+```
+
+---
+
 ## Formato
 
 - **Títulos**: Usar `#`, `##`, `###` jerárquicamente
@@ -121,4 +162,4 @@ Qué pasa cuando se viola.
 
 ---
 
-*Última actualización: Enero 2025*
+*Última actualización: Julio 2026*

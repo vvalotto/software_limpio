@@ -63,12 +63,7 @@ Cada nivel de la trilogía limpia implica una forma de **responsabilidad hacia o
 
 ## Las Virtudes en la Práctica
 
-| Virtud | En Código | En Diseño | En Arquitectura |
-|--------|-----------|-----------|-----------------|
-| **Pasión** | Cuidado en cada nombre | Elegancia en la estructura | Visión del sistema |
-| **Paciencia** | Refactorización continua | Iteración hasta cohesión | Evolución gradual |
-| **Perseverancia** | No aceptar "funciona" | No aceptar "está bien" | No aceptar deuda técnica |
-| **Profesionalismo** | Código que firmaría | Diseño que defendería | Arquitectura sostenible |
+Ver la tabla completa "En los Tres Niveles" en [Las Cuatro Virtudes](cuatro_virtudes.md#en-los-tres-niveles).
 
 ---
 
