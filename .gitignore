@@ -148,3 +148,4 @@ secrets/
 *.pem
 *.key
 credentials.json
+tmp/
