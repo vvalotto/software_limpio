@@ -274,29 +274,37 @@ Estructura del JSON:
 {
   "summary": {
     "total_files": 5,
+    "checks_executed": 3,
+    "checks_available": 9,
+    "checks_skipped": ["DeadCode", "Maintainability", "Pylint", "Spelling", "Types", "UnusedImports"],
+    "elapsed_seconds": 2.8,
+    "timestamp": "2026-02-05T10:30:45",
     "total_issues": 8,
     "errors": 2,
     "warnings": 4,
-    "info": 2,
-    "execution_time": 2.8
+    "infos": 2
   },
   "results": [
     {
-      "check_name": "SecurityCheck",
-      "severity": "ERROR",
+      "check": "Security",
+      "severity": "error",
       "message": "Hardcoded password detected",
-      "file_path": "src/auth.py",
-      "line_number": 45
+      "file": "src/auth.py",
+      "line": 45
     }
   ],
   "by_severity": {
-    "ERROR": 2,
-    "WARNING": 4,
-    "INFO": 2
+    "errors": [ /* ... */ ],
+    "warnings": [ /* ... */ ],
+    "infos": [ /* ... */ ]
   },
-  "timestamp": "2026-02-05T10:30:45"
+  "by_module": {
+    "auth.py": [ /* ... */ ]
+  }
 }
 ```
+
+`checks_executed` refleja los checks efectivamente seleccionados por el orquestador para el `analysis_type` usado (no el total de checks descubiertos). `checks_skipped` solo aparece con nombres cuando `checks_executed < checks_available` — típicamente en modo `pre-commit`. `by_severity` y `by_module` solo se incluyen si hay resultados.
 
 ### Niveles de Severidad
 
@@ -316,19 +324,18 @@ CodeGuard usa una **arquitectura modular** con 9 checks independientes que se ej
 | **SecurityCheck** | bandit | Vulnerabilidades, secretos, funciones inseguras | 1 | ~1.5s | ERROR |
 | **PEP8Check** | flake8 | Estilo de código PEP8 | 2 | ~0.5s | WARNING |
 | **ComplexityCheck** | radon | Complejidad ciclomática, anidamiento | 3 | ~1.0s | INFO/WARNING |
+| **DeadCodeCheck** | vulture | Código muerto: funciones, variables, imports sin usar | 4 | ~1.0s | WARNING/ERROR |
+| **MaintainabilityCheck** | radon | Índice de mantenibilidad (MI) | 4 | ~1.0s | INFO/WARNING/ERROR |
 | **PylintCheck** | pylint | Calidad general, score | 4 | ~2.0s | WARNING |
 | **TypeCheck** | mypy | Tipos, anotaciones | 5 | ~3.0s | WARNING |
+| **SpellingCheck** | codespell | Errores de ortografía en comentarios y strings | 5 | ~0.5s | WARNING |
 | **ImportCheck** | pylint | Imports sin usar, duplicados | 6 | ~0.5s | WARNING |
-| **DeadCodeCheck** | vulture | Código muerto: funciones, variables, imports sin usar | 7 | ~1.0s | WARNING/ERROR |
-| **MaintainabilityCheck** | radon | Índice de mantenibilidad (MI) | 8 | ~1.0s | INFO/WARNING/ERROR |
-| **SpellingCheck** | codespell | Errores de ortografía en comentarios y strings | 9 | ~0.5s | WARNING |
 
-**Prioridad:** 1 = más crítico (se ejecuta primero)
+**Prioridad:** 1 = más crítico (se ejecuta primero). Varios checks comparten el mismo número de prioridad (p. ej. DeadCode/Maintainability/Pylint = 4); entre ellos el orden de ejecución no está garantizado.
 
 **Checks ejecutados según análisis:**
-- `pre-commit`: Priority 1-3 (Security, PEP8, Complexity) → < 5s
-- `pr-review`: Priority 1-6 (+ Pylint, Types, Imports) → ~10-15s
-- `full`: Priority 1-9 (todos los checks) → ~20-30s
+- `pre-commit`: solo checks de prioridad 1-3 (Security, PEP8, Complexity) que entren en el presupuesto de tiempo (default 5s) → < 5s. Es el único modo con filtro real de prioridad/tiempo.
+- `pr-review` y `full`: **sin filtro de prioridad** — corren todos los checks que pasen su `should_run()` (habilitados en config, archivo aplicable, etc.). Hoy ambos modos son equivalentes en la práctica; `pr-review` está pensado como un futuro punto intermedio, pero el orquestador todavía no lo diferencia de `full` (ver `CheckOrchestrator._select_for_pr` en `orchestrator.py`).
 
 ### Detalles de Cada Check
 
@@ -407,9 +414,9 @@ CodeGuard adapta qué checks ejecuta según el contexto:
 
 | Tipo | Uso | Checks | Tiempo | Prioridad |
 |------|-----|--------|--------|-----------|
-| `pre-commit` | Commits rápidos | Solo checks críticos (priority 1-3) | < 5s | Default |
-| `pr-review` | Pull Requests | Checks importantes (priority 1-6) | ~10-15s | Completo |
-| `full` | Análisis completo | Todos los checks (priority 1-9) | ~20-30s | Exhaustivo |
+| `pre-commit` | Commits rápidos | Solo checks críticos (priority 1-3, sujeto a presupuesto de tiempo) | < 5s | Default |
+| `pr-review` | Pull Requests | Todos los checks habilitados (sin filtro de prioridad, hoy equivalente a `full`) | ~10-15s | Completo |
+| `full` | Análisis completo | Todos los checks habilitados | ~20-30s | Exhaustivo |
 
 **Ejemplos:**
 
@@ -922,9 +929,10 @@ Usa `.codeguard.yml` solo si tu proyecto no tiene `pyproject.toml`.
 ### ¿Qué diferencia hay entre pre-commit, pr-review y full?
 
 Son **tipos de análisis** que ejecutan diferentes checks:
-- `pre-commit`: Checks críticos (priority 1-3: Security, PEP8, Complexity) → < 5s, para commits rápidos
-- `pr-review`: Checks importantes (priority 1-6: + Pylint, Types, Imports) → ~10-15s, para pull requests
-- `full`: Todos los checks (priority 1-9: + DeadCode, Maintainability, Spelling) → ~20-30s, análisis exhaustivo
+- `pre-commit`: solo checks críticos (priority 1-3: Security, PEP8, Complexity), sujeto al presupuesto de tiempo → < 5s, para commits rápidos
+- `pr-review` y `full`: todos los checks habilitados, sin filtro de prioridad → ~10-30s según el proyecto, para pull requests o análisis exhaustivo. Hoy se comportan igual; `pr-review` está pensado como un punto intermedio a futuro.
+
+Usá `--format json` con el campo `summary.checks_skipped` para ver qué checks quedaron afuera en un run puntual (por ejemplo en modo `pre-commit`).
 
 Ejemplo: `codeguard --analysis-type full .`
 
@@ -943,9 +951,10 @@ No actualmente. Se ejecutan secuencialmente por prioridad. Esto simplifica el de
 
 ### ¿Cómo sé qué checks se ejecutaron?
 
-En el output JSON, la clave `results` muestra todos los checks ejecutados:
+`summary.checks_executed` (JSON) o la línea "Checks ejecutados" (texto) indican cuántos corrieron realmente para ese `analysis_type` — no es necesariamente el total de 9 disponibles (ver `summary.checks_available` y `summary.checks_skipped`). Para ver los nombres puntuales:
 ```bash
-codeguard --format json . | jq '.results[].check_name' | sort -u
+codeguard --format json . | jq '.results[].check' | sort -u
+codeguard --format json . | jq '.summary.checks_skipped'
 ```
 
 ### ¿Puedo crear mis propios checks?
