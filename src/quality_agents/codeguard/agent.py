@@ -68,6 +68,7 @@ class CodeGuard:
         self.orchestrator = CheckOrchestrator(self.config)
 
         self.results: List[CheckResult] = []
+        self.checks_run: set = set()
 
     def run(
         self,
@@ -100,6 +101,7 @@ class CodeGuard:
             >>> # Ejecuta solo checks rápidos y críticos
         """
         self.results = []
+        self.checks_run = set()
 
         # Filtrar solo archivos Python
         python_files = [f for f in files if f.suffix == ".py"]
@@ -126,6 +128,7 @@ class CodeGuard:
 
             # Ejecutar cada check seleccionado
             for check in selected_checks:
+                self.checks_run.add(check.name)
                 try:
                     check_results = check.execute(file_path)
                     self.results.extend(check_results)
@@ -278,19 +281,26 @@ def main(
     results = guard.run(all_files, analysis_type=analysis_type, time_budget=time_budget)
     elapsed = time.time() - start_time
 
+    checks_available = {c.name for c in guard.orchestrator.checks}
+    checks_skipped = sorted(checks_available - guard.checks_run)
+
     if format == "text":
         format_results(
             results,
             elapsed=elapsed,
             total_files=len(all_files),
-            checks_executed=len(guard.orchestrator.checks),
+            checks_executed=len(guard.checks_run),
+            checks_available=len(checks_available),
+            checks_skipped=checks_skipped,
         )
     else:
         json_output = format_json(
             results,
             elapsed=elapsed,
             total_files=len(all_files),
-            checks_executed=len(guard.orchestrator.checks),
+            checks_executed=len(guard.checks_run),
+            checks_available=len(checks_available),
+            checks_skipped=checks_skipped,
         )
         click.echo(json_output)
 

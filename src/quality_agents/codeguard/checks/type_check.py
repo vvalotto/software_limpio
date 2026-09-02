@@ -104,23 +104,28 @@ class TypeCheck(Verifiable):
             Lista de resultados de verificación
         """
         results = []
+        cache_dir = self._find_project_root(file_path) / ".mypy_cache"
 
         try:
             # Ejecutar mypy
             # --no-error-summary: no mostrar resumen al final
             # --show-column-numbers: mostrar número de columna
             # --no-color-output: output sin colores ANSI
+            # --cache-dir: reusar cache incremental entre corridas (sin esto,
+            #   mypy resuelve el import graph completo cada vez y puede superar
+            #   el timeout en repos medianos/grandes, ver issue #70)
             process = subprocess.run(
                 [
                     "mypy",
                     "--no-error-summary",
                     "--show-column-numbers",
                     "--no-color-output",
+                    f"--cache-dir={cache_dir}",
                     str(file_path),
                 ],
                 capture_output=True,
                 text=True,
-                timeout=10,
+                timeout=30,
             )
 
             # mypy retorna exit code 0 si no hay errores
@@ -178,7 +183,7 @@ class TypeCheck(Verifiable):
                 CheckResult(
                     check_name=self.name,
                     severity=Severity.ERROR,
-                    message="mypy execution timed out (>10s)",
+                    message="mypy execution timed out (>30s)",
                     file_path=str(file_path),
                 )
             )
@@ -194,6 +199,26 @@ class TypeCheck(Verifiable):
             )
 
         return results
+
+    def _find_project_root(self, file_path: Path) -> Path:
+        """
+        Busca la raíz del proyecto subiendo desde el archivo analizado.
+
+        Se usa como ubicación estable para la cache incremental de mypy
+        (`--cache-dir`), de forma que se reuse entre archivos y entre
+        corridas sucesivas de CodeGuard sobre el mismo proyecto.
+
+        Args:
+            file_path: Ruta al archivo Python
+
+        Returns:
+            Directorio raíz (con pyproject.toml o .git), o cwd si no se encuentra
+        """
+        for parent in [file_path.resolve().parent, *file_path.resolve().parents]:
+            if (parent / "pyproject.toml").exists() or (parent / ".git").exists():
+                return parent
+
+        return Path.cwd()
 
     def _has_type_hints(self, file_path: Path) -> bool:
         """

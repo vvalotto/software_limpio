@@ -26,6 +26,8 @@ def format_results(
     elapsed: float,
     total_files: int = 0,
     checks_executed: int = 0,
+    checks_available: int = 0,
+    checks_skipped: Optional[List[str]] = None,
 ) -> None:
     """
     Formatea y muestra resultados usando Rich.
@@ -34,7 +36,10 @@ def format_results(
         results: Lista de resultados de verificación
         elapsed: Tiempo de ejecución en segundos
         total_files: Número total de archivos analizados
-        checks_executed: Número de checks ejecutados
+        checks_executed: Número de checks efectivamente ejecutados (seleccionados
+            por el orquestador para este analysis_type, no el total descubierto)
+        checks_available: Número total de checks descubiertos por el orquestador
+        checks_skipped: Nombres de checks descubiertos pero no ejecutados
 
     Example:
         >>> results = [CheckResult(...), CheckResult(...)]
@@ -46,7 +51,9 @@ def format_results(
     _print_header(console)
 
     # Estadísticas generales
-    _print_stats(console, results, elapsed, total_files, checks_executed)
+    _print_stats(
+        console, results, elapsed, total_files, checks_executed, checks_available, checks_skipped
+    )
 
     # Si no hay resultados, mostrar mensaje de éxito y terminar
     if not results:
@@ -114,6 +121,8 @@ def _print_stats(
     elapsed: float,
     total_files: int,
     checks_executed: int,
+    checks_available: int = 0,
+    checks_skipped: Optional[List[str]] = None,
 ) -> None:
     """Imprime estadísticas generales."""
     stats = Table.grid(padding=(0, 2))
@@ -121,11 +130,20 @@ def _print_stats(
     stats.add_column(style="white")
 
     stats.add_row("Archivos analizados:", f"{total_files}")
-    stats.add_row("Checks ejecutados:", f"{checks_executed}")
+    if checks_available and checks_available != checks_executed:
+        stats.add_row("Checks ejecutados:", f"{checks_executed} de {checks_available} disponibles")
+    else:
+        stats.add_row("Checks ejecutados:", f"{checks_executed}")
     stats.add_row("Tiempo de ejecución:", f"{elapsed:.2f}s")
     stats.add_row("Resultados totales:", f"{len(results)}")
 
     console.print(stats)
+
+    if checks_skipped:
+        console.print(
+            f"[dim]Checks omitidos ({len(checks_skipped)}): {', '.join(checks_skipped)}[/]"
+        )
+
     console.print()
 
 
@@ -269,6 +287,8 @@ def format_json(
     elapsed: float = 0.0,
     total_files: int = 0,
     checks_executed: int = 0,
+    checks_available: int = 0,
+    checks_skipped: Optional[List[str]] = None,
 ) -> str:
     """
     Formatea resultados en formato JSON estructurado.
@@ -277,7 +297,10 @@ def format_json(
         results: Lista de resultados de verificación
         elapsed: Tiempo de ejecución en segundos
         total_files: Número total de archivos analizados
-        checks_executed: Número de checks ejecutados
+        checks_executed: Número de checks efectivamente ejecutados (seleccionados
+            por el orquestador para este analysis_type, no el total descubierto)
+        checks_available: Número total de checks descubiertos por el orquestador
+        checks_skipped: Nombres de checks descubiertos pero no ejecutados
 
     Returns:
         String con JSON formateado (pretty-printed)
@@ -297,6 +320,8 @@ def format_json(
         "summary": {
             "total_files": total_files,
             "checks_executed": checks_executed,
+            "checks_available": checks_available,
+            "checks_skipped": checks_skipped or [],
             "elapsed_seconds": round(elapsed, 2),
             "timestamp": datetime.now().isoformat(),
             "total_issues": len(results),
