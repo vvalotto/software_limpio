@@ -68,7 +68,7 @@ Pre-commit (<5s)    →    PR Review (2-5min)    →    Fin de Sprint (10-30min)
  (solo advierte)       (bloquea si crítico)        (análisis de tendencias)
 ```
 
-Los **tres agentes están implementados** y en v0.4.0 con mejoras: CodeGuard (9 checks), DesignReviewer (14 analyzers), ArchitectAnalyst (9 métricas). La integración IA es opt-in (infraestructura lista, wiring pendiente).
+Los **tres agentes están implementados** y en v0.4.0 con mejoras: CodeGuard (10 checks), DesignReviewer (14 analyzers), ArchitectAnalyst (9 métricas). La integración IA es opt-in (infraestructura lista, wiring pendiente).
 
 ### Estructura de Agentes
 
@@ -108,7 +108,7 @@ Cada check retorna `CheckResult(check_name, severity: Severity, message, file_pa
 
 ### Checks de CodeGuard (todos implementados)
 
-`PEP8Check` (flake8), `PylintCheck`, `SecurityCheck` (bandit), `ComplexityCheck` (radon), `TypeCheck` (mypy), `ImportCheck` (pylint), `DeadCodeCheck` (vulture), `MaintainabilityCheck` (radon MI), `SpellingCheck` (codespell).
+`PEP8Check` (flake8), `PylintCheck`, `SecurityCheck` (bandit), `ComplexityCheck` (radon), `TypeCheck` (mypy), `ImportCheck` (pylint), `DeadCodeCheck` (vulture), `MaintainabilityCheck` (radon MI), `SpellingCheck` (codespell), `DocstringCheck` (ast, stdlib).
 
 ### Carga de Configuración
 

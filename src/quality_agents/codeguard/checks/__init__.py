@@ -103,6 +103,7 @@ Ticket: 1.5.3
 # Imports de checks implementados
 from .complexity_check import ComplexityCheck
 from .dead_code_check import DeadCodeCheck
+from .docstring_check import DocstringCheck
 from .import_check import ImportCheck
 from .maintainability_check import MaintainabilityCheck
 from .pep8_check import PEP8Check
@@ -122,4 +123,5 @@ __all__ = [
     "DeadCodeCheck",
     "MaintainabilityCheck",
     "SpellingCheck",
+    "DocstringCheck",
 ]

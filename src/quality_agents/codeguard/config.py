@@ -66,6 +66,7 @@ class ChecksConfig:
     dead_code: bool = True
     maintainability: bool = True
     spelling: bool = True
+    docstrings: bool = True
 
 
 @dataclass
@@ -80,6 +81,7 @@ class CodeGuardConfig:
     min_dead_code_confidence: int = 60
     min_maintainability_index: int = 20
     spelling_ignore_words: List[str] = field(default_factory=list)
+    min_docstring_coverage: float = 80.0
 
     # Exclusiones
     exclude_patterns: List[str] = field(default_factory=lambda: [
@@ -185,6 +187,9 @@ class CodeGuardConfig:
             "max_cyclomatic_complexity": self.max_cyclomatic_complexity,
             "max_line_length": self.max_line_length,
             "max_function_lines": self.max_function_lines,
+            "min_dead_code_confidence": self.min_dead_code_confidence,
+            "min_maintainability_index": self.min_maintainability_index,
+            "min_docstring_coverage": self.min_docstring_coverage,
             "exclude_patterns": self.exclude_patterns,
             "checks": {
                 "pep8": self.checks.pep8,
@@ -196,6 +201,7 @@ class CodeGuardConfig:
                 "dead_code": self.checks.dead_code,
                 "maintainability": self.checks.maintainability,
                 "spelling": self.checks.spelling,
+                "docstrings": self.checks.docstrings,
             },
             "ai": {
                 "enabled": self.ai.enabled,

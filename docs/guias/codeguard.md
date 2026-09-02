@@ -113,6 +113,7 @@ max_function_lines        = 20
 min_dead_code_confidence  = 60    # Confianza mínima para reportar código muerto (vulture)
 min_maintainability_index = 20    # Índice de mantenibilidad mínimo (radon MI)
 spelling_ignore_words     = []    # Palabras a ignorar en el check de ortografía
+min_docstring_coverage    = 80.0  # % mínimo de símbolos documentados (módulo, clases, funciones)
 
 # Exclusiones
 exclude_patterns = [
@@ -135,6 +136,7 @@ imports         = true
 dead_code       = true   # Detecta código muerto con vulture
 maintainability = true   # Verifica índice de mantenibilidad con radon
 spelling        = true   # Detecta errores de ortografía con codespell
+docstrings      = true   # Verifica cobertura de docstrings (ast, sin herramienta externa)
 
 # Configuración de IA (opcional)
 [tool.codeguard.ai]
@@ -274,8 +276,8 @@ Estructura del JSON:
 {
   "summary": {
     "total_files": 5,
-    "checks_executed": 3,
-    "checks_available": 9,
+    "checks_executed": 4,
+    "checks_available": 10,
     "checks_skipped": ["DeadCode", "Maintainability", "Pylint", "Spelling", "Types", "UnusedImports"],
     "elapsed_seconds": 2.8,
     "timestamp": "2026-02-05T10:30:45",
@@ -317,13 +319,14 @@ Estructura del JSON:
 
 ### Qué Verifica CodeGuard
 
-CodeGuard usa una **arquitectura modular** con 9 checks independientes que se ejecutan según el contexto:
+CodeGuard usa una **arquitectura modular** con 10 checks independientes que se ejecutan según el contexto:
 
 | Check | Herramienta | Verifica | Prioridad | Tiempo | Severidad |
 |-------|-------------|----------|-----------|--------|-----------|
 | **SecurityCheck** | bandit | Vulnerabilidades, secretos, funciones inseguras | 1 | ~1.5s | ERROR |
 | **PEP8Check** | flake8 | Estilo de código PEP8 | 2 | ~0.5s | WARNING |
 | **ComplexityCheck** | radon | Complejidad ciclomática, anidamiento | 3 | ~1.0s | INFO/WARNING |
+| **DocstringCheck** | ast (stdlib) | Cobertura de docstrings (módulo, clases, funciones/métodos, incl. privados) | 3 | ~0.5s | INFO/WARNING |
 | **DeadCodeCheck** | vulture | Código muerto: funciones, variables, imports sin usar | 4 | ~1.0s | WARNING/ERROR |
 | **MaintainabilityCheck** | radon | Índice de mantenibilidad (MI) | 4 | ~1.0s | INFO/WARNING/ERROR |
 | **PylintCheck** | pylint | Calidad general, score | 4 | ~2.0s | WARNING |
@@ -331,10 +334,10 @@ CodeGuard usa una **arquitectura modular** con 9 checks independientes que se ej
 | **SpellingCheck** | codespell | Errores de ortografía en comentarios y strings | 5 | ~0.5s | WARNING |
 | **ImportCheck** | pylint | Imports sin usar, duplicados | 6 | ~0.5s | WARNING |
 
-**Prioridad:** 1 = más crítico (se ejecuta primero). Varios checks comparten el mismo número de prioridad (p. ej. DeadCode/Maintainability/Pylint = 4); entre ellos el orden de ejecución no está garantizado.
+**Prioridad:** 1 = más crítico (se ejecuta primero). Varios checks comparten el mismo número de prioridad (p. ej. Complexity/Docstrings = 3, DeadCode/Maintainability/Pylint = 4); entre ellos el orden de ejecución no está garantizado.
 
 **Checks ejecutados según análisis:**
-- `pre-commit`: solo checks de prioridad 1-3 (Security, PEP8, Complexity) que entren en el presupuesto de tiempo (default 5s) → < 5s. Es el único modo con filtro real de prioridad/tiempo.
+- `pre-commit`: solo checks de prioridad 1-3 (Security, PEP8, Complexity, Docstrings) que entren en el presupuesto de tiempo (default 5s) → < 5s. Es el único modo con filtro real de prioridad/tiempo.
 - `pr-review` y `full`: **sin filtro de prioridad** — corren todos los checks que pasen su `should_run()` (habilitados en config, archivo aplicable, etc.). Hoy ambos modos son equivalentes en la práctica; `pr-review` está pensado como un futuro punto intermedio, pero el orquestador todavía no lo diferencia de `full` (ver `CheckOrchestrator._select_for_pr` en `orchestrator.py`).
 
 ### Detalles de Cada Check
@@ -388,6 +391,13 @@ CodeGuard usa una **arquitectura modular** con 9 checks independientes que se ej
 #### 9. SpellingCheck (codespell)
 - ⚠️ **WARNING:** typo detectado en comentarios, docstrings o strings
 - Lista de palabras a ignorar configurable con `spelling_ignore_words`
+
+#### 10. DocstringCheck (ast, stdlib)
+- Mide cobertura de docstrings (PEP 257) de módulo, clases y funciones/métodos — **incluye símbolos privados**, sin excepción
+- ℹ️ **INFO (cobertura ≥ umbral):** documentación aceptable
+- ⚠️ **WARNING (cobertura < umbral):** documentación insuficiente, lista hasta 5 símbolos sin documentar
+- Umbral configurable con `min_docstring_coverage` (default: 80.0)
+- No requiere herramienta externa (usa `ast` de la stdlib)
 
 ---
 
@@ -929,7 +939,7 @@ Usa `.codeguard.yml` solo si tu proyecto no tiene `pyproject.toml`.
 ### ¿Qué diferencia hay entre pre-commit, pr-review y full?
 
 Son **tipos de análisis** que ejecutan diferentes checks:
-- `pre-commit`: solo checks críticos (priority 1-3: Security, PEP8, Complexity), sujeto al presupuesto de tiempo → < 5s, para commits rápidos
+- `pre-commit`: solo checks críticos (priority 1-3: Security, PEP8, Complexity, Docstrings), sujeto al presupuesto de tiempo → < 5s, para commits rápidos
 - `pr-review` y `full`: todos los checks habilitados, sin filtro de prioridad → ~10-30s según el proyecto, para pull requests o análisis exhaustivo. Hoy se comportan igual; `pr-review` está pensado como un punto intermedio a futuro.
 
 Usá `--format json` con el campo `summary.checks_skipped` para ver qué checks quedaron afuera en un run puntual (por ejemplo en modo `pre-commit`).
@@ -938,10 +948,12 @@ Ejemplo: `codeguard --analysis-type full .`
 
 ### ¿Qué herramientas externas necesita instalar?
 
-Los 9 checks usan herramientas instaladas automáticamente con el paquete:
+9 de los 10 checks usan herramientas instaladas automáticamente con el paquete:
 - `flake8`, `pylint`, `bandit`, `mypy`, `radon` — ya incluidos en las dependencias
 - `vulture` — necesario para DeadCodeCheck
 - `codespell` — necesario para SpellingCheck
+
+`DocstringCheck` es la excepción: no depende de ninguna herramienta externa, usa el módulo `ast` de la stdlib.
 
 Si alguna herramienta no está instalada, el check correspondiente se omite sin error.
 
@@ -951,7 +963,7 @@ No actualmente. Se ejecutan secuencialmente por prioridad. Esto simplifica el de
 
 ### ¿Cómo sé qué checks se ejecutaron?
 
-`summary.checks_executed` (JSON) o la línea "Checks ejecutados" (texto) indican cuántos corrieron realmente para ese `analysis_type` — no es necesariamente el total de 9 disponibles (ver `summary.checks_available` y `summary.checks_skipped`). Para ver los nombres puntuales:
+`summary.checks_executed` (JSON) o la línea "Checks ejecutados" (texto) indican cuántos corrieron realmente para ese `analysis_type` — no es necesariamente el total de 10 disponibles (ver `summary.checks_available` y `summary.checks_skipped`). Para ver los nombres puntuales:
 ```bash
 codeguard --format json . | jq '.results[].check' | sort -u
 codeguard --format json . | jq '.summary.checks_skipped'

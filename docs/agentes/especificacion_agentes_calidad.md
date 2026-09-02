@@ -656,9 +656,9 @@ class CheckOrchestrator:
 
 | Análisis | Estrategia | Checks Ejecutados |
 |----------|-----------|-------------------|
-| `pre-commit` | Solo rápidos (<2s) + alta prioridad (≤3) | Security, PEP8, ImportCheck |
-| `pr-review` | Todos los habilitados | Los 9 checks activos |
-| `full` | Todos los habilitados | Los 9 checks activos |
+| `pre-commit` | Solo alta prioridad (≤3), sujeto al presupuesto de tiempo | Security, PEP8, Complexity, Docstrings |
+| `pr-review` | Todos los habilitados (sin filtro de prioridad) | Los 10 checks activos |
+| `full` | Todos los habilitados (sin filtro de prioridad) | Los 10 checks activos |
 
 #### Flujo de Ejecución
 
@@ -1290,7 +1290,7 @@ project_root/
     │   ├── agent.py            # CLI + main()
     │   ├── orchestrator.py     # Selección contextual de checks
     │   └── checks/             # PEP8, Pylint, Security, Complexity, Type, Import,
-    │                           # DeadCode, Maintainability, Spelling (9 checks)
+    │                           # DeadCode, Maintainability, Spelling, Docstring (10 checks)
     ├── designreviewer/
     │   ├── agent.py            # CLI + main()
     │   ├── orchestrator.py     # Selección contextual de analyzers
