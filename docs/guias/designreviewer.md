@@ -543,6 +543,22 @@ En el output JSON se incluye la sección `by_module`:
 }
 ```
 
+### ¿Cómo veo el SOLID Scorecard?
+
+El JSON incluye la sección `by_solid_principle`, que agrupa los resultados que tienen `solid_principle` asignado (S/O/L/I/D), con conteo y los smells/analyzers que lo generaron. Las 5 letras siempre están presentes, aunque tengan `count: 0`:
+
+```json
+"by_solid_principle": {
+  "S": {"count": 4, "analyzers": ["GodObject", "LongMethod"]},
+  "O": {"count": 1, "analyzers": ["LawOfDemeter"]},
+  "L": {"count": 0, "analyzers": []},
+  "I": {"count": 0, "analyzers": []},
+  "D": {"count": 0, "analyzers": []}
+}
+```
+
+En modo texto se muestra un panel adicional **🧭 SOLID Scorecard** junto al resumen final (solo si hay al menos un resultado con `solid_principle` asignado).
+
 ### ¿Funciona con herencia de clases de otras librerías?
 
 Sí. DITAnalyzer y NOPAnalyzer usan AST puro y cuentan solo la herencia definida en el código analizado. No resuelve imports de librerías externas.

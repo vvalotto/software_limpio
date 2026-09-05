@@ -20,7 +20,7 @@ from rich.rule import Rule
 from rich.table import Table
 from rich.text import Text
 
-from quality_agents.designreviewer.models import ReviewResult, ReviewSeverity
+from quality_agents.designreviewer.models import ReviewResult, ReviewSeverity, SolidPrinciple
 
 
 def format_results(
@@ -73,6 +73,7 @@ def format_results(
             _print_results_table(console, mod_infos, "Informativos", "blue")
 
     _print_summary(console, criticals, warnings, infos)
+    _print_solid_scorecard(console, results)
     _print_effort_summary(console, results)
 
 
@@ -227,6 +228,56 @@ def _print_summary(
     console.print(Panel(summary, border_style=border, title="Resumen Final", padding=(0, 2)))
 
 
+def _group_by_solid_principle(results: List[ReviewResult]) -> Dict[str, Dict[str, Any]]:
+    """Agrupa resultados por principio SOLID violado (letra S/O/L/I/D).
+
+    Incluye las 5 letras siempre, aunque no tengan resultados (count=0).
+    """
+    grouped: Dict[str, Dict[str, Any]] = {
+        p.value: {"count": 0, "analyzers": set()} for p in SolidPrinciple
+    }
+    for r in results:
+        if r.solid_principle is None:
+            continue
+        entry = grouped[r.solid_principle.value]
+        entry["count"] += 1
+        entry["analyzers"].add(r.smell_type or r.analyzer_name)
+
+    return {
+        letter: {"count": data["count"], "analyzers": sorted(data["analyzers"])}
+        for letter, data in grouped.items()
+    }
+
+
+def _print_solid_scorecard(console: Console, results: List[ReviewResult]) -> None:
+    """Imprime un panel 'SOLID Scorecard' con el conteo de violaciones por principio."""
+    by_principle = _group_by_solid_principle(results)
+    if not any(data["count"] for data in by_principle.values()):
+        return
+
+    names = {
+        "S": "SRP",
+        "O": "OCP",
+        "L": "LSP",
+        "I": "ISP",
+        "D": "DIP",
+    }
+
+    table = Table.grid(padding=(0, 2))
+    table.add_column(style="bold cyan")
+    table.add_column(style="white")
+    table.add_column(style="dim")
+
+    for letter in ["S", "O", "L", "I", "D"]:
+        data = by_principle[letter]
+        count_style = "bold red" if data["count"] else "dim"
+        analyzers = ", ".join(data["analyzers"]) if data["analyzers"] else "-"
+        table.add_row(f"{letter} ({names[letter]}):", Text(str(data["count"]), style=count_style), analyzers)
+
+    console.print()
+    console.print(Panel(table, border_style="magenta", title="🧭  SOLID Scorecard", padding=(0, 2)))
+
+
 def _print_effort_summary(console: Console, results: List[ReviewResult]) -> None:
     """Imprime estimated_effort total del changeset."""
     total_effort = sum(r.estimated_effort for r in results)
@@ -300,6 +351,7 @@ def format_json(
             mod: [_result_to_dict(r) for r in mod_results]
             for mod, mod_results in sorted(by_mod.items())
         },
+        "by_solid_principle": _group_by_solid_principle(results),
     }
 
     return json.dumps(output, indent=2, ensure_ascii=False)

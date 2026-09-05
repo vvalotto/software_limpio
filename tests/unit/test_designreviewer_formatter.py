@@ -266,6 +266,53 @@ class TestFormatJson:
         assert "servicios/b.py" in data["by_module"]
 
 
+class TestFormatJsonBySolidPrinciple:
+    """Tests de agregación by_solid_principle (#75)."""
+
+    def test_incluye_las_5_letras_siempre(self):
+        output = format_json([], elapsed=0.5, total_files=0, analyzers_executed=8)
+        by_solid = json.loads(output)["by_solid_principle"]
+        assert set(by_solid.keys()) == {"S", "O", "L", "I", "D"}
+
+    def test_sin_resultados_solid_todos_en_cero(self, warning_result):
+        """warning_result no tiene solid_principle → todas las letras en count=0."""
+        output = format_json([warning_result], elapsed=1.0, total_files=1, analyzers_executed=8)
+        by_solid = json.loads(output)["by_solid_principle"]
+        for data in by_solid.values():
+            assert data["count"] == 0
+            assert data["analyzers"] == []
+
+    def test_agrupa_por_principio_correctamente(self):
+        results = [
+            make_result(smell_type="GodObject", solid_principle=SolidPrinciple.SRP),
+            make_result(smell_type="LongMethod", solid_principle=SolidPrinciple.SRP),
+            make_result(smell_type="LawOfDemeter", solid_principle=SolidPrinciple.OCP),
+        ]
+        output = format_json(results, elapsed=1.0, total_files=1, analyzers_executed=8)
+        by_solid = json.loads(output)["by_solid_principle"]
+
+        assert by_solid["S"]["count"] == 2
+        assert by_solid["S"]["analyzers"] == ["GodObject", "LongMethod"]
+        assert by_solid["O"]["count"] == 1
+        assert by_solid["O"]["analyzers"] == ["LawOfDemeter"]
+        assert by_solid["L"]["count"] == 0
+        assert by_solid["L"]["analyzers"] == []
+
+    def test_usa_analyzer_name_si_no_hay_smell_type(self):
+        result = ReviewResult(
+            analyzer_name="LawOfDemeterAnalyzer",
+            severity=ReviewSeverity.WARNING,
+            current_value=2,
+            threshold=1,
+            message="msg",
+            file_path=Path("src/servicio.py"),
+            solid_principle=SolidPrinciple.OCP,
+        )
+        output = format_json([result], elapsed=1.0, total_files=1, analyzers_executed=8)
+        by_solid = json.loads(output)["by_solid_principle"]
+        assert by_solid["O"]["analyzers"] == ["LawOfDemeterAnalyzer"]
+
+
 class TestFormatResultsByModule:
     """Tests de agrupación por módulo en salida text (#56)."""
 
