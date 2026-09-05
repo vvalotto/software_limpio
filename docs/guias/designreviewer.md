@@ -104,7 +104,7 @@ designreviewer src/ --no-ai
 
 ## Métricas Analizadas
 
-DesignReviewer ejecuta **16 analyzers** sobre cada archivo Python del changeset.
+DesignReviewer ejecuta **17 analyzers** sobre cada archivo Python del changeset.
 
 ### Acoplamiento
 
@@ -309,6 +309,26 @@ class Trabajador(ABC):
 
 Para `ABC`/`metaclass=ABCMeta` se cuentan solo los métodos decorados con `@abstractmethod`; para `Protocol` se cuentan todos los métodos declarados en el cuerpo (el contrato completo).
 
+#### Concrete Dependency (DIP)
+Clase que instancia sus propios colaboradores en el constructor en vez de recibirlos inyectados — queda acoplada a implementaciones concretas y es difícil de testear o sustituir.
+
+| Umbral | Severidad |
+|--------|-----------|
+| > max_concrete_dependencies dependencias concretas instanciadas en `__init__` (default: 2) | WARNING |
+
+```python
+# ❌ 3 dependencias concretas instanciadas directamente en el constructor
+from servicios import ClienteRepo, EmailService, GeneradorPDF
+
+class ServicioFacturacion:
+    def __init__(self):
+        self.cliente = ClienteRepo()
+        self.email = EmailService()
+        self.pdf = GeneradorPDF()
+```
+
+> ⚠️ **Heurística de confianza baja-media.** Sin type hints, no hay forma de distinguir con certeza una dependencia inyectable de un value object o de una clase auxiliar interna. Solo cuenta clases **importadas** en el archivo (no builtins ni tipos comunes de stdlib como `Path`, `Decimal`, `defaultdict`) que se asignan directamente a un atributo (`self.x = Clase(...)`) dentro de `__init__`. Instanciar 1-2 colaboradores concretos es común y aceptable — revisar cada resultado antes de refactorizar, no aplicar el cambio automáticamente.
+
 ---
 
 ## Interpretación de Resultados
@@ -389,6 +409,7 @@ min_data_clump_occurrences = 2    # Data Clumps: mínimo de ocurrencias
 max_demeter_depth          = 1    # Law of Demeter: profundidad de cadena → WARNING
 max_primitive_params       = 3    # Primitive Obsession: params del mismo tipo → WARNING
 max_abstract_methods       = 5    # Fat Interface: métodos abstractos → WARNING (x2 → CRITICAL)
+max_concrete_dependencies  = 2    # Concrete Dependency: deps. concretas en __init__ → WARNING
 # Refused Bequest (LSP) no tiene umbral numérico: es detección binaria por método
 
 # Analyzers habilitados (todos activos por defecto)
@@ -402,6 +423,7 @@ dit                 = true
 nop                 = true
 refused_bequest     = true   # Refused Bequest (LSP)
 fat_interface       = true   # Fat Interface (ISP)
+concrete_dependency = true   # Concrete Dependency (DIP)
 god_object          = true
 long_method         = true
 long_parameter_list = true

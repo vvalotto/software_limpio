@@ -104,6 +104,7 @@ Ticket: 1.1
 # Imports de analyzers implementados
 from .cbo_analyzer import CBOAnalyzer
 from .circular_imports_analyzer import CircularImportsAnalyzer
+from .concrete_dependency_analyzer import ConcreteDependencyAnalyzer
 from .data_clumps_analyzer import DataClumpsAnalyzer
 from .dit_analyzer import DITAnalyzer
 from .fan_out_analyzer import FanOutAnalyzer
@@ -122,6 +123,7 @@ from .wmc_analyzer import WMCAnalyzer
 __all__ = [
     "CBOAnalyzer",
     "CircularImportsAnalyzer",
+    "ConcreteDependencyAnalyzer",
     "DataClumpsAnalyzer",
     "DITAnalyzer",
     "FatInterfaceAnalyzer",
