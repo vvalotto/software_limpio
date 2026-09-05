@@ -104,7 +104,7 @@ designreviewer src/ --no-ai
 
 ## Métricas Analizadas
 
-DesignReviewer ejecuta **14 analyzers** sobre cada archivo Python del changeset.
+DesignReviewer ejecuta **15 analyzers** sobre cada archivo Python del changeset.
 
 ### Acoplamiento
 
@@ -257,6 +257,27 @@ def actualizar(self, datos: dict) -> None: ...
 
 Se excluyen métodos dunder, métodos privados (`_`) y constructores alternativos (`from_*`, `create_*`).
 
+#### Refused Bequest (LSP)
+Subclase que sobreescribe un método heredado vaciando su contrato (`pass`, `...`, o `raise NotImplementedError`) mientras la clase base tiene una implementación real. La subclase no puede sustituir a la base sin romper el comportamiento esperado — viola el Principio de Sustitución de Liskov.
+
+| Umbral | Severidad |
+|--------|-----------|
+| Detectado | WARNING |
+
+```python
+# ❌ Pinguino no puede sustituir a Ave: rompe el contrato de volar()
+class Ave:
+    def volar(self):
+        self.altura += 100
+        return self.altura
+
+class Pinguino(Ave):
+    def volar(self):
+        raise NotImplementedError("los pingüinos no vuelan")
+```
+
+Heurística de confianza media: solo cubre el caso de contrato vaciado, no violaciones semánticas de LSP (precondiciones más fuertes, postcondiciones más débiles). Se excluyen métodos decorados con `@abstractmethod`, clases que heredan de `ABC`/`Protocol` o declaran `metaclass=ABCMeta`, y métodos dunder (incluye `__init__`).
+
 ---
 
 ## Interpretación de Resultados
@@ -336,6 +357,7 @@ min_data_clump_size        = 3    # Data Clumps: mínimo de parámetros
 min_data_clump_occurrences = 2    # Data Clumps: mínimo de ocurrencias
 max_demeter_depth          = 1    # Law of Demeter: profundidad de cadena → WARNING
 max_primitive_params       = 3    # Primitive Obsession: params del mismo tipo → WARNING
+# Refused Bequest (LSP) no tiene umbral numérico: es detección binaria por método
 
 # Analyzers habilitados (todos activos por defecto)
 [tool.designreviewer.checks]
@@ -346,6 +368,7 @@ lcom                = true
 wmc                 = true
 dit                 = true
 nop                 = true
+refused_bequest     = true   # Refused Bequest (LSP)
 god_object          = true
 long_method         = true
 long_parameter_list = true

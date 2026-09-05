@@ -68,6 +68,7 @@ class DesignReviewerChecksConfig:
     # Herencia
     dit: bool = True
     nop: bool = True
+    refused_bequest: bool = True
 
     # Code smells
     god_object: bool = True

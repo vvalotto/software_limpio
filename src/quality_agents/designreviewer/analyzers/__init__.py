@@ -115,6 +115,7 @@ from .long_method_analyzer import LongMethodAnalyzer
 from .long_parameter_list_analyzer import LongParameterListAnalyzer
 from .nop_analyzer import NOPAnalyzer
 from .primitive_obsession_analyzer import PrimitiveObsessionAnalyzer
+from .refused_bequest_analyzer import RefusedBequestAnalyzer
 from .wmc_analyzer import WMCAnalyzer
 
 __all__ = [
@@ -131,5 +132,6 @@ __all__ = [
     "LongMethodAnalyzer",
     "LongParameterListAnalyzer",
     "NOPAnalyzer",
+    "RefusedBequestAnalyzer",
     "WMCAnalyzer",
 ]
