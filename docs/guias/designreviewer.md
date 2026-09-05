@@ -203,8 +203,8 @@ Método con demasiadas líneas — hace varias cosas a la vez.
 |--------|-----------|
 | > max_method_lines líneas (default: 20) | WARNING |
 
-#### Long Parameter List (ISP)
-Función o método con demasiados parámetros — señal de que agrupa conceptos distintos.
+#### Long Parameter List
+Función o método con demasiados parámetros — señal de que agrupa conceptos distintos. No se etiqueta con ningún principio SOLID: mide bloat de firma de función, no de interfaz (ese caso lo cubre [Fat Interface](#fat-interface-isp), ver #76).
 
 | Umbral | Severidad |
 |--------|-----------|
@@ -225,7 +225,7 @@ Grupos de parámetros que siempre aparecen juntos — candidatos a convertirse e
 | ≥ min_data_clump_size params (default: 3) en ≥ min_data_clump_occurrences lugares (default: 2) | WARNING |
 
 #### Law of Demeter (LoD)
-Método que accede a objetos a través de cadenas largas (`a.b.c.d`) — viola el principio "solo hablar con los vecinos directos".
+Método que accede a objetos a través de cadenas largas (`a.b.c.d`) — viola el principio "solo hablar con los vecinos directos". No se etiqueta con ningún principio SOLID: es un smell de acoplamiento estructural por derecho propio (ver #76).
 
 | Umbral | Severidad |
 |--------|-----------|

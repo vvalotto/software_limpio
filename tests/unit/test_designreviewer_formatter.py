@@ -283,10 +283,13 @@ class TestFormatJsonBySolidPrinciple:
             assert data["analyzers"] == []
 
     def test_agrupa_por_principio_correctamente(self):
+        """Nota (#76): LawOfDemeter/LongParameterList ya no tagean OCP/ISP en la
+        realidad — este smell_type es sintético, solo para probar la agregación
+        genérica del formatter (agnóstica del analyzer)."""
         results = [
             make_result(smell_type="GodObject", solid_principle=SolidPrinciple.SRP),
             make_result(smell_type="LongMethod", solid_principle=SolidPrinciple.SRP),
-            make_result(smell_type="LawOfDemeter", solid_principle=SolidPrinciple.OCP),
+            make_result(smell_type="EjemploOCP", solid_principle=SolidPrinciple.OCP),
         ]
         output = format_json(results, elapsed=1.0, total_files=1, analyzers_executed=8)
         by_solid = json.loads(output)["by_solid_principle"]
@@ -294,7 +297,7 @@ class TestFormatJsonBySolidPrinciple:
         assert by_solid["S"]["count"] == 2
         assert by_solid["S"]["analyzers"] == ["GodObject", "LongMethod"]
         assert by_solid["O"]["count"] == 1
-        assert by_solid["O"]["analyzers"] == ["LawOfDemeter"]
+        assert by_solid["O"]["analyzers"] == ["EjemploOCP"]
         assert by_solid["L"]["count"] == 0
         assert by_solid["L"]["analyzers"] == []
 

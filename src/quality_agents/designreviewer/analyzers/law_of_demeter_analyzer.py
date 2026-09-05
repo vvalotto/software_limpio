@@ -6,8 +6,10 @@ directos": self, sus parámetros, objetos que crea, y sus propios atributos.
 Las cadenas de acceso del tipo `a.b.c` indican que el método sabe demasiado
 sobre la estructura interna de otros objetos, creando acoplamiento estructural.
 
-Viola OCP y el principio de encapsulamiento: si la estructura interna de `b`
-cambia, este código se rompe aunque `a` no haya cambiado.
+Viola el principio de encapsulamiento: si la estructura interna de `b`
+cambia, este código se rompe aunque `a` no haya cambiado. Es un smell de
+acoplamiento por derecho propio — no se etiqueta con ningún principio SOLID
+(la relación con OCP es forzada, ver issue #76).
 
 Condición de reporte:
     profundidad de cadena de atributos > max_demeter_depth  (default: 1)
@@ -24,7 +26,7 @@ import ast
 from pathlib import Path
 from typing import Any, List, Union
 
-from quality_agents.designreviewer.models import ReviewResult, ReviewSeverity, SolidPrinciple
+from quality_agents.designreviewer.models import ReviewResult, ReviewSeverity
 from quality_agents.shared.verifiable import ExecutionContext, Verifiable
 
 
@@ -126,7 +128,7 @@ class LawOfDemeterAnalyzer(Verifiable):
                     "el valor necesario, evitando exponer su estructura interna."
                 ),
                 estimated_effort=0.5,
-                solid_principle=SolidPrinciple.OCP,
+                solid_principle=None,  # Smell de acoplamiento por derecho propio, no es OCP (#76)
                 smell_type="LawOfDemeter",
             ))
 

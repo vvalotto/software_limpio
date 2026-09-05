@@ -5,9 +5,9 @@ Una función con demasiados parámetros es difícil de llamar, testear y mantene
 Indica que la función probablemente hace demasiadas cosas o que los parámetros
 deberían agruparse en un objeto (Parameter Object).
 
-Viola el principio ISP (Interface Segregation Principle): una interfaz con
-demasiados parámetros obliga a los clientes a conocer y proveer más datos de
-los que necesitan.
+Es un smell de diseño de firma de función — no se etiqueta con ningún
+principio SOLID. Mide bloat de firma, no de interfaz (ABC/Protocol); ese
+caso lo cubre `FatInterfaceAnalyzer` (ISP real, ver issue #76).
 
 Fecha de creación: 2026-02-20
 Ticket: 4.3
@@ -17,7 +17,7 @@ import ast
 from pathlib import Path
 from typing import Any, List, Optional, Union
 
-from quality_agents.designreviewer.models import ReviewResult, ReviewSeverity, SolidPrinciple
+from quality_agents.designreviewer.models import ReviewResult, ReviewSeverity
 from quality_agents.shared.verifiable import ExecutionContext, Verifiable
 
 # Parámetros implícitos que se excluyen del conteo
@@ -142,7 +142,7 @@ class LongParameterListAnalyzer(Verifiable):
                 f"Agrupar los {cantidad} parámetros en un objeto Parameter Object o dataclass."
             ),
             estimated_effort=estimated_effort,
-            solid_principle=SolidPrinciple.ISP,
+            solid_principle=None,  # Bloat de firma, no de interfaz — ver FatInterfaceAnalyzer (#76)
             smell_type="LongParameterList",
         ))
 
