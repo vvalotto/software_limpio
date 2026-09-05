@@ -7,6 +7,10 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
+## [Unreleased]
+
+---
+
 ## [0.5.0] - 2026-09-05
 
 ### ✨ CodeGuard — 10 checks (antes 9)
@@ -43,7 +47,38 @@ Detecta clases que instancian sus propios colaboradores en `__init__` (`self.x =
 
 ---
 
-## [Unreleased]
+## [0.4.0] - 2026-05-27
+
+### ✨ CodeGuard — 10 checks (antes 6)
+
+#### Feat #50 / #51 / #52: `DeadCodeCheck`, `MaintainabilityCheck`, `SpellingCheck`
+
+- **`DeadCodeCheck`** (vulture) — detecta funciones, variables e imports sin usar. WARNING con confianza 60–79%, ERROR con confianza ≥80% (`min_dead_code_confidence`, default: 60).
+- **`MaintainabilityCheck`** (radon MI) — índice de mantenibilidad. INFO si MI ≥ umbral, WARNING si 10 ≤ MI < umbral, ERROR si MI < 10.
+- **`SpellingCheck`** (codespell) — errores de ortografía en comentarios, docstrings y strings. WARNING, con `spelling_ignore_words` configurable.
+
+### ✨ DesignReviewer — 14 analyzers (antes 12)
+
+#### Feat #54 / #55: `LawOfDemeterAnalyzer`, `PrimitiveObsessionAnalyzer`
+
+- **`LawOfDemeterAnalyzer`** — detecta cadenas de acceso (`a.b.c`) que exceden `max_demeter_depth` (default: 1), violando el principio "solo hablar con los vecinos directos". WARNING.
+- **`PrimitiveObsessionAnalyzer`** — detecta uso excesivo de tipos primitivos donde deberían usarse Value Objects (≥3 params del mismo tipo primitivo, default `max_primitive_params`), o paso de `dict`/`Dict` en métodos públicos. WARNING.
+
+### ✨ ArchitectAnalyst — 10 métricas (antes 7)
+
+#### Feat #47 / #48 / #57 / #58 / #49: `layer_roles`, `analysis_depth`, `RelationalCohesionAnalyzer`, `GodPackageAnalyzer`, `CoverageAnalyzer`
+
+- **`layer_roles`** (#47) — calibra `InstabilityAnalyzer` para módulos con comportamiento esperado distinto del patrón estándar (ej. módulos "leaf" en CQRS que no deberían tener dependientes).
+- **`analysis_depth`** (#48) — controla la granularidad del paquete usada por `DistanceAnalyzer` y `RelationalCohesionAnalyzer` (default: 1 = primer componente del módulo; 2 = dos componentes, útil en arquitecturas hexagonales).
+- **`RelationalCohesionAnalyzer`** (#57) — métrica de Martin H = (R+1)/N (relaciones internas / clases del paquete). WARNING si H < `min_relational_cohesion` (default: 1.5). Rango esperado: 1.5–4.0.
+- **`GodPackageAnalyzer`** (#58) — detecta paquetes con demasiada concentración (análogo arquitectónico del God Object): por tamaño (`n_clases > max_package_classes`, default: 20) o por acoplamiento aferente (`Ca > max_package_ca`, default: 10). WARNING.
+- **`CoverageAnalyzer`** (#49) — lee `coverage.json` (`pytest --cov --cov-report=json`) y reporta cobertura. WARNING si < `min_coverage` (default: 80%) o si el archivo no existe/es inválido; INFO si cumple el umbral.
+
+### 🏗️ Infrastructure
+
+#### Fix #66: configuración completa de los 3 agentes en `pyproject.toml` (PR #68)
+
+Todas las opciones de `[tool.codeguard]`, `[tool.designreviewer]` y `[tool.architectanalyst]` (incluyendo `checks`, `ai`, `layers`, `layer_roles`) documentadas y con defaults consistentes en `pyproject.toml`.
 
 ### ✨ Improvements — Incremento 1: Fundamentos de UX y Configuración
 
@@ -120,6 +155,8 @@ layer_violations = false   # solo si no se declaran capas
 ```
 
 ---
+
+## [0.3.1] - 2026-03-08
 
 ### 🐛 Bug Fixes — CodeGuard y DesignReviewer
 
@@ -484,24 +521,6 @@ Esta es la primera versión pública de **Software Limpio**, incluyendo el agent
 - Versión: 0.1.0
 - Python: >= 3.11
 - Licencia: MIT
-
----
-
-## [Unreleased]
-
-### Próximas Funcionalidades
-
-#### ArchitectAnalyst (v0.3.0)
-- Análisis de tendencias arquitectónicas a lo largo del tiempo
-- Métricas históricas en SQLite
-- Dashboards interactivos con Plotly
-- Detección de degradación arquitectónica
-
-#### Mejoras Futuras
-- MI (Maintainability Index) en CodeGuard via `radon mi`
-- Soporte para análisis paralelo de checks
-- Integración con GitHub Actions (workflows pre-configurados)
-- Soporte para plugins personalizados
 
 ---
 
