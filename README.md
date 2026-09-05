@@ -41,7 +41,7 @@ Nunca bloquea. Integración con pre-commit:
 # .pre-commit-config.yaml
 repos:
   - repo: https://github.com/vvalotto/software_limpio
-    rev: v0.4.0
+    rev: v0.5.0
     hooks:
       - id: codeguard
         args: ['--analysis-type', 'pre-commit']

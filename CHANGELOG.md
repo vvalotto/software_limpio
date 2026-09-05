@@ -7,6 +7,42 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
+## [0.5.0] - 2026-09-05
+
+### ✨ CodeGuard — 10 checks (antes 9)
+
+#### Feat #69: `DocstringCheck`
+
+Nuevo check basado en `ast` (sin dependencia externa) que mide cobertura de docstrings en funciones, clases y módulos públicos. Config: `checks.docstrings`, `min_docstring_coverage`.
+
+#### Fix #70 / #71: mypy sin `--cache-dir` y `checks_executed` incorrecto
+
+`TypeCheck` invocaba mypy sin `--cache-dir`, causando timeouts falsos en CI. El campo `summary.checks_executed` no reflejaba la selección real de checks del orquestador (contaba todos los registrados, no los efectivamente ejecutados según prioridad/contexto).
+
+### ✨ DesignReviewer — 17 analyzers (antes 14) + SOLID Scorecard
+
+#### Feat #75: SOLID Scorecard agregado al reporte
+
+Nueva sección `by_solid_principle` en el JSON (siempre las 5 letras S/O/L/I/D con `count` y `analyzers`) y panel Rich "🧭 SOLID Scorecard" en modo texto, agregando los resultados que tienen `solid_principle` asignado.
+
+#### Feat #72: `RefusedBequestAnalyzer` (LSP)
+
+Detecta subclases que vacían el contrato de un método heredado (`pass`/`...`/`raise NotImplementedError`) mientras la clase base tiene una implementación real. Excluye `@abstractmethod`, `ABC`/`Protocol`/`metaclass=ABCMeta` y métodos dunder.
+
+#### Feat #73: `FatInterfaceAnalyzer` (ISP)
+
+Detecta `ABC`/`Protocol` con demasiados métodos abstractos (default 5 → WARNING, x2 → CRITICAL). Para `ABC` cuenta solo `@abstractmethod`; para `Protocol` cuenta todos los métodos del cuerpo.
+
+#### Feat #74: `ConcreteDependencyAnalyzer` (DIP)
+
+Detecta clases que instancian sus propios colaboradores en `__init__` (`self.x = ClaseImportada()`) en vez de recibirlos inyectados. Heurística de confianza baja-media, documentada explícitamente en el mensaje del resultado y en la guía de usuario.
+
+#### Chore #76: limpieza de tags SOLID forzados
+
+`LawOfDemeterAnalyzer` (OCP→`None`) y `LongParameterListAnalyzer` (ISP→`None`) dejan de tagear principios SOLID semánticamente débiles, para no mezclar señales en el SOLID Scorecard ahora que `RefusedBequestAnalyzer`/`FatInterfaceAnalyzer`/`ConcreteDependencyAnalyzer` cubren LSP/ISP/DIP de forma real.
+
+---
+
 ## [Unreleased]
 
 ### ✨ Improvements — Incremento 1: Fundamentos de UX y Configuración
