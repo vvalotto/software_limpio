@@ -78,6 +78,7 @@ class DesignReviewerChecksConfig:
     data_clumps: bool = True
     law_of_demeter: bool = True
     primitive_obsession: bool = True
+    fat_interface: bool = True
 
 
 @dataclass
@@ -112,6 +113,7 @@ class DesignReviewerConfig:
     min_data_clump_occurrences: int = 2  # Mínimo de apariciones para Data Clump
     max_demeter_depth: int = 1         # Profundidad máxima de cadena de acceso (Law of Demeter)
     max_primitive_params: int = 3      # Máximo de parámetros primitivos del mismo tipo (Primitive Obsession)
+    max_abstract_methods: int = 5      # Métodos abstractos en una interfaz (Fat Interface)
 
     # Exclusiones
     exclude_patterns: List[str] = field(default_factory=lambda: [

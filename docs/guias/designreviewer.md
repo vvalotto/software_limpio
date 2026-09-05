@@ -104,7 +104,7 @@ designreviewer src/ --no-ai
 
 ## Métricas Analizadas
 
-DesignReviewer ejecuta **15 analyzers** sobre cada archivo Python del changeset.
+DesignReviewer ejecuta **16 analyzers** sobre cada archivo Python del changeset.
 
 ### Acoplamiento
 
@@ -278,6 +278,37 @@ class Pinguino(Ave):
 
 Heurística de confianza media: solo cubre el caso de contrato vaciado, no violaciones semánticas de LSP (precondiciones más fuertes, postcondiciones más débiles). Se excluyen métodos decorados con `@abstractmethod`, clases que heredan de `ABC`/`Protocol` o declaran `metaclass=ABCMeta`, y métodos dunder (incluye `__init__`).
 
+#### Fat Interface (ISP)
+Interfaz (`ABC`/`Protocol`) con demasiados métodos abstractos — fuerza a los implementadores a proveer métodos que no necesitan.
+
+| Umbral | Severidad |
+|--------|-----------|
+| > max_abstract_methods métodos abstractos (default: 5) | WARNING |
+| > 2 × max_abstract_methods | CRITICAL |
+
+```python
+# ❌ 7 métodos abstractos — cualquier implementación tiene que darlos todos
+from abc import ABC, abstractmethod
+
+class Trabajador(ABC):
+    @abstractmethod
+    def cocinar(self): ...
+    @abstractmethod
+    def limpiar(self): ...
+    @abstractmethod
+    def facturar(self): ...
+    @abstractmethod
+    def programar_turnos(self): ...
+    @abstractmethod
+    def atender_reclamos(self): ...
+    @abstractmethod
+    def hacer_marketing(self): ...
+    @abstractmethod
+    def auditar_finanzas(self): ...
+```
+
+Para `ABC`/`metaclass=ABCMeta` se cuentan solo los métodos decorados con `@abstractmethod`; para `Protocol` se cuentan todos los métodos declarados en el cuerpo (el contrato completo).
+
 ---
 
 ## Interpretación de Resultados
@@ -357,6 +388,7 @@ min_data_clump_size        = 3    # Data Clumps: mínimo de parámetros
 min_data_clump_occurrences = 2    # Data Clumps: mínimo de ocurrencias
 max_demeter_depth          = 1    # Law of Demeter: profundidad de cadena → WARNING
 max_primitive_params       = 3    # Primitive Obsession: params del mismo tipo → WARNING
+max_abstract_methods       = 5    # Fat Interface: métodos abstractos → WARNING (x2 → CRITICAL)
 # Refused Bequest (LSP) no tiene umbral numérico: es detección binaria por método
 
 # Analyzers habilitados (todos activos por defecto)
@@ -369,6 +401,7 @@ wmc                 = true
 dit                 = true
 nop                 = true
 refused_bequest     = true   # Refused Bequest (LSP)
+fat_interface       = true   # Fat Interface (ISP)
 god_object          = true
 long_method         = true
 long_parameter_list = true

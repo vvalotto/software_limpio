@@ -107,6 +107,7 @@ from .circular_imports_analyzer import CircularImportsAnalyzer
 from .data_clumps_analyzer import DataClumpsAnalyzer
 from .dit_analyzer import DITAnalyzer
 from .fan_out_analyzer import FanOutAnalyzer
+from .fat_interface_analyzer import FatInterfaceAnalyzer
 from .feature_envy_analyzer import FeatureEnvyAnalyzer
 from .god_object_analyzer import GodObjectAnalyzer
 from .law_of_demeter_analyzer import LawOfDemeterAnalyzer
@@ -123,6 +124,7 @@ __all__ = [
     "CircularImportsAnalyzer",
     "DataClumpsAnalyzer",
     "DITAnalyzer",
+    "FatInterfaceAnalyzer",
     "FeatureEnvyAnalyzer",
     "FanOutAnalyzer",
     "GodObjectAnalyzer",
