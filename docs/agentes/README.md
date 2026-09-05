@@ -24,8 +24,8 @@ Pre-commit (seg)     Review (min)        Sprint-end (horas)
 
 | Agente | Versión | Estado | Guía |
 |--------|---------|--------|------|
-| CodeGuard | v0.4.0 | ✅ 9 checks, toggles, output por módulo | `docs/guias/codeguard.md` |
-| DesignReviewer | v0.4.0 | ✅ 14 analyzers, toggles, output por módulo | `docs/guias/designreviewer.md` |
+| CodeGuard | v0.4.0 | ✅ 10 checks, toggles, output por módulo | `docs/guias/codeguard.md` |
+| DesignReviewer | v0.4.0 | ✅ 17 analyzers, toggles, output por módulo, SOLID Scorecard | `docs/guias/designreviewer.md` |
 | ArchitectAnalyst | v0.4.0 | ✅ 10 métricas, toggles, analysis_depth, layer_roles | `docs/guias/architectanalyst.md` |
 
 ## Pendiente

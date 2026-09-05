@@ -1,7 +1,7 @@
 # ESPECIFICACIÓN DE AGENTES DE CONTROL DE CALIDAD
 **Sistema de Control de Calidad en Tres Niveles**
 
-Versión 1.4 - Mayo 2026
+Versión 1.5 - Septiembre 2026
 
 ---
 
@@ -777,6 +777,11 @@ Análisis profundo de calidad de diseño a nivel clase/módulo en momentos de re
 | 12 | Data Clumps | grupos detectados (≥3 params en ≥2 lugares) | WARNING | `DataClumpsAnalyzer` |
 | 13 | Law of Demeter | cadena de acceso > 1 | WARNING | `LawOfDemeterAnalyzer` |
 | 14 | Primitive Obsession | ≥3 params del mismo tipo primitivo | WARNING | `PrimitiveObsessionAnalyzer` |
+| 15 | Refused Bequest (LSP) | contrato heredado vaciado | WARNING | `RefusedBequestAnalyzer` |
+| 16 | Fat Interface (ISP) | métodos abstractos > 5 (x2 → CRITICAL) | WARNING/CRITICAL | `FatInterfaceAnalyzer` |
+| 17 | Concrete Dependency (DIP) | deps. concretas en `__init__` > 2 | WARNING | `ConcreteDependencyAnalyzer` |
+
+**SOLID Scorecard:** sección `by_solid_principle` en el JSON (siempre las 5 letras S/O/L/I/D con `count` y `analyzers`) y panel Rich adicional en modo texto, agregando los resultados que tienen `solid_principle` asignado. `LawOfDemeterAnalyzer` y `LongParameterListAnalyzer` no tagean ningún principio SOLID (medían smells de acoplamiento/firma, no violaciones semánticas de un principio; ver decisión en issue #76).
 
 ### 2.4 Herramientas Utilizadas
 
@@ -872,6 +877,9 @@ min_data_clump_size = 3        # Data Clumps: mínimo de parámetros
 min_data_clump_occurrences = 2 # Data Clumps: mínimo de ocurrencias
 max_demeter_depth = 1          # Law of Demeter: profundidad de cadena
 max_primitive_params = 3       # Primitive Obsession: params del mismo tipo
+max_abstract_methods = 5       # Fat Interface: métodos abstractos → WARNING (x2 → CRITICAL)
+max_concrete_dependencies = 2  # Concrete Dependency: deps. concretas en __init__ → WARNING
+# Refused Bequest (LSP) no tiene umbral numérico: es detección binaria por método
 
 # Exclusiones
 exclude_patterns = ["tests/", "migrations/", "__pycache__/"]
@@ -880,6 +888,9 @@ exclude_patterns = ["tests/", "migrations/", "__pycache__/"]
 [tool.designreviewer.checks]
 law_of_demeter = true
 primitive_obsession = true
+refused_bequest = true
+fat_interface = true
+concrete_dependency = true
 
 # IA (opt-in — requiere ANTHROPIC_API_KEY)
 [tool.designreviewer.ai]
@@ -1294,9 +1305,10 @@ project_root/
     ├── designreviewer/
     │   ├── agent.py            # CLI + main()
     │   ├── orchestrator.py     # Selección contextual de analyzers
-    │   └── analyzers/          # CBO, FanOut, Circular, LCOM, WMC, DIT, NOP,
+    │   └── analyzers/          # CBO, FanOut, Circular, LCOM, WMC, DIT, NOP, RefusedBequest,
     │                           # GodObject, LongMethod, LongParameterList, FeatureEnvy,
-    │                           # DataClumps, LawOfDemeter, PrimitiveObsession (14 analyzers)
+    │                           # DataClumps, LawOfDemeter, PrimitiveObsession, FatInterface,
+    │                           # ConcreteDependency (17 analyzers)
     └── architectanalyst/
         ├── agent.py            # CLI + main()
         ├── orchestrator.py     # Ejecución de métricas
@@ -1402,6 +1414,26 @@ CREATE TABLE results (
 
 ---
 
+### Fase 5: Dogfooding post-v0.4.0 (en curso — Septiembre 2026)
+
+**Objetivo:** Resolver issues detectados usando los propios agentes sobre el código del proyecto (dogfooding vía `cognion`), sin ser parte de un incremento formal.
+
+- [x] CodeGuard: nuevo `DocstringCheck` (ast, sin dependencia externa) → total 10 checks (#69)
+- [x] CodeGuard: fix mypy sin `--cache-dir` (timeout falso) y `checks_executed` no reflejaba selección real del orquestador (#70, #71)
+- [x] Spike #59 (SOLID): análisis de qué principios son detectables estáticamente — dio origen a #72-#76
+- [x] DesignReviewer: SOLID Scorecard agregado en el reporte (`by_solid_principle`) (#75)
+- [x] DesignReviewer: `RefusedBequestAnalyzer` (LSP) (#72)
+- [x] DesignReviewer: `FatInterfaceAnalyzer` (ISP) (#73)
+- [x] DesignReviewer: `ConcreteDependencyAnalyzer` (DIP) (#74)
+- [x] DesignReviewer: limpieza de tags SOLID forzados en LawOfDemeter (OCP→None) y LongParameterList (ISP→None) (#76)
+- [ ] Publicación en PyPI (`pip install quality-agents`)
+- [ ] GitHub Actions CI/CD
+- [ ] Wiring IA para los 3 agentes (CodeGuard: explicaciones, DesignReviewer: refactorización, ArchitectAnalyst: análisis estratégico)
+
+**Resultado:** DesignReviewer pasa de 14 a 17 analyzers, con los 5 principios SOLID cubiertos por señal semánticamente correcta.
+
+---
+
 ## CONSIDERACIONES FINALES
 
 ### Para Proyectos Personales
@@ -1453,7 +1485,7 @@ CREATE TABLE results (
 
 ---
 
-**Versión:** 1.4
-**Fecha:** Mayo 2026
+**Versión:** 1.5
+**Fecha:** Septiembre 2026
 **Autor:** Sistema de Control de Calidad - ISSE
 **Licencia:** MIT (para uso académico y personal)

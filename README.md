@@ -71,7 +71,7 @@ Siempre exit code 0. Persiste snapshots en SQLite y muestra tendencias ↑↓= e
 
 ### CodeGuard
 
-9 checks modulares sobre cada archivo Python del changeset:
+10 checks modulares sobre cada archivo Python del changeset:
 
 - **PEP8Check** — estilo de código (flake8)
 - **SecurityCheck** — vulnerabilidades (bandit)
@@ -82,6 +82,7 @@ Siempre exit code 0. Persiste snapshots en SQLite y muestra tendencias ↑↓= e
 - **DeadCodeCheck** — código muerto (vulture)
 - **MaintainabilityCheck** — índice de mantenibilidad (radon MI)
 - **SpellingCheck** — errores de ortografía (codespell)
+- **DocstringCheck** — cobertura de docstrings (ast)
 
 📖 [Guía de Usuario](docs/guias/codeguard.md) · [Guía de Adopción](docs/guias/adopcion-codeguard.md)
 
@@ -89,11 +90,13 @@ Siempre exit code 0. Persiste snapshots en SQLite y muestra tendencias ↑↓= e
 
 ### DesignReviewer
 
-14 analyzers AST que detectan problemas de diseño:
+17 analyzers AST que detectan problemas de diseño:
 
 - **Acoplamiento:** CBO, Fan-Out, Importaciones Circulares
-- **Cohesión y herencia:** LCOM, WMC, DIT, NOP
-- **Code Smells + SOLID:** God Object, Long Method, Long Parameter List, Feature Envy, Data Clumps, Law of Demeter, Primitive Obsession
+- **Cohesión y herencia:** LCOM, WMC, DIT, NOP, Refused Bequest (LSP)
+- **Code Smells + SOLID:** God Object, Long Method, Long Parameter List, Feature Envy, Data Clumps, Law of Demeter, Primitive Obsession, Fat Interface (ISP), Concrete Dependency (DIP)
+
+Incluye un **SOLID Scorecard** agregado en el reporte (`by_solid_principle` en JSON, panel Rich en texto) que resume violaciones por principio S/O/L/I/D.
 
 Configuración en `pyproject.toml`:
 

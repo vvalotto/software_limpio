@@ -166,11 +166,16 @@ min_data_clump_size = 3
 min_data_clump_occurrences = 2
 max_demeter_depth = 1
 max_primitive_params = 3
+max_abstract_methods = 5
+max_concrete_dependencies = 2
 
 # Todos los checks activos
 [tool.designreviewer.checks]
 law_of_demeter = true
 primitive_obsession = true
+refused_bequest = true
+fat_interface = true
+concrete_dependency = true
 ```
 
 ### Paso 2: Verificar que el proyecto base pasa limpio
@@ -246,6 +251,9 @@ min_data_clump_size = 3        # Data Clumps: mínimo de parámetros repetidos
 min_data_clump_occurrences = 2 # Data Clumps: mínimo de ocurrencias
 max_demeter_depth = 1          # Law of Demeter: profundidad de cadena → WARNING
 max_primitive_params = 3       # Primitive Obsession: params del mismo tipo → WARNING
+max_abstract_methods = 5       # Fat Interface: métodos abstractos → WARNING (x2 → CRITICAL)
+max_concrete_dependencies = 2  # Concrete Dependency: deps. concretas en __init__ → WARNING
+# Refused Bequest (LSP) no tiene umbral numérico: es detección binaria por método
 
 # --- Exclusiones ---
 exclude_patterns = [
@@ -271,6 +279,9 @@ feature_envy = true
 data_clumps = true
 law_of_demeter = true
 primitive_obsession = true
+refused_bequest = true
+fat_interface = true
+concrete_dependency = true
 ```
 
 ### Comparación de perfiles

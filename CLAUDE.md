@@ -17,7 +17,7 @@ Este archivo provee orientación a Claude Code (claude.ai/code) cuando trabaja c
 # Instalar en modo desarrollo
 pip install -e ".[dev]"
 
-# Ejecutar todos los tests (~970 tests, ~30s)
+# Ejecutar todos los tests (~1109 tests, ~30s)
 pytest
 
 # Ejecutar por categoría
@@ -68,7 +68,7 @@ Pre-commit (<5s)    →    PR Review (2-5min)    →    Fin de Sprint (10-30min)
  (solo advierte)       (bloquea si crítico)        (análisis de tendencias)
 ```
 
-Los **tres agentes están implementados** y en v0.4.0 con mejoras: CodeGuard (10 checks), DesignReviewer (14 analyzers), ArchitectAnalyst (9 métricas). La integración IA es opt-in (infraestructura lista, wiring pendiente).
+Los **tres agentes están implementados** y en v0.4.0 con mejoras: CodeGuard (10 checks), DesignReviewer (17 analyzers), ArchitectAnalyst (9 métricas). La integración IA es opt-in (infraestructura lista, wiring pendiente).
 
 ### Estructura de Agentes
 
@@ -133,7 +133,7 @@ En `tests/conftest.py`:
 
 ## Archivos de Referencia Clave
 
-- `docs/agentes/especificacion_agentes_calidad.md` — Especificación completa de agentes (v1.3, autoritativo)
+- `docs/agentes/especificacion_agentes_calidad.md` — Especificación completa de agentes (v1.5, autoritativo)
 - `docs/agentes/arquitectura_modular.md` — Decisión de arquitectura modular
 - `docs/teoria/GUIA_REDACCION.md` — Estilo de redacción para docs de teoría
 - `docs/guias/codeguard.md` — Guía de usuario de CodeGuard
